@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const AVATARS = [
   {
@@ -32,25 +33,27 @@ export default function AuthBranding() {
       </div>
 
       {/* Mobile logo */}
-      <div className="lg:hidden w-full flex items-center gap-3 mb-8 relative z-10">
-        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
-          <span className="material-icons text-[20px]">psychology</span>
-        </div>
-        <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-display">
-          SkillScout
-        </span>
+      <div className="lg:hidden w-full flex items-center mb-8 relative z-10">
+        <Image
+          src="/brandimg.png"
+          alt="SkillScout"
+          width={160}
+          height={32}
+          className="h-8 w-auto"
+        />
       </div>
 
       {/* Desktop content */}
       <div className="relative z-20 hidden lg:flex flex-col h-full justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform">
-            <span className="material-icons text-[24px]">psychology</span>
-          </div>
-          <span className="text-2xl font-bold tracking-tight text-white drop-shadow-sm font-display">
-            SkillScout
-          </span>
+        <Link href="/" className="inline-flex items-center group hover:opacity-90 transition-opacity">
+          <Image
+            src="/brandimg.png"
+            alt="SkillScout"
+            width={180}
+            height={36}
+            className="h-9 w-auto drop-shadow-sm brightness-0 invert"
+          />
         </Link>
 
         {/* Tagline block */}

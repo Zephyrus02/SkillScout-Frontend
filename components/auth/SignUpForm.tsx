@@ -25,8 +25,8 @@ export default function SignUpForm() {
     setLoading(true);
     // TODO: wire up to auth API
     console.log("Sign up", { name, email, password });
-    // Redirect to profile setup after successful sign up
-    await router.push("/profile-setup");
+    // Redirect to email verification page after successful sign up
+    await router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
     setLoading(false);
   };
 

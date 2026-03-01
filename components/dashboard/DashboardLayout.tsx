@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/router";
 
 const NAV_ITEMS = [
@@ -77,15 +78,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       >
         <div className="px-6 pt-6 pb-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 mb-10">
-            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <span className="material-icons text-primary text-xl leading-none">
-                psychology
-              </span>
-            </div>
-            <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">
-              SkillScout
-            </span>
+          <Link href="/" className="flex items-center mb-10">
+            <Image
+              src="/brandimg.png"
+              alt="SkillScout"
+              width={160}
+              height={32}
+              className="h-8 w-auto"
+            />
           </Link>
 
           {/* User profile */}

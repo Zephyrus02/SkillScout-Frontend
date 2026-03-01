@@ -1,11 +1,13 @@
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 const NAV_LINKS = [
   { label: "Platform", href: "/#features" },
-  { label: "Roles", href: "/#roles" },
-  { label: "Resources", href: "/#resources" },
+  { label: "Resources", href: "/resources" },
+  { label: "About", href: "/about" },
   { label: "Pricing", href: "/pricing" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export default function Navbar() {
@@ -17,12 +19,14 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="material-icons text-primary text-3xl mr-2">
-              psychology
-            </span>
-            <span className="font-display font-bold text-xl tracking-tight text-text-light dark:text-text-dark">
-              SkillScout
-            </span>
+            <Image
+              src="/brandimg.png"
+              alt="SkillScout"
+              width={160}
+              height={32}
+              className="h-8 w-auto"
+              priority
+            />
           </Link>
 
           {/* Desktop nav links */}

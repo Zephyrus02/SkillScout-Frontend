@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface SetupNavProps {
@@ -13,13 +14,14 @@ export default function SetupNav({ userName }: SetupNavProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="material-icons text-primary text-3xl group-hover:scale-110 transition-transform">
-              psychology
-            </span>
-            <span className="font-display font-bold text-xl tracking-tight text-text-light dark:text-text-dark">
-              SkillScout
-            </span>
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/brandimg.png"
+              alt="SkillScout"
+              width={160}
+              height={32}
+              className="h-8 w-auto"
+            />
           </Link>
 
           {/* Right side */}
