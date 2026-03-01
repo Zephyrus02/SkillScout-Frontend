@@ -1,23 +1,50 @@
 import Link from "next/link";
-import { useRouter } from "next/router";
 import { useState } from "react";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import SocialAuthButtons from "./SocialAuthButtons";
 
 export default function SignInForm() {
-  const router = useRouter();
+  const { login, googleAuth } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) return;
     setLoading(true);
-    // TODO: wire up to auth API
-    console.log("Sign in", { email, password });
-    await router.push("/dashboard");
-    setLoading(false);
+    try {
+      await login(email, password, rememberMe);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Login failed. Please try again.";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const { googleButtonRef } = useGoogleAuth({
+    onSuccess: async (idToken) => {
+      setLoading(true);
+      try {
+        await googleAuth(idToken, false);
+      } catch (err: unknown) {
+        const msg =
+          (err as { response?: { data?: { message?: string } } })?.response
+            ?.data?.message ?? "Google authentication failed.";
+        toast.error(msg);
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: (err) => console.error("Google auth error:", err),
+  });
 
   return (
     <div className="w-full max-w-[440px] flex flex-col gap-8">
@@ -32,7 +59,7 @@ export default function SignInForm() {
       </div>
 
       {/* Social auth */}
-      <SocialAuthButtons />
+      <SocialAuthButtons googleButtonRef={googleButtonRef} loading={loading} />
 
       {/* Divider */}
       <div className="relative flex items-center">
@@ -109,6 +136,22 @@ export default function SignInForm() {
               </span>
             </button>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            id="rememberMe"
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer"
+          />
+          <label
+            htmlFor="rememberMe"
+            className="text-sm text-slate-500 dark:text-slate-400 cursor-pointer select-none"
+          >
+            Keep me logged in
+          </label>
         </div>
 
         <button

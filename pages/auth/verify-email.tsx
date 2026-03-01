@@ -2,18 +2,48 @@ import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import AuthBranding from "@/components/auth/AuthBranding";
+import { authAPI } from "@/lib/api";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
-  const { email, verified } = router.query;
+  const { email, verified, token } = router.query;
 
-  /** `verified=true` is set when the user clicks the link in the email */
-  const isVerified = verified === "true";
+  // `verified=true` is set by some legacy redirect; `verifiedByApi` is set by
+  // the on-mount API call when a `?token=xxx` param arrives from the email link.
+  const [verifiedByApi, setVerifiedByApi] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
+
+  const isVerified = verified === "true" || verifiedByApi;
 
   const [resendLoading, setResendLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendSuccess, setResendSuccess] = useState(false);
+
+  /* When the page loads with ?token=..., call the verify API immediately */
+  useEffect(() => {
+    if (!router.isReady) return;
+    const tokenParam = token as string | undefined;
+    if (!tokenParam) return;
+    setVerifying(true);
+    authAPI
+      .verifyEmail({ token: tokenParam })
+      .then(() => {
+        setVerifiedByApi(true);
+        toast.success("Email verified successfully! You can now sign in.");
+      })
+      .catch((err: unknown) => {
+        const msg =
+          (err as { response?: { data?: { message?: string } } })?.response
+            ?.data?.message ??
+          "Verification failed. The link may have expired.";
+        setVerifyError(msg);
+        toast.error(msg);
+      })
+      .finally(() => setVerifying(false));
+  }, [router.isReady, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* auto-start cooldown on first render so the user can't spam immediately */
   useEffect(() => {
@@ -34,14 +64,22 @@ export default function VerifyEmailPage() {
   };
 
   const handleResend = async () => {
-    if (resendCooldown > 0 || resendLoading) return;
+    if (resendCooldown > 0 || resendLoading || !email) return;
     setResendLoading(true);
     setResendSuccess(false);
-    // TODO: call POST /auth/resend-verification { email }
-    await new Promise((r) => setTimeout(r, 800));
-    setResendLoading(false);
-    setResendSuccess(true);
-    startCooldown(60);
+    try {
+      await authAPI.resendVerification(email as string);
+      setResendSuccess(true);
+      toast.success("Verification email resent! Please check your inbox.");
+      startCooldown(60);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Failed to resend verification email.";
+      toast.error(msg);
+    } finally {
+      setResendLoading(false);
+    }
   };
 
   return (
@@ -65,8 +103,60 @@ export default function VerifyEmailPage() {
         {/* Right – content */}
         <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-24 bg-white dark:bg-background-dark overflow-y-auto">
           <div className="w-full max-w-[440px] flex flex-col gap-8">
-            {/* ── VERIFIED state ────────────────────────────────── */}
-            {isVerified ? (
+            {/* ── VERIFYING state (spinner while API call is in-flight) ── */}
+            {verifying ? (
+              <div className="flex flex-col items-center gap-6 text-center py-4">
+                <div className="w-24 h-24 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                  <span className="material-icons text-primary text-[52px] animate-spin">
+                    autorenew
+                  </span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <h2 className="text-slate-900 dark:text-white text-3xl font-black tracking-tight font-display">
+                    Verifying…
+                  </h2>
+                  <p className="text-slate-500 dark:text-slate-400 text-base">
+                    Please wait while we confirm your email address.
+                  </p>
+                </div>
+              </div>
+            ) : /* ── ERROR state (token invalid / expired) ─────────── */
+            verifyError ? (
+              <div className="flex flex-col items-center gap-6 text-center py-4">
+                <div className="w-24 h-24 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
+                  <span className="material-icons text-red-500 text-[52px]">
+                    error_outline
+                  </span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <h2 className="text-slate-900 dark:text-white text-3xl font-black tracking-tight font-display">
+                    Verification Failed
+                  </h2>
+                  <p className="text-slate-500 dark:text-slate-400 text-base">
+                    {verifyError}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-3 w-full">
+                  <Link
+                    href="/auth/signup"
+                    className="h-12 w-full rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-sm tracking-wide transition-colors flex items-center justify-center gap-2"
+                  >
+                    <span className="material-icons text-[18px]">
+                      person_add
+                    </span>
+                    Sign Up Again
+                  </Link>
+                  <Link
+                    href="/auth/login"
+                    className="h-12 w-full rounded-xl border-2 border-primary text-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 font-bold text-sm tracking-wide transition-colors flex items-center justify-center gap-2"
+                  >
+                    <span className="material-icons text-[18px]">login</span>
+                    Sign In
+                  </Link>
+                </div>
+              </div>
+            ) : /* ── VERIFIED state ───────────────────────────────── */
+            isVerified ? (
               <div className="flex flex-col items-center gap-6 text-center py-4">
                 {/* Success icon */}
                 <div className="relative">
@@ -87,8 +177,8 @@ export default function VerifyEmailPage() {
                     Email Verified!
                   </h2>
                   <p className="text-slate-500 dark:text-slate-400 text-base">
-                    Your account is now active. Welcome to SkillScout – let's
-                    start your interview prep journey.
+                    Your account is now active. Sign in to complete your profile
+                    and start your interview prep journey.
                   </p>
                 </div>
 

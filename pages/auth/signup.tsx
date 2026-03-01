@@ -1,8 +1,22 @@
 import Head from "next/head";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
 import AuthBranding from "@/components/auth/AuthBranding";
 import SignUpForm from "@/components/auth/SignUpForm";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function SignUpPage() {
+  const { isAuthenticated, loading } = useAuth();
+  const router = useRouter();
+
+  // Redirect already authenticated users
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      router.replace("/dashboard");
+    }
+  }, [loading, isAuthenticated, router]);
+
+  if (loading || isAuthenticated) return null;
   return (
     <>
       <Head>

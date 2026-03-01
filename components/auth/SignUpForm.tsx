@@ -1,10 +1,15 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import { authAPI } from "@/lib/api";
 import SocialAuthButtons from "./SocialAuthButtons";
 
 export default function SignUpForm() {
   const router = useRouter();
+  const { signup, googleAuth } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,9 +18,31 @@ export default function SignUpForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Password validation rules (matching the backend requirements)
+  const validatePassword = (pwd: string): string | null => {
+    if (pwd.length < 8) return "Password must be at least 8 characters.";
+    if (!/[A-Z]/.test(pwd)) return "Password must include an uppercase letter.";
+    if (!/[a-z]/.test(pwd)) return "Password must include a lowercase letter.";
+    if (!/[0-9]/.test(pwd)) return "Password must include a number.";
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pwd))
+      return "Password must include a special character.";
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!name || !email || !password) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+
+    const pwdError = validatePassword(password);
+    if (pwdError) {
+      setError(pwdError);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
@@ -23,12 +50,64 @@ export default function SignUpForm() {
     }
 
     setLoading(true);
-    // TODO: wire up to auth API
-    console.log("Sign up", { name, email, password });
-    // Redirect to email verification page after successful sign up
-    await router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
-    setLoading(false);
+    try {
+      const result = await signup(email, password, name);
+      if (result && result.requiresEmailVerification) {
+        toast.success("Verification email sent! Please check your inbox.");
+        await router.push(
+          `/auth/verify-email?email=${encodeURIComponent(email)}`,
+        );
+      }
+    } catch (err: unknown) {
+      const apiErr = err as {
+        response?: {
+          data?: { message?: string; errors?: { message: string }[] };
+        };
+      };
+      const validationMsgs = apiErr.response?.data?.errors;
+      if (validationMsgs?.length) {
+        setError(validationMsgs.map((e) => e.message).join(", "));
+      } else {
+        setError(
+          apiErr.response?.data?.message ?? "Signup failed. Please try again.",
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const { googleButtonRef } = useGoogleAuth({
+    onSuccess: async (idToken) => {
+      setLoading(true);
+      try {
+        await googleAuth(idToken, false);
+      } catch (err: unknown) {
+        const msg =
+          (err as { response?: { data?: { message?: string } } })?.response
+            ?.data?.message ?? "Google authentication failed.";
+        toast.error(msg);
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: (err) => console.error("Google auth error:", err),
+  });
+
+  const handleResendVerification = async () => {
+    if (!email) return;
+    try {
+      await authAPI.resendVerification(email);
+      toast.success("Verification email resent!");
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? "Failed to resend verification email.";
+      toast.error(msg);
+    }
+  };
+
+  void handleResendVerification; // kept available for verify-email page
 
   return (
     <div className="w-full max-w-[440px] flex flex-col gap-8">
@@ -43,7 +122,7 @@ export default function SignUpForm() {
       </div>
 
       {/* Social auth */}
-      <SocialAuthButtons />
+      <SocialAuthButtons googleButtonRef={googleButtonRef} loading={loading} />
 
       {/* Divider */}
       <div className="relative flex items-center">
