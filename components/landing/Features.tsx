@@ -179,7 +179,8 @@ export default function Features() {
                 Benchmarking
               </h3>
               <p className="text-sm text-subtext-light dark:text-subtext-dark mb-4">
-                See how you rank against engineers from top tech companies.
+                See how you rank against engineers from top tech companies and
+                college students racing toward placement season.
               </p>
               <div className="space-y-2">
                 <div className="flex justify-between text-xs text-subtext-light dark:text-subtext-dark">

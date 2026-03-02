@@ -3,32 +3,18 @@ import Head from "next/head";
 import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import {
+  type BlogPost,
+  getAllBlogs,
+  getBlogTopics,
+  getFeaturedBlog,
+} from "@/lib/blogs";
 
 /* ─── Data ──────────────────────────────────────────────────────────── */
 
-const FEATURED = {
-  image:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuDbGcEh9NH-Id57hsMnaXtukxl_13MOrttC9JP6jixFaI18LiuuZmz8eFqcdsGJ8SOlK1b1abrfz-DZWUHuzW-WD7KE6BtrA9XZSvC-IoUWIwqt7EvxZiV3yb3foOEjS-zHgCxngwXRyh7HNOG31ml0l5-BScQK-Wdv9J45tuBvwk-aSWQiXF1vaiov5UGTibMzPTgV7Aqm8QxksrtCJ8GmwHkcJrO2zMw45NlGnacvDSc-7VoRg2_ZJksRn42pEunD1iauQZxbiOWW",
-  tag: "Featured",
-  readTime: "5 min read",
-  title: "Mastering the System Design Interview with AI Assistants",
-  excerpt:
-    "Learn how our AI tools simulate real-world system design scenarios to help you crack the toughest tech interviews at top tier companies.",
-  author: { name: "Priya Sharma", role: "Principal Engineer @ Flipkart" },
-};
-
 type TagColor = "blue" | "purple" | "emerald" | "rose" | "orange" | "indigo";
 
-interface Article {
-  id: number;
-  image: string;
-  alt: string;
-  tags: { label: string; color: TagColor }[];
-  title: string;
-  excerpt: string;
-  date: string;
-  readTime: string;
-}
+type Article = BlogPost;
 
 const TAG_COLORS: Record<TagColor, string> = {
   blue: "text-primary bg-white dark:bg-surface-dark",
@@ -39,141 +25,57 @@ const TAG_COLORS: Record<TagColor, string> = {
   indigo: "text-indigo-600 bg-white dark:bg-surface-dark",
 };
 
-const ALL_ARTICLES: Article[] = [
-  {
-    id: 1,
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBsnu55m1TZpW75DrEOmW3hstD0bixR6XnazQpBIWb8oWfz_lbsx4JUB9DY87Ww-1NuKsKENtGsNHwgsvbs2a3T28kLLqbqbM1cbsMKKVh6ETO5PN4LlHfid8HFAfHJRjC6JGseVc52WP_ihdx1rghfvbRWkr_hzm6edIKuxqaxHqtpGT4Rv2sWTt9XGW0uBkocnnAAMkvNrrRHQb4u6rnd9BkHuDaUdfFrqAWRoTlbcp7Q4AGv8Xeek7dRIVxhM9bmEjVFXL-4uaP4",
-    alt: "Abstract AI neural network visualization",
-    tags: [{ label: "AI Tech", color: "blue" }],
-    title: "Understanding LLMs for Technical Interviews",
-    excerpt:
-      "Large Language Models are changing how we code. Here's what you need to know about transformers and attention mechanisms for your next ML interview.",
-    date: "Feb 24, 2026",
-    readTime: "8 min read",
-  },
-  {
-    id: 2,
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDm0VDKxoNfQyrW8k0cU-APvCnxE5RAcOjDqp0J9G3VR6FbW2gR8yIJM6Verh9MPWWRAfAtncnacqm8ip6hHQEPXsoXYr5Mz_e5f7CqU6yEc9cwbykdEj7MbwXiuCrx5V-K4HSZByz4_v3vfLFPnbV5NuVn4S36WBhFt45DDGEn-ELjed6Qj1RQhkBzdpopOgjp3e8XqYLAsvzP9wKlkCAZy6Rl-rCfia1xwefK4R3b56za4R13uKl3XND9P1B4KgVaonWXk1wef0pJ",
-    alt: "Professional in a confident interview setting",
-    tags: [
-      { label: "Interview Tips", color: "blue" },
-      { label: "Soft Skills", color: "purple" },
-    ],
-    title: 'How to Answer "Tell Me About Yourself"',
-    excerpt:
-      "The opening question sets the tone. Learn the frameworks to craft a compelling narrative that highlights your strengths without rambling.",
-    date: "Feb 22, 2026",
-    readTime: "4 min read",
-  },
-  {
-    id: 3,
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCl35H7oO6sJprcscv7JtX3n_8I_JxZ-Ls6g2BEj7CAVHUu0AfGVMa1nnZtKp7GJ5ZzrjxMvpwtEaVyJYWFUdG14TsWtmZibS1PuIti_Ar_yRjrpsTLR0YgLUZAVdmmBgCuUenKSW_fMy0J_TWaXvmS9nGBjyuprRzM1oDj8NkBRECiB44zuF1L4zo3WWxZVFtXzvl_R15dSAxyU-IbuOVfEQcxoS1nyIyxshN1h-Ljc1N4Ala1lFZkEF3nwa9mFMx8bkk9TuwI-HZw",
-    alt: "Team celebrating a successful job offer",
-    tags: [{ label: "Career Growth", color: "emerald" }],
-    title: "Negotiating Your Senior Engineer Offer",
-    excerpt:
-      "Don't leave money on the table. Strategies for leveraging competing offers and understanding equity packages in 2026.",
-    date: "Feb 19, 2026",
-    readTime: "12 min read",
-  },
-  {
-    id: 4,
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBvEhJWNx5yca6aAZX7FtoVNEcaZgiV6SBSQle-Xe_gbwFnzPth52wawIXLiMbKDxUh9-2w1frcxSbsHUax-zihRmVcgATdju-sG_-C7SQt6swW29AY02YUmNZPVnUVxMz168sq-hUWkVj_4tMnKSvJMMsIxQ-I3uFtbenwjZttGWW3v8YeABH6_N-Njeck4PHk0GyPHETt4ZA-uoXzlvvtB0NZ0212sbrpWTJQwaPPV07PCQVSHITN6h_6PUwCkbZDlE2T4qQ7GU8q",
-    alt: "Code on a dark monitor screen",
-    tags: [{ label: "Coding Challenges", color: "indigo" }],
-    title: "Top 10 Dynamic Programming Problems",
-    excerpt:
-      "A curated list of must-solve DP problems to master the pattern before your onsite interview at FAANG companies.",
-    date: "Feb 15, 2026",
-    readTime: "15 min read",
-  },
-  {
-    id: 5,
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBsnu55m1TZpW75DrEOmW3hstD0bixR6XnazQpBIWb8oWfz_lbsx4JUB9DY87Ww-1NuKsKENtGsNHwgsvbs2a3T28kLLqbqbM1cbsMKKVh6ETO5PN4LlHfid8HFAfHJRjC6JGseVc52WP_ihdx1rghfvbRWkr_hzm6edIKuxqaxHqtpGT4Rv2sWTt9XGW0uBkocnnAAMkvNrrRHQb4u6rnd9BkHuDaUdfFrqAWRoTlbcp7Q4AGv8Xeek7dRIVxhM9bmEjVFXL-4uaP4",
-    alt: "System architecture diagram on whiteboard",
-    tags: [{ label: "System Design", color: "purple" }],
-    title: "Designing a Scalable Job Board Like LinkedIn",
-    excerpt:
-      "Walk through the architecture decisions behind a large-scale job platform: database sharding, search indexing, and notification pipelines.",
-    date: "Feb 10, 2026",
-    readTime: "10 min read",
-  },
-  {
-    id: 6,
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDm0VDKxoNfQyrW8k0cU-APvCnxE5RAcOjDqp0J9G3VR6FbW2gR8yIJM6Verh9MPWWRAfAtncnacqm8ip6hHQEPXsoXYr5Mz_e5f7CqU6yEc9cwbykdEj7MbwXiuCrx5V-K4HSZByz4_v3vfLFPnbV5NuVn4S36WBhFt45DDGEn-ELjed6Qj1RQhkBzdpopOgjp3e8XqYLAsvzP9wKlkCAZy6Rl-rCfia1xwefK4R3b56za4R13uKl3XND9P1B4KgVaonWXk1wef0pJ",
-    alt: "Resume being reviewed",
-    tags: [
-      { label: "Resume Tips", color: "orange" },
-      { label: "Career Growth", color: "emerald" },
-    ],
-    title: "Resume Checklist: What FAANG Recruiters Actually Look For",
-    excerpt:
-      "A 10-point checklist built from recruiter feedback at top tech companies. Cut fluff, quantify impact, and get past the ATS filter.",
-    date: "Feb 5, 2026",
-    readTime: "6 min read",
-  },
-];
+const ALL_ARTICLES: Article[] = getAllBlogs();
+const FEATURED = getFeaturedBlog();
+const TOPICS = getBlogTopics();
+const TRENDING = ALL_ARTICLES.slice(1, 5).map((article, index) => ({
+  title: article.title,
+  when: index === 0 ? "Recently added" : `${index + 1} posts ago`,
+  slug: article.slug,
+}));
 
-const TOPICS = [
-  "System Design",
-  "Python",
-  "Behavioral",
-  "Meta",
-  "Mock Interviews",
-  "Resume Reviews",
-  "DSA",
-  "SQL",
-  "Salary Negotiation",
-];
-
-const TRENDING = [
-  {
-    title: "Amazon Leadership Principles: The Complete Guide",
-    when: "Yesterday",
-  },
-  { title: "Designing a URL Shortener like Bit.ly", when: "2 days ago" },
-  { title: "Salary Negotiation Scripts That Work", when: "5 days ago" },
-  { title: "Top 15 React Interview Questions in 2026", when: "1 week ago" },
-];
+function getTagColor(label: string): TagColor {
+  if (label.includes("System") || label.includes("Behavioral")) return "purple";
+  if (label.includes("Salary") || label.includes("Offer")) return "emerald";
+  if (label.includes("SQL") || label.includes("Data")) return "indigo";
+  if (label.includes("Resume")) return "orange";
+  if (label.includes("Remote") || label.includes("Communication"))
+    return "rose";
+  return "blue";
+}
 
 const FAQS: { q: string; a: string }[] = [
   {
     q: "What is SkillScout and who is it for?",
-    a: "SkillScout is an AI-powered mock interview platform designed for software engineers, product managers, and data professionals preparing for technical and behavioural interviews at top tech companies. Whether you're a recent graduate or a senior engineer switching teams, SkillScout adapts to your level.",
+    a: "SkillScout is an AI-powered mock interview platform built for software engineers, product managers, data professionals, and college students preparing for placements. We support lateral moves, internal transfers, and campus hiring so you can rehearse coding, design, and behavioural rounds that match your target role and experience level.",
   },
   {
     q: "How does the AI mock interview work?",
-    a: "You choose a role, seniority level, and topic (system design, coding, behavioural, etc.). The AI interviewer asks contextual follow-up questions based on your answers — just like a real interview. After each session, you receive a detailed feedback report with scores, strengths, and areas to improve.",
+    a: "Choose your role, seniority, and topic (system design, coding, behavioural, PM case, or analytics). The AI interviewer conducts a live desktop session with collaborative coding, whiteboarding, and optional voice mode, asking contextual follow-ups like a senior hiring manager. When you finish, you get an instant scorecard with strengths, red flags, and action items tied to real company rubrics.",
   },
   {
     q: "Will my interview recordings be used to train AI models?",
-    a: "No. Your personal interview recordings are never used to train our public foundational models without your explicit opt-in consent. All real-time AI processing is strictly for generating your personal feedback report. You can review our Privacy Policy for full details.",
+    a: "No. Your personal interview recordings are never used to train our public models unless you explicitly opt in. Sessions are encrypted at rest, processed only to generate your feedback report, and can be deleted from your dashboard at any time in line with our Privacy Policy.",
   },
   {
     q: "Can I practise for a specific company like Google or Amazon?",
-    a: "Yes. SkillScout offers company-specific interview tracks covering the unique formats, question banks, and evaluation criteria of leading tech companies including Google, Amazon, Microsoft, Meta, Flipkart, and more.",
+    a: "Yes. SkillScout includes company-specific tracks for Google, Amazon, Microsoft, Meta, Flipkart, and fast-growing startups, plus curated flows for Indian campus placements. Each track mirrors the format, difficulty, and evaluation criteria of that employer so your prep maps directly to the loop you care about.",
   },
   {
     q: "What is included in the free tier?",
-    a: "The free tier gives you access to sample mock interview sessions across 3 topic categories, basic performance analytics, and one downloadable feedback report per month. No credit card required to sign up.",
+    a: "The free tier lets you run sample mock interviews across three topic categories, review basic analytics, and download one feedback report per month—no credit card required. To unlock unlimited desktop interviews, voice mode, and advanced analytics, upgrade whenever you’re ready.",
   },
   {
     q: "How accurate is the AI feedback?",
-    a: "Our feedback engine is trained on thousands of real interview patterns and evaluated by senior engineers from top tech companies. It scores your answers on technical accuracy, communication clarity, structure, and depth — providing actionable, specific suggestions rather than generic advice.",
+    a: "Our feedback engine is calibrated against thousands of anonymized interview loops that were reviewed by senior hiring managers. It scores technical depth, communication, and execution, then benchmarks you against candidates who recently landed similar offers so you get actionable guidance instead of generic tips.",
   },
   {
     q: "Can I use SkillScout on mobile?",
-    a: "Yes. SkillScout is fully responsive and works on any modern browser on desktop, tablet, or mobile. Voice-based mock interview sessions require microphone access and work best on desktop for the most accurate transcription.",
+    a: "You can browse resources and manage your account from any modern mobile browser, but all AI-powered mock interview sessions must be taken on a desktop or laptop. We rely on multi-stream audio, live coding panes, and low-latency transcription that currently require a full browser with microphone access for accurate scoring.",
   },
   {
     q: "How do I cancel my subscription?",
-    a: "You can cancel anytime from your account settings under Billing & Payments. Cancellation stops future charges at the end of the current billing period — you keep access until then. Please refer to our Refund Policy for details on refund eligibility.",
+    a: "You can cancel anytime under Billing & Payments. Your plan remains active until the end of the billing period, no penalties or lock-ins, and you can export your interview history before the subscription expires. Check our Refund Policy for eligibility details.",
   },
 ];
 
@@ -195,8 +97,7 @@ export default function ResourcesPage() {
       !search ||
       a.title.toLowerCase().includes(search.toLowerCase()) ||
       a.excerpt.toLowerCase().includes(search.toLowerCase());
-    const matchTopic =
-      !activeTopic || a.tags.some((t) => t.label === activeTopic);
+    const matchTopic = !activeTopic || a.tags.includes(activeTopic);
     return matchSearch && matchTopic;
   });
 
@@ -236,13 +137,13 @@ export default function ResourcesPage() {
               <div className="lg:col-span-7 relative h-64 lg:h-96 w-full overflow-hidden rounded-lg">
                 <div
                   className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                  style={{ backgroundImage: `url('${FEATURED.image}')` }}
+                  style={{ backgroundImage: `url('${FEATURED.image.url}')` }}
                 />
               </div>
               <div className="lg:col-span-5 flex flex-col justify-center space-y-4">
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">
-                    {FEATURED.tag}
+                    Featured
                   </span>
                   <span className="text-sm text-subtext-light dark:text-subtext-dark">
                     {FEATURED.readTime}
@@ -269,7 +170,7 @@ export default function ResourcesPage() {
                     </div>
                   </div>
                   <Link
-                    href="/resources/blog"
+                    href={`/resources/blog/${FEATURED.slug}`}
                     className="ml-auto flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors"
                   >
                     Read Article
@@ -417,8 +318,9 @@ export default function ResourcesPage() {
                     Crack the Interview
                   </h3>
                   <p className="text-violet-100 text-sm mb-4 leading-relaxed">
-                    Join 50,000+ engineers receiving weekly system design tips
-                    and coding patterns directly to their inbox.
+                    Join 50,000+ engineers and placement-focused college
+                    students receiving weekly system design tips and coding
+                    patterns directly to their inbox.
                   </p>
                   {subscribed ? (
                     <div className="flex items-center gap-2 py-3 text-sm font-semibold text-white bg-white/20 rounded-lg px-4">
@@ -491,9 +393,9 @@ export default function ResourcesPage() {
                 </h3>
                 <div className="space-y-4">
                   {TRENDING.map((item, i) => (
-                    <a
+                    <Link
                       key={i}
-                      href="#"
+                      href={`/resources/blog/${item.slug}`}
                       className="group flex items-start gap-3"
                     >
                       <span className="text-2xl font-bold text-gray-200 dark:text-gray-700 group-hover:text-primary transition-colors leading-none mt-0.5 tabular-nums">
@@ -507,7 +409,7 @@ export default function ResourcesPage() {
                           {item.when}
                         </span>
                       </div>
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -595,21 +497,21 @@ export default function ResourcesPage() {
 /* ─── Article Card (grid) ────────────────────────────────────────────── */
 function ArticleCard({ article }: { article: Article }) {
   return (
-    <Link href="/resources/blog" className="block">
+    <Link href={`/resources/blog/${article.slug}`} className="block">
       <article className="flex flex-col rounded-xl bg-gray-50 dark:bg-gray-800/60 overflow-hidden group hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
         <div
           className="h-48 w-full bg-gray-200 dark:bg-gray-700 bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
-          style={{ backgroundImage: `url('${article.image}')` }}
-          aria-label={article.alt}
+          style={{ backgroundImage: `url('${article.image.url}')` }}
+          aria-label={article.image.alt}
         />
         <div className="p-5 flex flex-col flex-grow">
           <div className="flex flex-wrap gap-2 mb-3">
             {article.tags.map((tag) => (
               <span
-                key={tag.label}
-                className={`text-xs font-semibold px-2 py-1 rounded ${TAG_COLORS[tag.color]}`}
+                key={tag}
+                className={`text-xs font-semibold px-2 py-1 rounded ${TAG_COLORS[getTagColor(tag)]}`}
               >
-                {tag.label}
+                {tag}
               </span>
             ))}
           </div>
@@ -632,22 +534,22 @@ function ArticleCard({ article }: { article: Article }) {
 /* ─── Article List Item ──────────────────────────────────────────────── */
 function ArticleListItem({ article }: { article: Article }) {
   return (
-    <Link href="/resources/blog" className="block">
+    <Link href={`/resources/blog/${article.slug}`} className="block">
       <article className="flex gap-4 rounded-xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 p-4 group hover:shadow-md transition-all duration-200">
         <div
           className="w-28 h-20 shrink-0 rounded-lg bg-gray-200 dark:bg-gray-700 bg-cover bg-center"
-          style={{ backgroundImage: `url('${article.image}')` }}
-          aria-label={article.alt}
+          style={{ backgroundImage: `url('${article.image.url}')` }}
+          aria-label={article.image.alt}
         />
         <div className="flex flex-col justify-between flex-grow min-w-0">
           <div>
             <div className="flex flex-wrap gap-1.5 mb-1.5">
               {article.tags.map((tag) => (
                 <span
-                  key={tag.label}
-                  className={`text-xs font-semibold px-1.5 py-0.5 rounded ${TAG_COLORS[tag.color]}`}
+                  key={tag}
+                  className={`text-xs font-semibold px-1.5 py-0.5 rounded ${TAG_COLORS[getTagColor(tag)]}`}
                 >
-                  {tag.label}
+                  {tag}
                 </span>
               ))}
             </div>

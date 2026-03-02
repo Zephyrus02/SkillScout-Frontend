@@ -12,8 +12,9 @@ export default function CTA() {
           you can get hired?
         </h2>
         <p className="text-lg text-subtext-light dark:text-subtext-dark mb-10 max-w-xl mx-auto">
-          Join 10,000+ engineers who have doubled their offer rates using
-          Skillscout. Start your first mock interview today.
+          Join 10,000+ engineers and placement-focused college students who have
+          doubled their offer rates using Skillscout. Start your first mock
+          interview today.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <Link

@@ -259,11 +259,11 @@ export default function AboutPage() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap justify-center gap-x-8 gap-y-14">
+              <div className="mx-auto grid w-full max-w-[1216px] grid-cols-[repeat(auto-fit,minmax(220px,280px))] justify-center gap-x-8 gap-y-14">
                 {TEAM.map((member) => (
                   <div
                     key={member.name}
-                    className="group flex flex-col items-center text-center w-full sm:w-1/2 lg:w-1/4 max-w-[280px]"
+                    className="group flex flex-col items-center text-center w-full max-w-[280px]"
                   >
                     <div className="relative mb-5 h-44 w-44 overflow-hidden rounded-full ring-4 ring-white dark:ring-surface-dark shadow-lg transition-transform duration-300 group-hover:scale-105">
                       <Image

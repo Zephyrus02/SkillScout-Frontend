@@ -1,0 +1,448 @@
+[
+  {
+    "id": 1,
+    "slug": "mastering-system-design-interview-ai-assistants",
+    "title": "Mastering the System Design Interview with AI Assistants",
+    "excerpt": "A practical framework to structure system design answers, communicate trade-offs clearly, and use AI prompts for focused practice.",
+    "category": "System Design",
+    "date": "Mar 1, 2026",
+    "readTime": "8 min read",
+    "tags": ["System Design", "AI", "Interview Guide"],
+    "featured": true,
+    "image": {
+      "url": "https://lh3.googleusercontent.com/aida-public/AB6AXuDbGcEh9NH-Id57hsMnaXtukxl_13MOrttC9JP6jixFaI18LiuuZmz8eFqcdsGJ8SOlK1b1abrfz-DZWUHuzW-WD7KE6BtrA9XZSvC-IoUWIwqt7EvxZiV3yb3foOEjS-zHgCxngwXRyh7HNOG31ml0l5-BScQK-Wdv9J45tuBvwk-aSWQiXF1vaiov5UGTibMzPTgV7Aqm8QxksrtCJ8GmwHkcJrO2zMw45NlGnacvDSc-7VoRg2_ZJksRn42pEunD1iauQZxbiOWW",
+      "alt": "Engineer presenting a system design on a glass wall",
+      "sourceUrl": "https://unsplash.com/photos/engineer-presenting"
+    },
+    "author": {
+      "name": "SkillScout Editorial Team",
+      "role": "Interview Coaches"
+    },
+    "content": {
+      "intro": "System design rounds test how you think under ambiguity. Strong candidates do not jump straight into databases and queues. They first define scope, clarify constraints, and explain trade-offs in plain language.",
+      "sections": [
+        {
+          "heading": "Use a repeatable 45-minute structure",
+          "paragraphs": [
+            "Start with requirements: users, scale, latency expectations, and business constraints. This immediately shows maturity and keeps your design grounded.",
+            "Then move to a high-level architecture before diving into bottlenecks. Interviewers reward clarity more than complexity."
+          ],
+          "bullets": [
+            "5 min: clarify functional and non-functional requirements",
+            "10 min: present high-level components and data flow",
+            "20 min: deep dive into scaling, reliability, and consistency",
+            "5 min: summarize trade-offs and future improvements"
+          ]
+        },
+        {
+          "heading": "Practice with AI as a simulation partner",
+          "paragraphs": [
+            "You can ask an AI assistant to act like a hiring panel and challenge your assumptions. This helps you build confidence handling follow-up questions.",
+            "Use it for critique loops: present your design, get objections, refine, and repeat."
+          ],
+          "bullets": [
+            "Prompt the AI to act as a Staff Engineer interviewer",
+            "Ask for questions only, not full solutions",
+            "Request scoring on clarity, completeness, and trade-offs"
+          ]
+        },
+        {
+          "heading": "Common mistakes to avoid",
+          "paragraphs": [
+            "Many candidates over-index on tools and under-index on reasoning. Name-dropping Kafka, Redis, and Kubernetes without context weakens your answer.",
+            "Instead, tie each choice to a requirement and discuss what you are sacrificing."
+          ]
+        }
+      ],
+      "conclusion": "Think in systems, speak in trade-offs, and rehearse in realistic conditions. That combination consistently separates average answers from strong senior-level performances."
+    }
+  },
+  {
+    "id": 2,
+    "slug": "behavioral-interview-story-frameworks",
+    "title": "Behavioral Interview Story Frameworks That Actually Work",
+    "excerpt": "Turn your experience into concise, high-impact stories using STAR and reflection loops that interviewers remember.",
+    "category": "Behavioral",
+    "date": "Feb 27, 2026",
+    "readTime": "7 min read",
+    "tags": ["Behavioral", "Communication", "Interview Guide"],
+    "featured": false,
+    "image": {
+      "url": "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=80",
+      "alt": "Team in a professional discussion",
+      "sourceUrl": "https://unsplash.com/photos/team-discussion"
+    },
+    "author": {
+      "name": "SkillScout Editorial Team",
+      "role": "Career Mentors"
+    },
+    "content": {
+      "intro": "Behavioral rounds are not about polished speeches. They are about evidence, ownership, and growth. Interviewers want proof of how you operate with people and pressure.",
+      "sections": [
+        {
+          "heading": "Build a story bank before interviews",
+          "paragraphs": [
+            "Prepare 8 to 10 stories from projects, incidents, and cross-team moments. Reuse them across different questions by changing the emphasis.",
+            "A strong story includes context, your decision process, measurable impact, and what you learned."
+          ]
+        },
+        {
+          "heading": "Use STAR, but do not sound robotic",
+          "paragraphs": [
+            "STAR gives structure, but your delivery should still feel natural. Keep Situation and Task short; spend most time on Actions and Results.",
+            "End with a reflection line to demonstrate growth mindset."
+          ],
+          "bullets": [
+            "Situation: one sentence of context",
+            "Task: your responsibility",
+            "Action: specific choices you made",
+            "Result: metric or concrete outcome",
+            "Reflection: what you would improve next time"
+          ]
+        }
+      ],
+      "conclusion": "Great behavioral answers are clear, specific, and measurable. If your story shows ownership and learning, you are already ahead of most candidates."
+    }
+  },
+  {
+    "id": 3,
+    "slug": "dsa-pattern-practice-plan",
+    "title": "A 6-Week DSA Pattern Practice Plan for Coding Rounds",
+    "excerpt": "Stop random problem grinding. Use pattern-based practice and review loops to improve speed and consistency.",
+    "category": "Coding",
+    "date": "Feb 24, 2026",
+    "readTime": "9 min read",
+    "tags": ["DSA", "Coding", "Interview Prep"],
+    "featured": false,
+    "image": {
+      "url": "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1600&q=80",
+      "alt": "Developer writing code on laptop",
+      "sourceUrl": "https://unsplash.com/photos/coding-laptop"
+    },
+    "author": {
+      "name": "SkillScout Editorial Team",
+      "role": "Technical Coaches"
+    },
+    "content": {
+      "intro": "Most candidates fail coding rounds because they train for difficulty, not for recognition. Interviews reward pattern recognition under time pressure.",
+      "sections": [
+        {
+          "heading": "Organize by patterns, not platforms",
+          "paragraphs": [
+            "Group problems into arrays, two pointers, sliding window, trees, graphs, DP, and heaps. This builds reusable mental templates.",
+            "After each problem, write a short debrief: why this pattern applied and which constraints mattered."
+          ]
+        },
+        {
+          "heading": "Use timed sets and review checkpoints",
+          "paragraphs": [
+            "Practice in 40-minute blocks with full verbal explanation. Simulate writing clean code while speaking your decisions.",
+            "Track errors by category: misunderstanding constraints, edge cases, implementation bugs, or complexity mistakes."
+          ],
+          "bullets": [
+            "Weeks 1-2: arrays, maps, strings",
+            "Weeks 3-4: trees, graphs, recursion",
+            "Week 5: dynamic programming and greedy",
+            "Week 6: mixed mocks with review"
+          ]
+        }
+      ],
+      "conclusion": "Pattern fluency and deliberate review beat random volume. Study less content, but study it with structure."
+    }
+  },
+  {
+    "id": 4,
+    "slug": "sql-interview-analytics-essentials",
+    "title": "SQL Interview Essentials for Product and Data Roles",
+    "excerpt": "Master practical SQL interview topics: joins, window functions, cohort analysis, and debugging messy business questions.",
+    "category": "Data",
+    "date": "Feb 21, 2026",
+    "readTime": "8 min read",
+    "tags": ["SQL", "Analytics", "Interview Prep"],
+    "featured": false,
+    "image": {
+      "url": "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?auto=format&fit=crop&w=1600&q=80",
+      "alt": "Analytics dashboard on a monitor",
+      "sourceUrl": "https://unsplash.com/photos/analytics-dashboard"
+    },
+    "author": {
+      "name": "SkillScout Editorial Team",
+      "role": "Data Interview Mentors"
+    },
+    "content": {
+      "intro": "SQL interviews are less about syntax trivia and more about structured thinking. Interviewers look for your ability to translate ambiguous business questions into clean query logic.",
+      "sections": [
+        {
+          "heading": "Focus on the high-frequency core",
+          "paragraphs": [
+            "Expect joins, aggregations, CTEs, and window functions in almost every round. Practice from messy schemas rather than toy examples.",
+            "Learn to explain assumptions before writing code. This prevents rework and signals maturity."
+          ]
+        },
+        {
+          "heading": "Show your reasoning while coding",
+          "paragraphs": [
+            "State granularity early: user-level, session-level, or event-level. Most SQL mistakes come from mixing granularities.",
+            "Then validate with quick checks: row counts, duplicates, and null behavior."
+          ]
+        }
+      ],
+      "conclusion": "Strong SQL candidates are precise communicators. Clear assumptions and validation steps are often as important as the final query."
+    }
+  },
+  {
+    "id": 5,
+    "slug": "resume-that-clears-tech-screens",
+    "title": "How to Write a Resume That Clears Technical Screens",
+    "excerpt": "Use impact-focused bullets, proof metrics, and role-specific tailoring to increase interview callbacks.",
+    "category": "Resume",
+    "date": "Feb 18, 2026",
+    "readTime": "6 min read",
+    "tags": ["Resume", "Career Growth", "Interview Guide"],
+    "featured": false,
+    "image": {
+      "url": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=1600&q=80",
+      "alt": "Resume on a desk with laptop",
+      "sourceUrl": "https://unsplash.com/photos/resume-desk"
+    },
+    "author": {
+      "name": "SkillScout Editorial Team",
+      "role": "Career Mentors"
+    },
+    "content": {
+      "intro": "A good resume makes recruiter decisions easy. It should show what you built, why it mattered, and what changed because of your work.",
+      "sections": [
+        {
+          "heading": "Write bullets using outcome language",
+          "paragraphs": [
+            "Start with action, include system context, and finish with measurable impact. Generic bullets are easy to ignore.",
+            "Use metrics responsibly: performance, latency, reliability, cost, conversion, or team productivity."
+          ],
+          "bullets": [
+            "Weak: Worked on backend APIs",
+            "Strong: Built 12 Go APIs for checkout flows, reducing p95 latency by 38%"
+          ]
+        },
+        {
+          "heading": "Tailor for each role in under 15 minutes",
+          "paragraphs": [
+            "Mirror important keywords from the job description, but keep your wording natural. Match domain terms such as distributed systems, experimentation, or observability.",
+            "Reorder projects so the most relevant work appears first."
+          ]
+        }
+      ],
+      "conclusion": "Recruiters scan quickly. Make your impact obvious in the first screen, and your interview odds improve immediately."
+    }
+  },
+  {
+    "id": 6,
+    "slug": "salary-negotiation-playbook-engineers",
+    "title": "Salary Negotiation Playbook for Software Engineers",
+    "excerpt": "A practical, respectful framework to negotiate compensation using market bands, value framing, and clear asks.",
+    "category": "Compensation",
+    "date": "Feb 15, 2026",
+    "readTime": "8 min read",
+    "tags": ["Salary Negotiation", "Career Growth", "Offer Strategy"],
+    "featured": false,
+    "image": {
+      "url": "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1600&q=80",
+      "alt": "Person reviewing financial notes",
+      "sourceUrl": "https://unsplash.com/photos/finance-notes"
+    },
+    "author": {
+      "name": "SkillScout Editorial Team",
+      "role": "Compensation Advisors"
+    },
+    "content": {
+      "intro": "Negotiation is a normal part of hiring, not a conflict. The goal is to align your offer with market value and your expected impact.",
+      "sections": [
+        {
+          "heading": "Prepare your leverage before the call",
+          "paragraphs": [
+            "Know current compensation ranges for your level and location. Distinguish between base, bonus, equity, and benefits.",
+            "Write your target range and walk-away number before speaking with recruiters."
+          ]
+        },
+        {
+          "heading": "Use collaborative language",
+          "paragraphs": [
+            "Your tone should be confident and professional. Anchor with data, then ask whether there is flexibility.",
+            "If base cannot move, negotiate equity refreshers, sign-on bonus, remote allowance, or review cycle timing."
+          ],
+          "bullets": [
+            "Lead with appreciation for the offer",
+            "State your target range with rationale",
+            "Ask one clear next step and timeline"
+          ]
+        }
+      ],
+      "conclusion": "Well-prepared candidates negotiate calmly and clearly. Even one thoughtful conversation can improve your long-term earnings significantly."
+    }
+  },
+  {
+    "id": 7,
+    "slug": "recruiter-screen-15-minute-plan",
+    "title": "The 15-Minute Recruiter Screen Plan",
+    "excerpt": "How to handle the first call: career summary, motivation, compensation expectations, and strong closing questions.",
+    "category": "Recruiter Screen",
+    "date": "Feb 12, 2026",
+    "readTime": "5 min read",
+    "tags": ["Recruiter Screen", "Communication", "Interview Prep"],
+    "featured": false,
+    "image": {
+      "url": "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1600&q=80",
+      "alt": "Video call interview setup",
+      "sourceUrl": "https://unsplash.com/photos/video-interview"
+    },
+    "author": {
+      "name": "SkillScout Editorial Team",
+      "role": "Interview Coaches"
+    },
+    "content": {
+      "intro": "Recruiter screens decide whether you move forward. Treat them as strategic conversations, not administrative checklists.",
+      "sections": [
+        {
+          "heading": "Open with a 60-second professional summary",
+          "paragraphs": [
+            "Summarize your current role, technical strengths, and one recent impact metric. Keep it concise and role-relevant.",
+            "Avoid full career history unless asked."
+          ]
+        },
+        {
+          "heading": "Ask smart role-fit questions",
+          "paragraphs": [
+            "Show that you evaluate opportunities thoughtfully. Good questions improve signal on both sides.",
+            "Prioritize team scope, success metrics, and interview process expectations."
+          ]
+        }
+      ],
+      "conclusion": "A focused recruiter call increases your conversion rate to hiring manager rounds. Clarity and preparation are your edge."
+    }
+  },
+  {
+    "id": 8,
+    "slug": "remote-interview-setup-checklist",
+    "title": "Remote Interview Setup Checklist (Tech + Environment)",
+    "excerpt": "A complete pre-interview checklist for internet stability, audio quality, backup plans, and on-camera presence.",
+    "category": "Remote Interviews",
+    "date": "Feb 10, 2026",
+    "readTime": "6 min read",
+    "tags": ["Remote Interviews", "Interview Guide", "Preparation"],
+    "featured": false,
+    "image": {
+      "url": "https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&w=1600&q=80",
+      "alt": "Neat home office with laptop and headset",
+      "sourceUrl": "https://unsplash.com/photos/home-office-interview"
+    },
+    "author": {
+      "name": "SkillScout Editorial Team",
+      "role": "Interview Operations"
+    },
+    "content": {
+      "intro": "Remote rounds add a hidden layer of risk: tech glitches and environment distractions. A simple checklist can prevent avoidable mistakes.",
+      "sections": [
+        {
+          "heading": "Run a pre-flight test 30 minutes early",
+          "paragraphs": [
+            "Check internet, camera framing, microphone quality, and screen-sharing permissions.",
+            "Keep your IDE, documents, and browser tabs ready to avoid context switching during the interview."
+          ]
+        },
+        {
+          "heading": "Have backups ready",
+          "paragraphs": [
+            "Keep a hotspot, charger, and interviewer contact details nearby. If something fails, communicate quickly and calmly.",
+            "Professional recovery from a glitch often leaves a positive impression."
+          ],
+          "bullets": [
+            "Primary + backup internet",
+            "Noise-controlled room",
+            "Water, notebook, and quick notes",
+            "Silent phone and closed notifications"
+          ]
+        }
+      ],
+      "conclusion": "Preparation reduces cognitive load. When your setup is stable, you can focus fully on answering well."
+    }
+  },
+  {
+    "id": 9,
+    "slug": "questions-to-ask-interviewer",
+    "title": "Smart Questions to Ask Your Interviewer",
+    "excerpt": "Use high-signal questions to evaluate team quality, engineering culture, and growth opportunities.",
+    "category": "Interview Strategy",
+    "date": "Feb 7, 2026",
+    "readTime": "5 min read",
+    "tags": ["Interview Strategy", "Communication", "Career Growth"],
+    "featured": false,
+    "image": {
+      "url": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1600&q=80",
+      "alt": "Interview discussion across a table",
+      "sourceUrl": "https://unsplash.com/photos/interview-discussion"
+    },
+    "author": {
+      "name": "SkillScout Editorial Team",
+      "role": "Career Mentors"
+    },
+    "content": {
+      "intro": "Your questions signal seniority, curiosity, and priorities. The final five minutes can meaningfully change interviewer perception.",
+      "sections": [
+        {
+          "heading": "Ask about outcomes, not perks",
+          "paragraphs": [
+            "Prioritize questions that reveal team expectations, decision processes, and technical challenges.",
+            "Examples: How does this team define success in the first 90 days? What are current reliability bottlenecks?"
+          ]
+        },
+        {
+          "heading": "Use layered follow-ups",
+          "paragraphs": [
+            "Start broad, then ask a specific follow-up tied to what they shared. This creates a real conversation instead of a checklist.",
+            "Avoid asking questions that are already answered on the company website."
+          ]
+        }
+      ],
+      "conclusion": "Strong questions show strategic thinking and help you make better career decisions, not just pass interviews."
+    }
+  },
+  {
+    "id": 10,
+    "slug": "machine-learning-interview-prep-roadmap",
+    "title": "Machine Learning Interview Prep Roadmap",
+    "excerpt": "A practical study roadmap for ML interviews covering fundamentals, model trade-offs, experimentation, and productionization.",
+    "category": "ML Interviews",
+    "date": "Feb 4, 2026",
+    "readTime": "10 min read",
+    "tags": ["Machine Learning", "System Design", "Interview Prep"],
+    "featured": false,
+    "image": {
+      "url": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=1600&q=80",
+      "alt": "AI and machine learning themed visualization",
+      "sourceUrl": "https://unsplash.com/photos/ai-visualization"
+    },
+    "author": {
+      "name": "SkillScout Editorial Team",
+      "role": "ML Interview Coaches"
+    },
+    "content": {
+      "intro": "ML interviews evaluate both theory and production judgment. You need to explain models, metrics, and deployment decisions in business context.",
+      "sections": [
+        {
+          "heading": "Build depth in core fundamentals",
+          "paragraphs": [
+            "Focus on bias-variance trade-off, regularization, evaluation metrics, and error analysis. Interviewers often probe why a model failed, not just what model you chose.",
+            "Use small case studies to explain your reasoning from data cleaning to model selection."
+          ]
+        },
+        {
+          "heading": "Prepare for ML system design",
+          "paragraphs": [
+            "Expect questions on feature pipelines, drift monitoring, retraining triggers, and serving latency.",
+            "Be ready to discuss offline versus online metrics and how to detect silent model degradation."
+          ]
+        }
+      ],
+      "conclusion": "Treat ML interviews as end-to-end product thinking. Strong candidates connect statistical choices to user and business outcomes."
+    }
+  }
+]

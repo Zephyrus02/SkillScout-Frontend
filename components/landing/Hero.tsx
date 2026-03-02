@@ -33,7 +33,9 @@ export default function Hero() {
           Run live, interactive mock interviews powered by AI that mimic real
           technical and behavioral questions. Receive instant feedback on your
           coding speed, answer structure, and communication so you can build
-          confidence before the big day.
+          confidence before the big day. Built for software engineers, product
+          managers, data professionals, and college students preparing for
+          placements.
         </p>
 
         {/* CTA Buttons */}

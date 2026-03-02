@@ -14,9 +14,18 @@ const FOOTER_LINKS: Record<string, Array<{ label: string; href: string }>> = {
     { label: "Contact", href: "/contact" },
   ],
   Resources: [
-    { label: "Interview Guide", href: "#" },
-    { label: "Salary Negotiation", href: "#" },
-    { label: "System Design", href: "#" },
+    {
+      label: "Interview Guide",
+      href: "/resources/blog/behavioral-interview-story-frameworks",
+    },
+    {
+      label: "Salary Negotiation",
+      href: "/resources/blog/salary-negotiation-playbook-engineers",
+    },
+    {
+      label: "System Design",
+      href: "/resources/blog/mastering-system-design-interview-ai-assistants",
+    },
     { label: "FAQ", href: "/resources#faq" },
   ],
   Legal: [
