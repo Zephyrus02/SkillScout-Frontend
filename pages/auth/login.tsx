@@ -3,19 +3,20 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 import AuthBranding from "@/components/auth/AuthBranding";
 import SignInForm from "@/components/auth/SignInForm";
-import { useAuth } from "@/contexts/AuthContext";
+import { isAdminUser, useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const router = useRouter();
 
   // Redirect already authenticated users to the dashboard
   useEffect(() => {
     if (!loading && isAuthenticated) {
       const redirect = router.query.redirect as string | undefined;
-      router.replace(redirect ?? "/dashboard");
+      const defaultPath = isAdminUser(user) ? "/admin/dashboard" : "/dashboard";
+      router.replace(redirect ?? defaultPath);
     }
-  }, [loading, isAuthenticated, router]);
+  }, [loading, isAuthenticated, user, router]);
 
   if (loading || isAuthenticated) return null;
   return (

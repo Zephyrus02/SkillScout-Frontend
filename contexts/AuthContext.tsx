@@ -41,6 +41,10 @@ import { clearCachedProfile } from "@/lib/profile-cache";
 
 export type { User };
 
+type UserWithRoles = User & {
+  roles?: string[] | string;
+};
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -73,7 +77,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  * After a successful login/google-auth, check candidate profile status and
  * navigate to the right page.
  *
- * Admins → /admin/dashboard (future)
+ * Admins → /admin/dashboard
  * Candidates without completed profile → /profile-setup
  * Candidates without access → /choose-plan
  * Candidates OK → /dashboard
@@ -82,8 +86,8 @@ async function navigateAfterAuth(
   userForNav: User,
   router: ReturnType<typeof useRouter>,
 ) {
-  if (userForNav.role === "admin") {
-    await router.replace("/dashboard"); // admin dashboard to be added later
+  if (isAdminUser(userForNav)) {
+    await router.replace("/admin/dashboard");
     return;
   }
 
@@ -103,6 +107,41 @@ async function navigateAfterAuth(
   }
 
   await router.replace("/dashboard");
+}
+
+export function isAdminUser(userForNav: UserWithRoles | null | undefined) {
+  if (!userForNav) return false;
+
+  if (
+    typeof userForNav.role === "string" &&
+    userForNav.role.toLowerCase() === "admin"
+  ) {
+    return true;
+  }
+
+  if (typeof userForNav.roles === "string") {
+    return userForNav.roles.toLowerCase() === "admin";
+  }
+
+  if (Array.isArray(userForNav.roles)) {
+    return userForNav.roles.some(
+      (role) => typeof role === "string" && role.toLowerCase() === "admin",
+    );
+  }
+
+  return false;
+}
+
+function normalizeUserRole(userForNav: UserWithRoles): User {
+  if (isAdminUser(userForNav)) {
+    return { ...userForNav, role: "admin" };
+  }
+
+  if (typeof userForNav.role === "string" && userForNav.role.trim()) {
+    return userForNav;
+  }
+
+  return { ...userForNav, role: "candidate" };
 }
 
 // ── Provider ─────────────────────────────────────────────────────────────────
@@ -150,8 +189,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             try {
               const profileRes = await authAPI.getProfile();
               if (profileRes.success && profileRes.data) {
-                setUserState(profileRes.data);
-                setUserData(profileRes.data);
+                const normalizedUser = normalizeUserRole(profileRes.data);
+                setUserState(normalizedUser);
+                setUserData(normalizedUser);
               } else {
                 clearSession();
               }
@@ -173,8 +213,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         try {
           const profileRes = await authAPI.getProfile();
           if (profileRes.success && profileRes.data) {
-            setUserState(profileRes.data);
-            setUserData(profileRes.data);
+            const normalizedUser = normalizeUserRole(profileRes.data);
+            setUserState(normalizedUser);
+            setUserData(normalizedUser);
           } else {
             clearSession();
           }
@@ -186,8 +227,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
               setAccessToken(refreshRes.data.accessToken);
               const retryRes = await authAPI.getProfile();
               if (retryRes.success && retryRes.data) {
-                setUserState(retryRes.data);
-                setUserData(retryRes.data);
+                const normalizedUser = normalizeUserRole(retryRes.data);
+                setUserState(normalizedUser);
+                setUserData(normalizedUser);
               } else {
                 clearSession();
               }
@@ -217,15 +259,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     const response = await authAPI.login({ email, password, keepMeLoggedIn });
 
     if (response.success) {
-      const { user: userData, accessToken } = response.data;
+      const { user: rawUserData, accessToken } = response.data;
       setAccessToken(accessToken);
 
       // Fetch full auth profile (includes role, isSuperAdmin, hasAccess, etc.)
-      let userForNav = userData;
+      let userForNav = normalizeUserRole(rawUserData);
       try {
         const profileRes = await authAPI.getProfile();
         if (profileRes.success && profileRes.data) {
-          userForNav = profileRes.data;
+          userForNav = normalizeUserRole(profileRes.data);
         }
       } catch {
         // use the login response user data as fallback
@@ -277,14 +319,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     });
 
     if (response.success) {
-      const { user: userData, accessToken, isNewUser } = response.data;
+      const { user: rawUserData, accessToken, isNewUser } = response.data;
       setAccessToken(accessToken);
 
-      let userForNav = userData;
+      let userForNav = normalizeUserRole(rawUserData);
       try {
         const profileRes = await authAPI.getProfile();
         if (profileRes.success && profileRes.data) {
-          userForNav = profileRes.data;
+          userForNav = normalizeUserRole(profileRes.data);
         }
       } catch {
         // use the google-auth response user data as fallback
@@ -312,7 +354,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     try {
       const profileRes = await authAPI.getProfile();
       if (profileRes.success && profileRes.data) {
-        userForNav = profileRes.data;
+        userForNav = normalizeUserRole(profileRes.data);
       }
     } catch {
       // profile fetch failed — clear bad token

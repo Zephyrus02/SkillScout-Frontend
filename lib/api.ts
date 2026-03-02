@@ -228,6 +228,7 @@ export interface User {
   name?: string;
   image?: string;
   role: string;
+  roles?: string[] | string;
   emailConfirmedAt: Date | null;
   lastSignInAt: Date | null;
   createdAt: Date;

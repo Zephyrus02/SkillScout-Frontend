@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Platform Analytics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#3B82F6", 
+                        secondary: "#8B5CF6", 
+                        "background-light": "#F8FAFC",
+                        "background-dark": "#0F172A",
+                        "surface-light": "#FFFFFF",
+                        "surface-dark": "#1E293B",
+                        "text-primary-light": "#1E293B",
+                        "text-primary-dark": "#F1F5F9",
+                        "text-secondary-light": "#64748B",
+                        "text-secondary-dark": "#94A3B8",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "16px",
+                        'sm': "12px",
+                        'lg': "24px",
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
+                        'card': '0 0 0 1px rgba(0,0,0,0.03), 0 2px 8px rgba(0,0,0,0.04)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-primary-light dark:text-text-primary-dark transition-colors duration-300 min-h-screen flex">
+<aside class="w-64 fixed h-screen bg-surface-light dark:bg-surface-dark border-r border-gray-100 dark:border-gray-800 flex flex-col justify-between z-50">
+<div class="p-6">
+<div class="flex items-center gap-3 mb-10">
+<div class="w-8 h-8 rounded-full bg-blue-100 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-xl">psychology</span>
+</div>
+<span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white">SkillScout</span>
+</div>
+<div class="flex items-center gap-3 mb-8">
+<div class="h-10 w-10 rounded-full bg-gray-200 overflow-hidden">
+<img alt="Alex Chen" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf6RtUCZsciBDISHlZ3olM54e37Vl2OrX4qXpOko2GBKGv5gwg3NtjS9Q2lBAoRydCko3OEAocwgpUh9oyBJgjTGWJXVx_kuaZ9813nIjLzgKYe1cwGJ1f9Az72Td8FxPSU_TzY_3okorH-XiPKF3J9YbMITg1tHrTJhSAM0jZSKq_NBiVbyaWcnzURupO9eqQZxFDvU_suFGc08NUNpUCOjPuwKQTc7BLVUg0I8cqOCyViqF-FEnBfGVbDz9S7Kdio5xHssJlNSFE"/>
+</div>
+<div>
+<h3 class="text-sm font-bold text-gray-900 dark:text-white">Alex Chen</h3>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">Admin View</p>
+</div>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="text-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">flag</span>
+<span class="text-sm">Goals &amp; Milestones</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">videocam</span>
+<span class="text-sm">My Interviews</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">fitness_center</span>
+<span class="text-sm">Practice</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-900/20 text-primary rounded-xl font-medium transition-colors" href="#">
+<span class="material-symbols-outlined filled text-[20px]">analytics</span>
+<span class="text-sm">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm">Settings</span>
+</a>
+</nav>
+</div>
+<div class="p-6">
+<button class="w-full bg-surface-light border border-gray-200 hover:bg-gray-50 text-text-primary-light py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span class="text-sm">Log Out</span>
+</button>
+</div>
+</aside>
+<main class="ml-64 flex-1 p-8 lg:p-10 max-w-[1600px]">
+<div class="flex justify-between items-start mb-8">
+<div>
+<h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Platform Analytics</h1>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm">Deep-dive into global user performance and AI accuracy metrics.</p>
+</div>
+<div class="flex gap-3">
+<div class="relative">
+<button class="px-4 py-2 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-lg">calendar_month</span>
+                        Last 30 Days
+                        <span class="material-symbols-outlined text-lg">expand_more</span>
+</button>
+</div>
+<button class="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition flex items-center gap-2 shadow-lg shadow-blue-500/20">
+<span class="material-symbols-outlined text-lg">download</span>
+                    Export Report
+                </button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="col-span-1 bg-surface-light dark:bg-surface-dark rounded-2xl shadow-card p-5 border border-gray-100 dark:border-gray-800">
+<div class="flex items-center justify-between mb-4">
+<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-primary">
+<span class="material-symbols-outlined">group</span>
+</div>
+<span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md flex items-center gap-1">
+                        +12.5% <span class="material-symbols-outlined text-[10px]">arrow_upward</span>
+</span>
+</div>
+<h3 class="text-2xl font-bold text-gray-900 dark:text-white">2,845</h3>
+<p class="text-xs text-text-secondary-light">Total Active Users</p>
+</div>
+<div class="col-span-1 bg-surface-light dark:bg-surface-dark rounded-2xl shadow-card p-5 border border-gray-100 dark:border-gray-800">
+<div class="flex items-center justify-between mb-4">
+<div class="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-secondary">
+<span class="material-symbols-outlined">smart_toy</span>
+</div>
+<span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md flex items-center gap-1">
+                        +5.2% <span class="material-symbols-outlined text-[10px]">arrow_upward</span>
+</span>
+</div>
+<h3 class="text-2xl font-bold text-gray-900 dark:text-white">14,302</h3>
+<p class="text-xs text-text-secondary-light">AI Interviews Conducted</p>
+</div>
+<div class="col-span-1 bg-surface-light dark:bg-surface-dark rounded-2xl shadow-card p-5 border border-gray-100 dark:border-gray-800">
+<div class="flex items-center justify-between mb-4">
+<div class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-orange-500">
+<span class="material-symbols-outlined">star</span>
+</div>
+<span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md flex items-center gap-1">
+                        +0.8% <span class="material-symbols-outlined text-[10px]">arrow_upward</span>
+</span>
+</div>
+<h3 class="text-2xl font-bold text-gray-900 dark:text-white">4.8/5.0</h3>
+<p class="text-xs text-text-secondary-light">Avg. User Satisfaction</p>
+</div>
+<div class="col-span-1 bg-surface-light dark:bg-surface-dark rounded-2xl shadow-card p-5 border border-gray-100 dark:border-gray-800">
+<div class="flex items-center justify-between mb-4">
+<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600">
+<span class="material-symbols-outlined">work</span>
+</div>
+<span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md flex items-center gap-1">
+                        +24 Offers
+                    </span>
+</div>
+<h3 class="text-2xl font-bold text-gray-900 dark:text-white">186</h3>
+<p class="text-xs text-text-secondary-light">Reported Job Offers</p>
+</div>
+<div class="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 bg-surface-light dark:bg-surface-dark rounded-2xl shadow-card p-6 border border-gray-100 dark:border-gray-800 flex flex-col">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h3 class="font-bold text-lg text-gray-900 dark:text-white">Global User Skills</h3>
+<p class="text-xs text-text-secondary-light">Average proficiency across all active users</p>
+</div>
+<button class="p-2 hover:bg-gray-50 rounded-lg text-gray-400">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex-1 relative w-full h-[300px] flex items-center justify-center">
+<canvas id="skillsRadarChart"></canvas>
+</div>
+<div class="mt-4 flex justify-center gap-6 text-sm">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+<span class="text-gray-600 dark:text-gray-300">Junior Level</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-secondary"></span>
+<span class="text-gray-600 dark:text-gray-300">Senior Level</span>
+</div>
+</div>
+</div>
+<div class="col-span-1 md:col-span-2 lg:col-span-2 bg-surface-light dark:bg-surface-dark rounded-2xl shadow-card p-6 border border-gray-100 dark:border-gray-800">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h3 class="font-bold text-lg text-gray-900 dark:text-white">Popular Target Companies</h3>
+<p class="text-xs text-text-secondary-light">Where users are practicing to apply</p>
+</div>
+</div>
+<div class="relative h-[200px] w-full">
+<canvas id="companiesBarChart"></canvas>
+</div>
+</div>
+<div class="col-span-1 md:col-span-2 lg:col-span-2 bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-2xl shadow-card p-6 border border-gray-700 relative overflow-hidden">
+<div class="absolute -right-10 -top-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl"></div>
+<div class="absolute -left-10 -bottom-10 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl"></div>
+<div class="relative z-10 flex flex-col h-full justify-between">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="font-bold text-lg text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-purple-400">psychology_alt</span>
+                                AI Accuracy Feedback
+                            </h3>
+<p class="text-xs text-gray-400 mt-1">User agreement with AI-generated interview scores</p>
+</div>
+<span class="bg-white/10 backdrop-blur-sm border border-white/10 px-3 py-1 rounded-full text-xs font-bold text-white">92% Positive</span>
+</div>
+<div class="grid grid-cols-3 gap-4 mb-4">
+<div class="bg-white/5 p-3 rounded-xl border border-white/5 backdrop-blur-sm text-center">
+<span class="block text-2xl font-bold text-green-400">85%</span>
+<span class="text-[10px] text-gray-400 uppercase tracking-wide">Agreed</span>
+</div>
+<div class="bg-white/5 p-3 rounded-xl border border-white/5 backdrop-blur-sm text-center">
+<span class="block text-2xl font-bold text-yellow-400">12%</span>
+<span class="text-[10px] text-gray-400 uppercase tracking-wide">Neutral</span>
+</div>
+<div class="bg-white/5 p-3 rounded-xl border border-white/5 backdrop-blur-sm text-center">
+<span class="block text-2xl font-bold text-red-400">3%</span>
+<span class="text-[10px] text-gray-400 uppercase tracking-wide">Disagreed</span>
+</div>
+</div>
+<div class="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden flex">
+<div class="h-full bg-green-500" style="width: 85%"></div>
+<div class="h-full bg-yellow-500" style="width: 12%"></div>
+<div class="h-full bg-red-500" style="width: 3%"></div>
+</div>
+<div class="mt-2 text-xs text-gray-400 text-center">Based on 5,200 feedback submissions this month</div>
+</div>
+</div>
+<div class="col-span-1 md:col-span-2 lg:col-span-4 bg-surface-light dark:bg-surface-dark rounded-2xl shadow-card p-6 border border-gray-100 dark:border-gray-800">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h3 class="font-bold text-lg text-gray-900 dark:text-white">User Retention Cohorts</h3>
+<p class="text-xs text-text-secondary-light">Weekly retention rates over the last 8 weeks</p>
+</div>
+<div class="flex gap-2">
+<div class="flex items-center gap-1 text-xs text-gray-500">
+<span class="w-3 h-3 bg-blue-100 rounded-sm"></span> &lt; 20%
+                         </div>
+<div class="flex items-center gap-1 text-xs text-gray-500">
+<span class="w-3 h-3 bg-blue-300 rounded-sm"></span> 20-50%
+                         </div>
+<div class="flex items-center gap-1 text-xs text-gray-500">
+<span class="w-3 h-3 bg-blue-600 rounded-sm"></span> &gt; 50%
+                         </div>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-sm text-left">
+<thead class="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50">
+<tr>
+<th class="px-4 py-3 rounded-l-lg">Cohort</th>
+<th class="px-4 py-3">Users</th>
+<th class="px-2 py-3 text-center">Week 1</th>
+<th class="px-2 py-3 text-center">Week 2</th>
+<th class="px-2 py-3 text-center">Week 3</th>
+<th class="px-2 py-3 text-center">Week 4</th>
+<th class="px-2 py-3 text-center">Week 5</th>
+<th class="px-2 py-3 text-center">Week 6</th>
+<th class="px-2 py-3 text-center">Week 7</th>
+<th class="px-2 py-3 rounded-r-lg text-center">Week 8</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+<tr>
+<td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Jan 01 - Jan 07</td>
+<td class="px-4 py-3 text-gray-500">420</td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-600 text-white text-xs rounded">98%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-500 text-white text-xs rounded">75%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-400 text-white text-xs rounded">62%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-400 text-white text-xs rounded">58%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-300 text-white text-xs rounded">50%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-300 text-white text-xs rounded">48%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-300 text-white text-xs rounded">45%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-200 text-blue-800 text-xs rounded">42%</div></td>
+</tr>
+<tr>
+<td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Jan 08 - Jan 14</td>
+<td class="px-4 py-3 text-gray-500">385</td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-600 text-white text-xs rounded">100%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-500 text-white text-xs rounded">78%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-400 text-white text-xs rounded">65%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-400 text-white text-xs rounded">60%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-300 text-white text-xs rounded">54%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-300 text-white text-xs rounded">51%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-200 text-blue-800 text-xs rounded">46%</div></td>
+<td class="px-2 py-3 text-center"></td>
+</tr>
+<tr>
+<td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Jan 15 - Jan 21</td>
+<td class="px-4 py-3 text-gray-500">450</td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-600 text-white text-xs rounded">99%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-500 text-white text-xs rounded">80%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-400 text-white text-xs rounded">68%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-400 text-white text-xs rounded">64%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-300 text-white text-xs rounded">58%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-300 text-white text-xs rounded">55%</div></td>
+<td class="px-2 py-3 text-center"></td>
+<td class="px-2 py-3 text-center"></td>
+</tr>
+<tr>
+<td class="px-4 py-3 font-medium text-gray-900 dark:text-white">Jan 22 - Jan 28</td>
+<td class="px-4 py-3 text-gray-500">512</td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-600 text-white text-xs rounded">100%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-500 text-white text-xs rounded">82%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-400 text-white text-xs rounded">70%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-400 text-white text-xs rounded">68%</div></td>
+<td class="px-2 py-3 text-center"><div class="mx-auto w-10 py-1 bg-blue-300 text-white text-xs rounded">59%</div></td>
+<td class="px-2 py-3 text-center"></td>
+<td class="px-2 py-3 text-center"></td>
+<td class="px-2 py-3 text-center"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+<script>
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#94A3B8';
+        Chart.defaults.scale.grid.color = 'rgba(0, 0, 0, 0.05)';
+        // 1. Skill Radar Chart
+        const ctxRadar = document.getElementById('skillsRadarChart').getContext('2d');
+        new Chart(ctxRadar, {
+            type: 'radar',
+            data: {
+                labels: ['Algorithms', 'System Design', 'Data Structures', 'Behavioral', 'Database', 'Networking'],
+                datasets: [{
+                    label: 'Senior Level',
+                    data: [85, 90, 80, 75, 88, 70],
+                    fill: true,
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)', // Primary Blue with opacity
+                    borderColor: '#3B82F6',
+                    pointBackgroundColor: '#3B82F6',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#3B82F6'
+                }, {
+                    label: 'Junior Level',
+                    data: [65, 50, 70, 60, 55, 45],
+                    fill: true,
+                    backgroundColor: 'rgba(139, 92, 246, 0.2)', // Secondary Purple with opacity
+                    borderColor: '#8B5CF6',
+                    pointBackgroundColor: '#8B5CF6',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#8B5CF6'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                elements: {
+                    line: { borderWidth: 3 }
+                },
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(0, 0, 0, 0.05)' },
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                        pointLabels: {
+                            font: { size: 12, weight: '600' },
+                            color: '#64748B'
+                        },
+                        ticks: { display: false, backdropColor: 'transparent' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+        // 2. Popular Companies Bar Chart
+        const ctxBar = document.getElementById('companiesBarChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: ['Google', 'Amazon', 'Meta', 'Netflix', 'Microsoft', 'Apple'],
+                datasets: [{
+                    label: 'Targeted by Users',
+                    data: [1200, 1150, 980, 650, 890, 720],
+                    backgroundColor: [
+                        '#3B82F6', '#3B82F6', '#3B82F6', 
+                        '#8B5CF6', // Netflix (Accent)
+                        '#3B82F6', '#3B82F6'
+                    ],
+                    borderRadius: 6,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1E293B',
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [2, 4], drawBorder: false },
+                        ticks: { font: { size: 11 } }
+                    },
+                    x: {
+                        grid: { display: false, drawBorder: false },
+                        ticks: { font: { size: 12, weight: '500' } }
+                    }
+                }
+            }
+        });
+    </script>
+
+</body></html>
