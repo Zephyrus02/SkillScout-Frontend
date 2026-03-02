@@ -10,7 +10,7 @@ export default function Hero() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
         {/* Badge */}
-        <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 mb-8 animate-fade-in-up">
+        {/* <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 mb-8 animate-fade-in-up">
           <span className="flex h-2 w-2 relative mr-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
@@ -18,20 +18,22 @@ export default function Hero() {
           <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
             New: GPT-4o Voice Integration
           </span>
-        </div>
+        </div> */}
 
         {/* Headline */}
         <h1 className="text-5xl md:text-7xl font-display font-bold text-text-light dark:text-text-dark tracking-tight mb-6 leading-tight">
-          Ace Your Next Interview with <br />
+          Practice for Interviews with
+          <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-600 italic font-serif">
-            AI Real-Time Simulations
+            AI‑Driven Mock Sessions
           </span>
         </h1>
 
         <p className="max-w-2xl mx-auto text-lg md:text-xl text-subtext-light dark:text-subtext-dark mb-10 leading-relaxed">
-          Master technical and behavioral interviews with our intelligent AI
-          coach. Get real-time feedback on your coding speed, communication
-          clarity, and confidence levels.
+          Run live, interactive mock interviews powered by AI that mimic real
+          technical and behavioral questions. Receive instant feedback on your
+          coding speed, answer structure, and communication so you can build
+          confidence before the big day.
         </p>
 
         {/* CTA Buttons */}

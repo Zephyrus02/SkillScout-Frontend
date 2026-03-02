@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Blog Article Detail View</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#F8FAFC",
+                        "background-dark": "#0f172a",
+                        "accent-purple": "#8B5CF6",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "heading": ["Plus Jakarta Sans", "Inter", "sans-serif"], // Using Plus Jakarta Sans as a proxy for Geist Sans feel
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "2rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display antialiased min-h-screen flex flex-col overflow-x-hidden">
+<header class="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex h-16 items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="flex items-center justify-center size-8 rounded-lg bg-primary/10 text-primary">
+<span class="material-symbols-outlined">smart_toy</span>
+</div>
+<span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">SkillScout</span>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors" href="#">Practice</a>
+<a class="text-sm font-medium text-primary dark:text-primary transition-colors" href="#">Resources</a>
+<a class="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors" href="#">Pricing</a>
+</nav>
+<div class="flex items-center gap-3">
+<button class="hidden sm:flex items-center justify-center h-9 px-4 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 transition-colors">
+                    Log In
+                </button>
+<button class="flex items-center justify-center h-9 px-4 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20">
+                    Get Started
+                </button>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+<article class="lg:col-span-8">
+<nav class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-6">
+<a class="hover:text-primary transition-colors" href="#">Resources</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<a class="hover:text-primary transition-colors font-medium text-slate-900 dark:text-white" href="#">Interview Tips</a>
+</nav>
+<header class="mb-8">
+<h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 dark:text-white mb-6 font-heading leading-tight">
+                    Mastering the System Design Interview with AI Assistants
+                </h1>
+<div class="flex items-center gap-4 py-4 border-y border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAJ-NiyPbMJNOSkpVLLMvndAME16NPb92Hi6Sr0TYFjROATBrosTKyPux8zYPc72XOdHI_qrw4VWVeiBg7ZT_hgTK16lNZd2ZOUMlM0uTAxf5vTV2qZZawDq_74Kj06bigCIqOyIyGjUT6Apb5lhK8gstB-s-MpGATjJjtD5UqYbEMQLbkXo7u86LxJU4h2ht2ordFF8DLJxb0U2Ns0ZICh6joZSvWZWBiXLOCEzebtTv7WDqzFIxBjy2Kf7mrBrSZ1S8DJLq6SM6-K'); background-size: cover;"></div>
+<div>
+<p class="text-sm font-semibold text-slate-900 dark:text-white">David Chen</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">Senior Engineer @ Google</p>
+</div>
+</div>
+<div class="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-2"></div>
+<div class="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-lg">schedule</span>
+<span>5 min read</span>
+</div>
+<div class="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 ml-auto">
+<span class="material-symbols-outlined text-lg">calendar_today</span>
+<span>Oct 24, 2023</span>
+</div>
+</div>
+</header>
+<div class="relative w-full aspect-video rounded-2xl overflow-hidden mb-10 shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDbGcEh9NH-Id57hsMnaXtukxl_13MOrttC9JP6jixFaI18LiuuZmz8eFqcdsGJ8SOlK1b1abrfz-DZWUHuzW-WD7KE6BtrA9XZSvC-IoUWIwqt7EvxZiV3yb3foOEjS-zHgCxngwXRyh7HNOG31ml0l5-BScQK-Wdv9J45tuBvwk-aSWQiXF1vaiov5UGTibMzPTgV7Aqm8QxksrtCJ8GmwHkcJrO2zMw45NlGnacvDSc-7VoRg2_ZJksRn42pEunD1iauQZxbiOWW');"></div>
+</div>
+<div class="prose prose-slate dark:prose-invert max-w-none text-slate-700 dark:text-slate-300">
+<p class="text-lg leading-relaxed mb-6">
+                    System design interviews are notoriously difficult. Unlike coding rounds where there's often a single "correct" optimal solution, system design is open-ended, ambiguous, and requires a breadth of knowledge spanning databases, networking, and distributed systems.
+                </p>
+<p class="mb-8 leading-relaxed">
+                    However, with the rise of AI assistants, candidates now have a powerful tool to practice these scenarios. In this guide, we'll explore how to leverage AI to simulate realistic interview conditions and receive actionable feedback on your architecture choices.
+                </p>
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 mt-8 font-heading">The Framework for Success</h2>
+<p class="mb-4 leading-relaxed">Before diving into tools, let's revisit the standard 45-minute system design framework used by top tech companies:</p>
+<ul class="space-y-3 mb-8 list-none pl-0">
+<li class="flex gap-3">
+<span class="flex-shrink-0 size-6 flex items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs mt-0.5">1</span>
+<span><strong class="text-slate-900 dark:text-white">Requirements Clarification (5 min):</strong> Define the scope, functional requirements, and non-functional constraints.</span>
+</li>
+<li class="flex gap-3">
+<span class="flex-shrink-0 size-6 flex items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs mt-0.5">2</span>
+<span><strong class="text-slate-900 dark:text-white">High-Level Design (10-15 min):</strong> Sketch the core components and how data flows between them.</span>
+</li>
+<li class="flex gap-3">
+<span class="flex-shrink-0 size-6 flex items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs mt-0.5">3</span>
+<span><strong class="text-slate-900 dark:text-white">Deep Dive (20 min):</strong> Focus on bottlenecks, scaling issues, and specific technologies.</span>
+</li>
+<li class="flex gap-3">
+<span class="flex-shrink-0 size-6 flex items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs mt-0.5">4</span>
+<span><strong class="text-slate-900 dark:text-white">Wrap Up (5 min):</strong> Summarize and discuss trade-offs.</span>
+</li>
+</ul>
+<div class="my-10 p-6 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-l-4 border-accent-purple">
+<div class="flex items-start gap-4">
+<div class="p-2 bg-accent-purple/10 rounded-lg text-accent-purple shrink-0">
+<span class="material-symbols-outlined">lightbulb</span>
+</div>
+<div>
+<h4 class="text-lg font-bold text-slate-900 dark:text-white mb-2 font-heading">Pro Tip: Focus on Trade-offs</h4>
+<p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+                                Interviewers aren't just looking for the right answer; they want to see your thought process. When choosing a database (SQL vs NoSQL), always explicitly state <em>why</em> you made that choice and what you sacrificed (e.g., consistency for availability).
+                            </p>
+</div>
+</div>
+</div>
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 font-heading">Simulating the Interview with AI</h2>
+<p class="mb-6 leading-relaxed">
+                    You can use ChatGPT or Claude as a mock interviewer. Here is a prompt template we've found effective for simulating a senior-level system design round:
+                </p>
+<div class="bg-slate-900 rounded-lg p-5 text-slate-300 font-mono text-sm overflow-x-auto mb-8 border border-slate-700">
+<p class="mb-0">
+                        "Act as a Staff Engineer at Meta conducting a system design interview. I am the candidate. Ask me to design Instagram's News Feed. Do not give me the solution. Start by giving me the problem statement, then wait for my clarifying questions. Grade my responses on scalability, reliability, and completeness."
+                    </p>
+</div>
+<h3 class="text-xl font-bold text-slate-900 dark:text-white mb-3 mt-6 font-heading">Key Areas to Practice</h3>
+<p class="mb-4 leading-relaxed">While every system is unique, certain patterns emerge frequently:</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+<div class="p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+<h4 class="font-semibold text-slate-900 dark:text-white mb-2">Data Sharding</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400">Horizontal scaling strategies based on user ID or geography.</p>
+</div>
+<div class="p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+<h4 class="font-semibold text-slate-900 dark:text-white mb-2">Caching Strategies</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400">Write-through vs. write-back, eviction policies (LRU/LFU).</p>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 mt-8 mb-12">
+<a class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" href="#">#SystemDesign</a>
+<a class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" href="#">#InterviewPrep</a>
+<a class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" href="#">#AI</a>
+<a class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" href="#">#CareerGrowth</a>
+</div>
+<hr class="border-slate-200 dark:border-slate-800 mb-10"/>
+<div class="bg-white dark:bg-slate-800 rounded-xl p-8 border border-slate-100 dark:border-slate-700 mb-12 shadow-sm">
+<div class="flex flex-col sm:flex-row gap-6 items-start">
+<div class="size-16 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex-shrink-0" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAJ-NiyPbMJNOSkpVLLMvndAME16NPb92Hi6Sr0TYFjROATBrosTKyPux8zYPc72XOdHI_qrw4VWVeiBg7ZT_hgTK16lNZd2ZOUMlM0uTAxf5vTV2qZZawDq_74Kj06bigCIqOyIyGjUT6Apb5lhK8gstB-s-MpGATjJjtD5UqYbEMQLbkXo7u86LxJU4h2ht2ordFF8DLJxb0U2Ns0ZICh6joZSvWZWBiXLOCEzebtTv7WDqzFIxBjy2Kf7mrBrSZ1S8DJLq6SM6-K'); background-size: cover;"></div>
+<div class="flex-grow">
+<div class="flex items-center justify-between mb-2">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">David Chen</h3>
+<button class="text-primary hover:text-primary/80 text-sm font-semibold">Follow</button>
+</div>
+<p class="text-slate-600 dark:text-slate-300 text-sm mb-4 leading-relaxed">
+                            Senior Software Engineer at Google working on Cloud Infrastructure. I write about distributed systems, scalability patterns, and helping engineers ace their technical interviews.
+                        </p>
+<div class="flex gap-4">
+<a class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors" href="#">
+<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"></path></svg>
+</a>
+<a class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors" href="#">
+<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" fill-rule="evenodd"></path></svg>
+</a>
+</div>
+</div>
+</div>
+<div class="mt-8">
+<h3 class="text-xl font-bold text-slate-900 dark:text-white mb-6">Discussion (12)</h3>
+<textarea class="w-full rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-y min-h-[100px]" placeholder="Add to the discussion..."></textarea>
+<div class="flex justify-end mt-3">
+<button class="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold text-sm rounded-lg hover:opacity-90 transition-opacity">
+                            Post Comment
+                        </button>
+</div>
+</div>
+</div></article>
+<aside class="lg:col-span-4 space-y-8 h-fit lg:sticky lg:top-24">
+<div class="rounded-xl p-6 bg-accent-purple text-white shadow-lg relative overflow-hidden">
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-bold tracking-wide uppercase text-xs opacity-90">Newsletter</span>
+</div>
+<h3 class="text-xl font-bold mb-2">Crack the Interview</h3>
+<p class="text-purple-100 text-sm mb-4 leading-relaxed">
+                        Join 50,000+ engineers receiving weekly system design tips and coding patterns directly to their inbox.
+                    </p>
+<form class="space-y-3">
+<input class="w-full px-4 py-2.5 rounded-lg border-none bg-white/20 placeholder:text-purple-100 text-white focus:ring-2 focus:ring-white/50 text-sm outline-none" placeholder="Your email address" type="email"/>
+<button class="w-full py-2.5 rounded-lg bg-white text-accent-purple font-bold text-sm hover:bg-purple-50 transition-colors shadow-sm" type="button">
+                            Subscribe Free
+                        </button>
+</form>
+<p class="text-[10px] text-purple-200 mt-3 text-center">No spam, unsubscribe anytime.</p>
+</div>
+<div class="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+<div class="absolute -bottom-12 -left-12 w-40 h-40 bg-black/10 rounded-full blur-2xl"></div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Related Articles</h3>
+<div class="space-y-6">
+<a class="group flex gap-4 items-start" href="#">
+<div class="w-20 h-20 rounded-lg bg-slate-200 dark:bg-slate-700 bg-cover bg-center shrink-0 group-hover:opacity-90 transition-opacity" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBsnu55m1TZpW75DrEOmW3hstD0bixR6XnazQpBIWb8oWfz_lbsx4JUB9DY87Ww-1NuKsKENtGsNHwgsvbs2a3T28kLLqbqbM1cbsMKKVh6ETO5PN4LlHfid8HFAfHJRjC6JGseVc52WP_ihdx1rghfvbRWkr_hzm6edIKuxqaxHqtpGT4Rv2sWTt9XGW0uBkocnnAAMkvNrrRHQb4u6rnd9BkHuDaUdfFrqAWRoTlbcp7Q4AGv8Xeek7dRIVxhM9bmEjVFXL-4uaP4');"></div>
+<div>
+<span class="text-xs font-semibold text-primary mb-1 block">AI Tech</span>
+<h4 class="text-sm font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-primary transition-colors">Understanding LLMs for Technical Interviews</h4>
+</div>
+</a>
+<a class="group flex gap-4 items-start" href="#">
+<div class="w-20 h-20 rounded-lg bg-slate-200 dark:bg-slate-700 bg-cover bg-center shrink-0 group-hover:opacity-90 transition-opacity" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCl35H7oO6sJprcscv7JtX3n_8I_JxZ-Ls6g2BEj7CAVHUu0AfGVMa1nnZtKp7GJ5ZzrjxMvpwtEaVyJYWFUdG14TsWtmZibS1PuIti_Ar_yRjrpsTLR0YgLUZAVdmmBgCuUenKSW_fMy0J_TWaXvmS9nGBjyuprRzM1oDj8NkBRECiB44zuF1L4zo3WWxZVFtXzvl_R15dSAxyU-IbuOVfEQcxoS1nyIyxshN1h-Ljc1N4Ala1lFZkEF3nwa9mFMx8bkk9TuwI-HZw');"></div>
+<div>
+<span class="text-xs font-semibold text-emerald-600 mb-1 block">Career Growth</span>
+<h4 class="text-sm font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-primary transition-colors">Negotiating Your Senior Engineer Offer</h4>
+</div>
+</a>
+<a class="group flex gap-4 items-start" href="#">
+<div class="w-20 h-20 rounded-lg bg-slate-200 dark:bg-slate-700 bg-cover bg-center shrink-0 group-hover:opacity-90 transition-opacity" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBvEhJWNx5yca6aAZX7FtoVNEcaZgiV6SBSQle-Xe_gbwFnzPth52wawIXLiMbKDxUh9-2w1frcxSbsHUax-zihRmVcgATdju-sG_-C7SQt6swW29AY02YUmNZPVnUVxMz168sq-hUWkVj_4tMnKSvJMMsIxQ-I3uFtbenwjZttGWW3v8YeABH6_N-Njeck4PHk0GyPHETt4ZA-uoXzlvvtB0NZ0212sbrpWTJQwaPPV07PCQVSHITN6h_6PUwCkbZDlE2T4qQ7GU8q');"></div>
+<div>
+<span class="text-xs font-semibold text-blue-600 mb-1 block">Coding</span>
+<h4 class="text-sm font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-primary transition-colors">Top 10 Dynamic Programming Problems</h4>
+</div>
+</a>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+<h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-4 uppercase tracking-wider text-xs">Share this article</h3>
+<div class="flex gap-2">
+<button class="flex-1 flex items-center justify-center gap-2 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"></path></svg>
+</button>
+<button class="flex-1 flex items-center justify-center gap-2 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"></path></svg>
+</button>
+<button class="flex-1 flex items-center justify-center gap-2 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-[20px]">link</span>
+</button>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<footer class="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark py-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+<div class="col-span-1 md:col-span-1">
+<div class="flex items-center gap-2 mb-4">
+<div class="flex items-center justify-center size-6 rounded bg-primary/10 text-primary">
+<span class="material-symbols-outlined text-sm">smart_toy</span>
+</div>
+<span class="text-lg font-bold text-slate-900 dark:text-white">SkillScout</span>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400">
+                    Empowering engineers to land their dream jobs with AI-driven interview preparation.
+                </p>
+</div>
+<div>
+<h4 class="font-semibold text-slate-900 dark:text-white mb-4">Product</h4>
+<ul class="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+<li><a class="hover:text-primary" href="#">Mock Interviews</a></li>
+<li><a class="hover:text-primary" href="#">System Design</a></li>
+<li><a class="hover:text-primary" href="#">Coding Problems</a></li>
+<li><a class="hover:text-primary" href="#">Pricing</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-semibold text-slate-900 dark:text-white mb-4">Resources</h4>
+<ul class="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+<li><a class="hover:text-primary" href="#">Blog</a></li>
+<li><a class="hover:text-primary" href="#">Interview Guides</a></li>
+<li><a class="hover:text-primary" href="#">Company Profiles</a></li>
+<li><a class="hover:text-primary" href="#">Success Stories</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-semibold text-slate-900 dark:text-white mb-4">Company</h4>
+<ul class="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+<li><a class="hover:text-primary" href="#">About Us</a></li>
+<li><a class="hover:text-primary" href="#">Careers</a></li>
+<li><a class="hover:text-primary" href="#">Contact</a></li>
+<li><a class="hover:text-primary" href="#">Privacy Policy</a></li>
+</ul>
+</div>
+</div>
+<div class="border-t border-slate-100 dark:border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-sm text-slate-500 text-center md:text-left">© 2024 AI Prep Inc. All rights reserved.</p>
+<div class="flex gap-4">
+<a class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" href="#">
+<span class="sr-only">Twitter</span>
+<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"></path></svg>
+</a>
+<a class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" href="#">
+<span class="sr-only">GitHub</span>
+<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill-rule="evenodd"></path></svg>
+</a>
+</div>
+</div>
+</div>
+</footer>
+
+</body></html>

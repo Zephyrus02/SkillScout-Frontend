@@ -268,12 +268,15 @@ export default function ResourcesPage() {
                       </p>
                     </div>
                   </div>
-                  <button className="ml-auto flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors">
+                  <Link
+                    href="/resources/blog"
+                    className="ml-auto flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors"
+                  >
                     Read Article
                     <span className="material-icons text-lg">
                       arrow_forward
                     </span>
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -592,69 +595,73 @@ export default function ResourcesPage() {
 /* ─── Article Card (grid) ────────────────────────────────────────────── */
 function ArticleCard({ article }: { article: Article }) {
   return (
-    <article className="flex flex-col rounded-xl bg-gray-50 dark:bg-gray-800/60 overflow-hidden group hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
-      <div
-        className="h-48 w-full bg-gray-200 dark:bg-gray-700 bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
-        style={{ backgroundImage: `url('${article.image}')` }}
-        aria-label={article.alt}
-      />
-      <div className="p-5 flex flex-col flex-grow">
-        <div className="flex flex-wrap gap-2 mb-3">
-          {article.tags.map((tag) => (
-            <span
-              key={tag.label}
-              className={`text-xs font-semibold px-2 py-1 rounded ${TAG_COLORS[tag.color]}`}
-            >
-              {tag.label}
-            </span>
-          ))}
+    <Link href="/resources/blog" className="block">
+      <article className="flex flex-col rounded-xl bg-gray-50 dark:bg-gray-800/60 overflow-hidden group hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700">
+        <div
+          className="h-48 w-full bg-gray-200 dark:bg-gray-700 bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
+          style={{ backgroundImage: `url('${article.image}')` }}
+          aria-label={article.alt}
+        />
+        <div className="p-5 flex flex-col flex-grow">
+          <div className="flex flex-wrap gap-2 mb-3">
+            {article.tags.map((tag) => (
+              <span
+                key={tag.label}
+                className={`text-xs font-semibold px-2 py-1 rounded ${TAG_COLORS[tag.color]}`}
+              >
+                {tag.label}
+              </span>
+            ))}
+          </div>
+          <h3 className="text-lg font-bold text-text-light dark:text-text-dark mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+            {article.title}
+          </h3>
+          <p className="text-subtext-light dark:text-subtext-dark text-sm mb-4 line-clamp-3 flex-grow">
+            {article.excerpt}
+          </p>
+          <div className="flex items-center justify-between text-xs text-subtext-light dark:text-subtext-dark pt-4 border-t border-gray-200 dark:border-gray-700">
+            <span>{article.date}</span>
+            <span>{article.readTime}</span>
+          </div>
         </div>
-        <h3 className="text-lg font-bold text-text-light dark:text-text-dark mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-          {article.title}
-        </h3>
-        <p className="text-subtext-light dark:text-subtext-dark text-sm mb-4 line-clamp-3 flex-grow">
-          {article.excerpt}
-        </p>
-        <div className="flex items-center justify-between text-xs text-subtext-light dark:text-subtext-dark pt-4 border-t border-gray-200 dark:border-gray-700">
-          <span>{article.date}</span>
-          <span>{article.readTime}</span>
-        </div>
-      </div>
-    </article>
+      </article>
+    </Link>
   );
 }
 
 /* ─── Article List Item ──────────────────────────────────────────────── */
 function ArticleListItem({ article }: { article: Article }) {
   return (
-    <article className="flex gap-4 rounded-xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 p-4 group hover:shadow-md transition-all duration-200">
-      <div
-        className="w-28 h-20 shrink-0 rounded-lg bg-gray-200 dark:bg-gray-700 bg-cover bg-center"
-        style={{ backgroundImage: `url('${article.image}')` }}
-        aria-label={article.alt}
-      />
-      <div className="flex flex-col justify-between flex-grow min-w-0">
-        <div>
-          <div className="flex flex-wrap gap-1.5 mb-1.5">
-            {article.tags.map((tag) => (
-              <span
-                key={tag.label}
-                className={`text-xs font-semibold px-1.5 py-0.5 rounded ${TAG_COLORS[tag.color]}`}
-              >
-                {tag.label}
-              </span>
-            ))}
+    <Link href="/resources/blog" className="block">
+      <article className="flex gap-4 rounded-xl bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 p-4 group hover:shadow-md transition-all duration-200">
+        <div
+          className="w-28 h-20 shrink-0 rounded-lg bg-gray-200 dark:bg-gray-700 bg-cover bg-center"
+          style={{ backgroundImage: `url('${article.image}')` }}
+          aria-label={article.alt}
+        />
+        <div className="flex flex-col justify-between flex-grow min-w-0">
+          <div>
+            <div className="flex flex-wrap gap-1.5 mb-1.5">
+              {article.tags.map((tag) => (
+                <span
+                  key={tag.label}
+                  className={`text-xs font-semibold px-1.5 py-0.5 rounded ${TAG_COLORS[tag.color]}`}
+                >
+                  {tag.label}
+                </span>
+              ))}
+            </div>
+            <h3 className="text-sm font-bold text-text-light dark:text-text-dark line-clamp-2 group-hover:text-primary transition-colors">
+              {article.title}
+            </h3>
           </div>
-          <h3 className="text-sm font-bold text-text-light dark:text-text-dark line-clamp-2 group-hover:text-primary transition-colors">
-            {article.title}
-          </h3>
+          <div className="flex items-center gap-3 text-xs text-subtext-light dark:text-subtext-dark mt-2">
+            <span>{article.date}</span>
+            <span>·</span>
+            <span>{article.readTime}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-3 text-xs text-subtext-light dark:text-subtext-dark mt-2">
-          <span>{article.date}</span>
-          <span>·</span>
-          <span>{article.readTime}</span>
-        </div>
-      </div>
-    </article>
+      </article>
+    </Link>
   );
 }

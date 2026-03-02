@@ -51,28 +51,10 @@ const VALUES = [
 
 const TEAM = [
   {
-    name: "Priya Sharma",
+    name: "Aneesh Raskar",
     role: "Co-Founder & CEO",
-    bio: "Former Google engineer with a passion for democratising interview prep across India.",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDD-cTFcOoLf9apIbTjwIXBX1Y4AXLxxjdVTzS4ZlCtQFt7vwjOrRQ8jqxrYcwEbqehjChtFMFp8A78SinEJISs-xEDcx8lu_7XEAL95Lgmu-QplobvRlqc_74TL6vrFwlKSGkNF__MCoWYsaAU-fOgBcPS2K9Q4won9XR19mXhyDp37L0IuxNqWMxL-2-A2m5-ok2yc9olOgbdWygsyxUvcLj16DflDOo1Xjzu9FxvBgWu-ZVZA40zO4Q930IhiW-uIGKR-SGGCxvl",
-  },
-  {
-    name: "Arjun Mehta",
-    role: "CTO",
-    bio: "AI researcher specialising in NLP and conversational agents. IIT Bombay alumnus.",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAIrF1RtpoSoHXYWib6UCmkpi-ADk_l5uVGEHH2ZaRNiLx2cQ9XCOazJU1EgUsu88ixoCC-ygZqTHsUgjV4C8rbGw9EPr3WwtvBQLlpySsqkkTkm2A12OtJYoddKK_lX0E9oqJhHPhMeLSGXFbySJMBC4XxrNg7AvlcGW9gNWpcDRgkSL7b9p3FD5GDvj3lYn2KHvBqMgwVebTteY5FyIEcZKGlQWMr0guUUxHDxfbZRuA9L2D73aGJr0ngXimFBlnUje85rVOZWsKd",
-  },
-  {
-    name: "Kavya Reddy",
-    role: "Head of Product",
-    bio: "Product visionary focused on intuitive UX and candidate success journeys.",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAlauqJgUo98xPAWcBXwhri0FRBB_xQuu8v3mjJ-sisqs55018BSum6iAfg_96S8L538W1xH5vtlQ7GkRmKF9B92MrsFmS4kzbDJSVQoaExYq-Y7MJRklv65tMBNHHiGYW5wEJ3tEEJOZK5V9DPepooV6SvJFAOgHRyV0HJ19JrcpyWXQk6vBgtcQheUldjTwCcWcAcNDYFY43UxWd5PrsK90PWE5WJSe42-MHsUI1PbIRVXebhOI7EbYAioxwCi0xvLddMvRIMRhGy",
-  },
-  {
-    name: "Rohan Kapoor",
-    role: "Lead AI Engineer",
-    bio: "10+ years building scalable ML systems. Formerly at Microsoft Research India.",
-    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAgLFvObjbvo3_cY5piXdUaeJb4mguK8fmC6jd2dwh0aGMSYrzw38oqLFHC31nsa-9v07TymfwZEgmFz7qaQlT9ZjACJh05tzmvDUBs6IUsDS6-pqYOM_yd1fCTgYA7o02bnPw_dNKJfbmCM4BzVyaxAdBBwXT1sb5zwhhcoPnzUtMTQFWJjLA95vHjjd5VWvNHVb76sSLdlGUMM-4Q3qtU0Wm987xBzHXP8-Sqridd5LYynKMN0Af8xtBXJZSST77itKGBWGVPKmSd",
+    bio: "Software engineer with a passion for democratising interview prep across India.",
+    img: "/aneesh.png",
   },
 ];
 
@@ -277,11 +259,11 @@ export default function AboutPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="flex flex-wrap justify-center gap-x-8 gap-y-14">
                 {TEAM.map((member) => (
                   <div
                     key={member.name}
-                    className="group flex flex-col items-center text-center"
+                    className="group flex flex-col items-center text-center w-full sm:w-1/2 lg:w-1/4 max-w-[280px]"
                   >
                     <div className="relative mb-5 h-44 w-44 overflow-hidden rounded-full ring-4 ring-white dark:ring-surface-dark shadow-lg transition-transform duration-300 group-hover:scale-105">
                       <Image

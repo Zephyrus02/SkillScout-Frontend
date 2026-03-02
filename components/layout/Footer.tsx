@@ -4,21 +4,19 @@ import Image from "next/image";
 const FOOTER_LINKS: Record<string, Array<{ label: string; href: string }>> = {
   Platform: [
     { label: "Mock Interviews", href: "#" },
-    { label: "System Design", href: "#" },
-    { label: "Coding Challenges", href: "#" },
+    { label: "Resume Review", href: "#" },
     { label: "Behavioral Prep", href: "#" },
     { label: "Pricing", href: "/pricing" },
   ],
   Company: [
     { label: "About Us", href: "/about" },
     { label: "Careers", href: "#" },
-    { label: "Blog", href: "/resources" },
     { label: "Contact", href: "/contact" },
   ],
   Resources: [
     { label: "Interview Guide", href: "#" },
     { label: "Salary Negotiation", href: "#" },
-    { label: "Resume Review", href: "#" },
+    { label: "System Design", href: "#" },
     { label: "FAQ", href: "/resources#faq" },
   ],
   Legal: [
@@ -29,11 +27,8 @@ const FOOTER_LINKS: Record<string, Array<{ label: string; href: string }>> = {
   ],
 };
 
-const SOCIAL_ICONS = [
-  { icon: "camera_alt", label: "Instagram" },
-  { icon: "alternate_email", label: "Twitter" },
-  { icon: "work", label: "LinkedIn" },
-];
+// Social icons removed as per request
+const SOCIAL_ICONS: Array<{ icon: string; label: string }> = [];
 
 const LEGAL_LINKS: Array<{ label: string; href: string }> = [
   { label: "Privacy Policy", href: "/legal/privacy-policy" },

@@ -277,11 +277,17 @@ export default function SignUpForm() {
 
         <p className="text-center text-xs text-slate-400 -mt-2">
           By signing up you agree to our{" "}
-          <Link href="/terms" className="text-primary hover:underline">
+          <Link
+            href="/legal/terms-of-service"
+            className="text-primary hover:underline"
+          >
             Terms of Service
           </Link>{" "}
           and{" "}
-          <Link href="/privacy" className="text-primary hover:underline">
+          <Link
+            href="/legal/privacy-policy"
+            className="text-primary hover:underline"
+          >
             Privacy Policy
           </Link>
           .
