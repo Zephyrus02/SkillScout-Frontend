@@ -58,6 +58,10 @@ interface AuthContextType {
     avatarUrl?: string,
   ) => Promise<{ requiresEmailVerification: boolean; email?: string } | void>;
   googleAuth: (idToken: string, keepMeLoggedIn?: boolean) => Promise<void>;
+  githubCallbackAuth: (
+    accessToken: string,
+    isNewUser?: boolean,
+  ) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -297,6 +301,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  /**
+   * Called from the /auth/github-callback page after GitHub redirects back
+   * with an access token in the query string.
+   */
+  const githubCallbackAuth = async (accessToken: string, isNewUser = false) => {
+    setAccessToken(accessToken);
+
+    let userForNav: User | null = null;
+    try {
+      const profileRes = await authAPI.getProfile();
+      if (profileRes.success && profileRes.data) {
+        userForNav = profileRes.data;
+      }
+    } catch {
+      // profile fetch failed — clear bad token
+      clearAccessToken();
+      throw new Error("Failed to load user profile after GitHub login.");
+    }
+
+    if (!userForNav) {
+      clearAccessToken();
+      throw new Error("Failed to load user profile after GitHub login.");
+    }
+
+    setUserState(userForNav);
+    setUserData(userForNav);
+    toast.success(
+      isNewUser
+        ? "Account created successfully with GitHub!"
+        : "Login successful with GitHub!",
+    );
+    await navigateAfterAuth(userForNav, router);
+  };
+
   const logout = async () => {
     try {
       await authAPI.logout();
@@ -327,6 +365,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     login,
     signup,
     googleAuth,
+    githubCallbackAuth,
     logout,
   };
 

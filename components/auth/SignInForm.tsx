@@ -46,6 +46,12 @@ export default function SignInForm() {
     onError: (err) => console.error("Google auth error:", err),
   });
 
+  const handleGitHubClick = () => {
+    const apiBase =
+      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
+    window.location.href = `${apiBase}/api/auth/github`;
+  };
+
   return (
     <div className="w-full max-w-[440px] flex flex-col gap-8">
       {/* Heading */}
@@ -59,7 +65,11 @@ export default function SignInForm() {
       </div>
 
       {/* Social auth */}
-      <SocialAuthButtons googleButtonRef={googleButtonRef} loading={loading} />
+      <SocialAuthButtons
+        googleButtonRef={googleButtonRef}
+        onGitHubClick={handleGitHubClick}
+        loading={loading}
+      />
 
       {/* Divider */}
       <div className="relative flex items-center">
