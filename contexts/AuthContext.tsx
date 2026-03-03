@@ -129,6 +129,11 @@ export function isAdminUser(userForNav: UserWithRoles | null | undefined) {
     );
   }
 
+  // Fallback: treat super-admins as admins even if role string is missing/wrong
+  if ((userForNav as { isSuperAdmin?: boolean }).isSuperAdmin === true) {
+    return true;
+  }
+
   return false;
 }
 
@@ -385,6 +390,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     } finally {
       clearSession();
       clearCachedProfile();
+      setUserState(null);
       // Return to the landing page (not the login page) so the user
       // lands on a public page and can choose to sign in again.
       await router.push("/");

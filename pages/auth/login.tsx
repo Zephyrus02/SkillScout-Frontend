@@ -9,12 +9,16 @@ export default function LoginPage() {
   const { isAuthenticated, loading, user } = useAuth();
   const router = useRouter();
 
-  // Redirect already authenticated users to the dashboard
+  // Redirect already authenticated users to the correct dashboard
   useEffect(() => {
     if (!loading && isAuthenticated) {
       const redirect = router.query.redirect as string | undefined;
-      const defaultPath = isAdminUser(user) ? "/admin/dashboard" : "/dashboard";
-      router.replace(redirect ?? defaultPath);
+      // Admins always go to /admin/dashboard — never honour a ?redirect param
+      // that might point to a candidate page (e.g. from a prior ProtectedRoute save).
+      const targetPath = isAdminUser(user)
+        ? "/admin/dashboard"
+        : (redirect ?? "/dashboard");
+      router.replace(targetPath);
     }
   }, [loading, isAuthenticated, user, router]);
 

@@ -23,7 +23,7 @@ import {
 } from "recharts";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminSidebar from "@/components/dashboard/admin/AdminSidebar";
-import { useAuth } from "@/contexts/AuthContext";
+import { isAdminUser, useAuth } from "@/contexts/AuthContext";
 
 const revenueData = [
   { month: "Jan", revenue: 65000 },
@@ -104,12 +104,12 @@ export default function AdminDashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user && user.role !== "admin") {
+    if (!loading && user && !isAdminUser(user)) {
       router.replace("/dashboard");
     }
   }, [loading, user, router]);
 
-  if (loading || (user && user.role !== "admin")) {
+  if (loading || (user && !isAdminUser(user))) {
     return null;
   }
 

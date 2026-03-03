@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminSidebar from "@/components/dashboard/admin/AdminSidebar";
-import { useAuth } from "@/contexts/AuthContext";
+import { isAdminUser, useAuth } from "@/contexts/AuthContext";
 
 const ongoingSessions = [
   {
@@ -156,12 +156,12 @@ export default function AdminInterviewsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user && user.role !== "admin") {
+    if (!loading && user && !isAdminUser(user)) {
       router.replace("/dashboard");
     }
   }, [loading, user, router]);
 
-  if (loading || (user && user.role !== "admin")) {
+  if (loading || (user && !isAdminUser(user))) {
     return null;
   }
 

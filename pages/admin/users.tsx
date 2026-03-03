@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminSidebar from "@/components/dashboard/admin/AdminSidebar";
-import { useAuth } from "@/contexts/AuthContext";
+import { isAdminUser, useAuth } from "@/contexts/AuthContext";
 
 type Plan = "Free" | "Pro" | "Enterprise";
 type Status = "Active" | "Inactive" | "Suspended";
@@ -138,12 +138,12 @@ export default function AdminUsersPage() {
     tableRows.find((row) => row.email === selectedUserEmail) ?? null;
 
   useEffect(() => {
-    if (!loading && user && user.role !== "admin") {
+    if (!loading && user && !isAdminUser(user)) {
       router.replace("/dashboard");
     }
   }, [loading, user, router]);
 
-  if (loading || (user && user.role !== "admin")) {
+  if (loading || (user && !isAdminUser(user))) {
     return null;
   }
 

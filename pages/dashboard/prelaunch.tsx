@@ -1,6 +1,11 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import {
+  useMediaPipeProctoring,
+  getViolationLabel,
+  type ViolationType,
+} from "@/hooks/useMediaPipeProctoring";
 
 /* ─────────────────────────────────────────────────────────────
    Interview Pre-launch / System Readiness Check
@@ -17,6 +22,40 @@ export default function PrelaunchPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraStatus, setCameraStatus] = useState<CheckStatus>("checking");
   const [cameraLabel, setCameraLabel] = useState<string>("");
+
+  // ── MediaPipe face / object proctoring ───────────────────
+  const proctoring = useMediaPipeProctoring(videoRef, cameraStatus !== "error");
+
+  // Derive a CheckStatus for the face detection row
+  type FaceCheckStatus = CheckStatus;
+  let faceCheckStatus: FaceCheckStatus;
+  let faceCheckBadgeLabel: string;
+  let faceCheckDescription: string;
+  if (proctoring.isLoading || !proctoring.isReady) {
+    faceCheckStatus = "checking";
+    faceCheckBadgeLabel = "Initialising…";
+    faceCheckDescription = "Loading face detection models…";
+  } else if (!proctoring.modelLoaded) {
+    // Graceful degradation – models failed silently, allow user through
+    faceCheckStatus = "ok";
+    faceCheckBadgeLabel = "Skipped";
+    faceCheckDescription = "Face detection unavailable in this browser.";
+  } else if (proctoring.faceCount === 0 || proctoring.violation === "no_face") {
+    faceCheckStatus = "checking";
+    faceCheckBadgeLabel = "Looking…";
+    faceCheckDescription = "Please position your face within the camera frame.";
+  } else if (proctoring.violation === null && proctoring.faceCount === 1) {
+    faceCheckStatus = "ok";
+    faceCheckBadgeLabel = "Clear";
+    faceCheckDescription =
+      "One face detected, looking at screen, no banned objects.";
+  } else {
+    faceCheckStatus = "error";
+    faceCheckBadgeLabel = "Issue Detected";
+    faceCheckDescription = getViolationLabel(
+      proctoring.violation as ViolationType,
+    );
+  }
 
   // ── Microphone ───────────────────────────────────────────
   // micPermission: browser permission state
@@ -46,7 +85,8 @@ export default function PrelaunchPage() {
     micPermission === "ok" &&
     micQuality === "passed" &&
     deviceStatus === "ok" &&
-    speakerState === "audible";
+    speakerState === "audible" &&
+    faceCheckStatus === "ok";
 
   // ── Camera init ──────────────────────────────────────────
   useEffect(() => {
@@ -351,6 +391,44 @@ export default function PrelaunchPage() {
                       {cameraLabel}
                     </span>
                   </div>
+                )}
+              </CheckRow>
+
+              {/* ── Face Detection (MediaPipe) ── */}
+              <CheckRow
+                status={faceCheckStatus}
+                icon={
+                  faceCheckStatus === "ok"
+                    ? "face"
+                    : faceCheckStatus === "error"
+                      ? "no_accounts"
+                      : "face_retouching_natural"
+                }
+                title="Face Detection"
+                badge={
+                  faceCheckStatus === "ok"
+                    ? { label: faceCheckBadgeLabel, color: "emerald" }
+                    : faceCheckStatus === "error"
+                      ? { label: faceCheckBadgeLabel, color: "red" }
+                      : { label: faceCheckBadgeLabel, color: "blue" }
+                }
+                borderBottom
+                spinnerIcon={faceCheckStatus === "checking"}
+              >
+                <p
+                  className={`text-xs mt-1 ${
+                    faceCheckStatus === "error"
+                      ? "text-red-500 font-medium"
+                      : "text-slate-500"
+                  }`}
+                >
+                  {faceCheckDescription}
+                </p>
+                {faceCheckStatus === "error" && (
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Ensure only you are visible, you are looking at the screen,
+                    and no phones or books are in view.
+                  </p>
                 )}
               </CheckRow>
 

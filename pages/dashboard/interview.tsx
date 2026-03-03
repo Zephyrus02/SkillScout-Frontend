@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
+import {
+  useMediaPipeProctoring,
+  getWarningMessage,
+} from "@/hooks/useMediaPipeProctoring";
+import {
+  MalpracticeWarningToast,
+  type ActiveWarning,
+} from "@/components/ui/MalpracticeWarningToast";
 
 export default function InterviewRoom() {
   const router = useRouter();
@@ -9,6 +17,18 @@ export default function InterviewRoom() {
 
   // Live timer state (seconds elapsed)
   const [elapsed, setElapsed] = useState(0);
+
+  // ── Malpractice / proctoring state ──────────────────────────────────────
+  const MAX_WARNINGS = 3;
+  const WARNING_COOLDOWN_MS = 11_000; // slightly > 10 s so the toast finishes
+
+  const [activeWarning, setActiveWarning] = useState<ActiveWarning | null>(
+    null,
+  );
+  const warningCountRef = useRef(0);
+  const [warningCountDisplay, setWarningCountDisplay] = useState(0);
+  const lastWarningAtRef = useRef<number>(0);
+  const terminatingRef = useRef(false);
 
   // ── Format elapsed seconds → "14m 02s" / "00:14" style ─────────────────
   const formatTime = (secs: number) => {
@@ -54,6 +74,53 @@ export default function InterviewRoom() {
     }
   };
 
+  // ── End session ──────────────────────────────────────────
+  const endSession = useCallback(() => {
+    stopCamera();
+    router.push("/dashboard/practice");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
+
+  // ── Proctoring (MediaPipe) ─────────────────────────────────
+  const proctoring = useMediaPipeProctoring(videoRef, true);
+
+  // Fire a warning toast whenever a violation is detected (with cooldown)
+  useEffect(() => {
+    if (!proctoring.isReady || !proctoring.modelLoaded) return;
+    if (proctoring.violation === null) return;
+    if (terminatingRef.current) return;
+    if (warningCountRef.current >= MAX_WARNINGS) return;
+
+    const now = Date.now();
+    if (now - lastWarningAtRef.current < WARNING_COOLDOWN_MS) return;
+
+    lastWarningAtRef.current = now;
+    const newCount = warningCountRef.current + 1;
+    warningCountRef.current = newCount;
+    setWarningCountDisplay(newCount);
+
+    const warning: ActiveWarning = {
+      id: now,
+      type: proctoring.violation,
+      message: getWarningMessage(
+        proctoring.violation,
+        proctoring.detectedObjects,
+      ),
+      warningNumber: newCount,
+      totalWarnings: MAX_WARNINGS,
+    };
+    setActiveWarning(warning);
+
+    if (newCount >= MAX_WARNINGS) {
+      terminatingRef.current = true;
+      // Let the "Final Warning" toast display for 3.5 s before terminating
+      setTimeout(() => {
+        endSession();
+      }, 3500);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proctoring.violation, proctoring.isReady, proctoring.modelLoaded]);
+
   // ── Boot camera ────────────────────────────────────────────────────────
   useEffect(() => {
     startCamera();
@@ -63,14 +130,14 @@ export default function InterviewRoom() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startCamera]);
 
-  // ── End session ────────────────────────────────────────────────────────
-  const endSession = () => {
-    stopCamera();
-    router.push("/dashboard/practice");
-  };
-
   return (
     <>
+      {/* ── Malpractice warning overlay (fixed, above all content) ── */}
+      <MalpracticeWarningToast
+        warning={activeWarning}
+        onDismiss={() => setActiveWarning(null)}
+      />
+
       <Head>
         <title>AI Live Interview Room – SkillScout</title>
         <style>{`
@@ -139,6 +206,20 @@ export default function InterviewRoom() {
                 {formatTime(elapsed)}
               </span>
             </div>
+
+            {/* Malpractice warning indicator – only shown after ≥1 warning */}
+            {warningCountDisplay > 0 && (
+              <div
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
+                  warningCountDisplay >= MAX_WARNINGS
+                    ? "bg-red-100 text-red-700 border border-red-200"
+                    : "bg-orange-100 text-orange-700 border border-orange-200"
+                }`}
+              >
+                <span className="material-icons text-sm">warning_amber</span>
+                {warningCountDisplay}/{MAX_WARNINGS} Warnings
+              </div>
+            )}
 
             <button className="p-2 text-slate-500 hover:text-slate-700 transition-colors">
               <span className="material-icons text-xl">settings</span>
