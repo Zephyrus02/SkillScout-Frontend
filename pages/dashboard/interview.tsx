@@ -19,6 +19,7 @@ export default function InterviewRoom() {
   const [elapsed, setElapsed] = useState(0);
 
   // ── Malpractice / proctoring state ──────────────────────────────────────
+  // 3 visible warnings; 4th violation → immediate termination
   const MAX_WARNINGS = 3;
   const WARNING_COOLDOWN_MS = 11_000; // slightly > 10 s so the toast finishes
 
@@ -84,22 +85,30 @@ export default function InterviewRoom() {
   // ── Proctoring (MediaPipe) ─────────────────────────────────
   const proctoring = useMediaPipeProctoring(videoRef, true);
 
-  // Fire a warning toast whenever a violation is detected (with cooldown)
+  // Fire a warning toast on each violation (with cooldown).
+  // Warnings 1–3 show a toast. The 4th violation terminates immediately.
   useEffect(() => {
     if (!proctoring.isReady || !proctoring.modelLoaded) return;
     if (proctoring.violation === null) return;
     if (terminatingRef.current) return;
-    if (warningCountRef.current >= MAX_WARNINGS) return;
 
     const now = Date.now();
     if (now - lastWarningAtRef.current < WARNING_COOLDOWN_MS) return;
 
     lastWarningAtRef.current = now;
+
+    // Already gave 3 warnings → this 4th violation terminates the session
+    if (warningCountRef.current >= MAX_WARNINGS) {
+      terminatingRef.current = true;
+      endSession();
+      return;
+    }
+
     const newCount = warningCountRef.current + 1;
     warningCountRef.current = newCount;
     setWarningCountDisplay(newCount);
 
-    const warning: ActiveWarning = {
+    setActiveWarning({
       id: now,
       type: proctoring.violation,
       message: getWarningMessage(
@@ -108,16 +117,7 @@ export default function InterviewRoom() {
       ),
       warningNumber: newCount,
       totalWarnings: MAX_WARNINGS,
-    };
-    setActiveWarning(warning);
-
-    if (newCount >= MAX_WARNINGS) {
-      terminatingRef.current = true;
-      // Let the "Final Warning" toast display for 3.5 s before terminating
-      setTimeout(() => {
-        endSession();
-      }, 3500);
-    }
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proctoring.violation, proctoring.isReady, proctoring.modelLoaded]);
 

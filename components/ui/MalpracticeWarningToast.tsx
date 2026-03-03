@@ -102,7 +102,7 @@ export function MalpracticeWarningToast({ warning, onDismiss }: Props) {
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <span className="text-white font-bold text-sm leading-tight">
                   {isFinal
-                    ? "Final Warning – Interview will be Terminated"
+                    ? "Final Warning – One more violation will terminate the interview"
                     : "Malpractice Warning Detected"}
                 </span>
                 <span className="text-[10px] font-semibold text-white/80 bg-white/20 rounded-full px-2 py-0.5 shrink-0">
@@ -117,13 +117,14 @@ export function MalpracticeWarningToast({ warning, onDismiss }: Props) {
               {!isFinal && (
                 <p className="text-white/60 text-[10px] mt-1">
                   The interview will be automatically terminated after{" "}
-                  {warning.totalWarnings} warnings.
+                  {warning.totalWarnings} warnings if violations continue.
                 </p>
               )}
 
               {isFinal && (
                 <p className="text-white/80 text-[10px] mt-1 font-medium">
-                  Redirecting you to the dashboard in a moment…
+                  This is your last warning. Any further malpractice will
+                  immediately end the session.
                 </p>
               )}
             </div>

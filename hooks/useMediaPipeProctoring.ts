@@ -1,10 +1,16 @@
 /**
  * useMediaPipeProctoring
  *
- * Runs continuous face + object detection on a <video> element using
- * @mediapipe/tasks-vision.  Safe to use alongside any existing camera
- * logic – it only reads pixels from the element, never re-creates the
- * MediaStream.
+ * Runs continuous face + object detection on a <video> element using the
+ * module-level singleton from lib/mediapipe-singleton.ts.
+ *
+ * Key properties:
+ *   • Models are loaded ONCE per browser session and reused across page
+ *     navigations (prelaunch → interview room).
+ *   • On failure the singleton retries up to 3 times with exponential back-off
+ *     (1 s → 2 s → 4 s).  If all attempts fail, modelLoaded is false.
+ *   • This hook only attaches / detaches the detection interval; it never
+ *     closes the underlying detectors.
  *
  * Detects:
  *   • Number of visible faces (0 = away, 1 = ok, >1 = multiple)
@@ -14,6 +20,12 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { RefObject } from "react";
+import {
+  ensureLoaded,
+  subscribe,
+  getSnapshot,
+  reset,
+} from "@/lib/mediapipe-singleton";
 
 // ── Public types ────────────────────────────────────────────────────────────
 
@@ -28,10 +40,14 @@ export type ViolationType =
 export interface ProctoringResult {
   /** True while the WASM models are still downloading / initialising */
   isLoading: boolean;
-  /** True once both models are ready (or when init failed – graceful) */
+  /** True once both models are ready OR all retries have failed */
   isReady: boolean;
-  /** True only when both models successfully loaded (false on graceful failure) */
+  /** True only when both models loaded successfully */
   modelLoaded: boolean;
+  /** Which retry attempt is currently in progress (1-based) */
+  retryAttempt: number;
+  /** Maximum number of attempts that will be made */
+  maxRetries: number;
   faceCount: number;
   isLookingSideways: boolean;
   detectedObjects: string[];
@@ -39,16 +55,7 @@ export interface ProctoringResult {
   violation: ViolationType;
 }
 
-// ── Model URLs ──────────────────────────────────────────────────────────────
-
-const WASM_PATH =
-  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.32/wasm";
-
-const FACE_MODEL =
-  "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite";
-
-const OBJECT_MODEL =
-  "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float32/1/efficientdet_lite0.tflite";
+// ── Constants ───────────────────────────────────────────────────────────────
 
 // COCO class names to flag (lowercase, substring match)
 const FLAGGED_OBJECT_KEYWORDS = ["cell phone", "book"];
@@ -66,6 +73,8 @@ const DEFAULT_RESULT: ProctoringResult = {
   isLoading: true,
   isReady: false,
   modelLoaded: false,
+  retryAttempt: 0,
+  maxRetries: 3,
   faceCount: 0,
   isLookingSideways: false,
   detectedObjects: [],
@@ -77,45 +86,66 @@ const DEFAULT_RESULT: ProctoringResult = {
 export function useMediaPipeProctoring(
   videoRef: RefObject<HTMLVideoElement | null>,
   enabled: boolean,
-): ProctoringResult {
-  const [result, setResult] = useState<ProctoringResult>(() => ({
-    ...DEFAULT_RESULT,
-  }));
+): ProctoringResult & { retry: () => void } {
+  const [result, setResult] = useState<ProctoringResult>(() => {
+    // Hydrate immediately from singleton if models are already cached
+    const snap = getSnapshot();
+    if (snap.state === "loaded") {
+      return {
+        ...DEFAULT_RESULT,
+        isLoading: false,
+        isReady: true,
+        modelLoaded: true,
+        retryAttempt: snap.attempt,
+        maxRetries: snap.maxAttempts,
+      };
+    }
+    if (snap.state === "failed") {
+      return {
+        ...DEFAULT_RESULT,
+        isLoading: false,
+        isReady: true,
+        modelLoaded: false,
+        retryAttempt: snap.attempt,
+        maxRetries: snap.maxAttempts,
+      };
+    }
+    return {
+      ...DEFAULT_RESULT,
+      retryAttempt: snap.attempt,
+      maxRetries: snap.maxAttempts,
+    };
+  });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const faceDetRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const objDetRef = useRef<any>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // MediaPipe requires strictly-increasing video timestamps
   const lastTsRef = useRef<number>(0);
 
   // ── Per-tick detection ────────────────────────────────────────────────────
   const runDetection = useCallback(() => {
+    const snap = getSnapshot();
     const video = videoRef.current as HTMLVideoElement | null;
     if (
       !video ||
-      !faceDetRef.current ||
-      !objDetRef.current ||
+      !snap.faceDetector ||
+      !snap.objectDetector ||
       video.readyState < 2 ||
       video.videoWidth === 0
     )
       return;
 
     try {
-      // Strictly increasing timestamp
       const raw = performance.now();
       const ts = raw <= lastTsRef.current ? lastTsRef.current + 1 : raw;
       lastTsRef.current = ts;
 
       // ── Face detection ────────────────────────────────────────────────
-      const faceRes = faceDetRef.current.detectForVideo(video, ts);
+      const faceRes = snap.faceDetector.detectForVideo(video, ts);
       const faces: Array<{
         keypoints?: Array<{ x: number; y: number }>;
       }> = faceRes?.detections ?? [];
       const faceCount = faces.length;
 
-      // ── Gaze (sideways) via ear–nose–ear keypoint ratio ───────────────
+      // ── Gaze via ear–nose–ear keypoint ratio ──────────────────────────
       // blaze_face_short_range keypoints:
       //   0: right eye  1: left eye  2: nose tip
       //   3: mouth      4: right ear 5: left ear
@@ -130,15 +160,13 @@ export function useMediaPipeProctoring(
           const rightDist = Math.abs(nose.x - rEar.x);
           const maxD = Math.max(leftDist, rightDist);
           const minD = Math.min(leftDist, rightDist);
-          // Guard div-by-zero for very close keypoints
           const ratio = maxD > 0.01 ? minD / maxD : 1;
           isLookingSideways = ratio < SIDEWAYS_RATIO_THRESHOLD;
         }
       }
 
       // ── Object detection ──────────────────────────────────────────────
-      // Use same timestamp (MediaPipe handles internally per detector)
-      const objRes = objDetRef.current.detectForVideo(video, ts);
+      const objRes = snap.objectDetector.detectForVideo(video, ts);
       const detectedObjects: string[] = [];
       for (const det of objRes?.detections ?? []) {
         for (const cat of det.categories ?? []) {
@@ -167,7 +195,8 @@ export function useMediaPipeProctoring(
         violation = n.includes("phone") ? "phone_detected" : "book_detected";
       }
 
-      setResult({
+      setResult((prev) => ({
+        ...prev,
         isLoading: false,
         isReady: true,
         modelLoaded: true,
@@ -175,88 +204,94 @@ export function useMediaPipeProctoring(
         isLookingSideways,
         detectedObjects,
         violation,
-      });
+      }));
     } catch {
       // Silently ignore single-frame decode errors
     }
   }, [videoRef]);
 
-  // ── Lifecycle: load models, start interval ────────────────────────────────
+  // ── Start / stop detection interval ──────────────────────────────────────
+  const startInterval = useCallback(() => {
+    if (intervalRef.current) return;
+    lastTsRef.current = 0;
+    intervalRef.current = setInterval(runDetection, 1000);
+  }, [runDetection]);
+
+  const stopInterval = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  // ── Retry helper exposed to UI ────────────────────────────────────────────
+  const retry = useCallback(() => {
+    reset();
+    setResult({ ...DEFAULT_RESULT });
+    ensureLoaded();
+  }, []);
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!enabled) return;
 
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const { FaceDetector, ObjectDetector, FilesetResolver } =
-          await import("@mediapipe/tasks-vision");
-
-        const vision = await FilesetResolver.forVisionTasks(WASM_PATH);
-
-        const [faceDetector, objectDetector] = await Promise.all([
-          FaceDetector.createFromOptions(vision, {
-            baseOptions: { modelAssetPath: FACE_MODEL },
-            runningMode: "VIDEO",
-            minDetectionConfidence: 0.5,
-          }),
-          ObjectDetector.createFromOptions(vision, {
-            baseOptions: { modelAssetPath: OBJECT_MODEL },
-            runningMode: "VIDEO",
-            scoreThreshold: 0.5,
-          }),
-        ]);
-
-        if (cancelled) {
-          faceDetector.close();
-          objectDetector.close();
-          return;
-        }
-
-        faceDetRef.current = faceDetector;
-        objDetRef.current = objectDetector;
-
-        // Emit "ready" + modelLoaded before first tick so UI can update
+    const unsubscribe = subscribe((snap) => {
+      if (snap.state === "loaded") {
         setResult((prev) => ({
           ...prev,
           isLoading: false,
           isReady: true,
           modelLoaded: true,
+          retryAttempt: snap.attempt,
+          maxRetries: snap.maxAttempts,
         }));
-
-        // Run detection every 1 second
-        intervalRef.current = setInterval(runDetection, 1000);
-      } catch (err) {
-        console.warn("[MediaPipe] Failed to initialise proctoring:", err);
-        if (!cancelled) {
-          // Graceful degradation – unblock the user; modelLoaded stays false
-          setResult((prev) => ({
-            ...prev,
-            isLoading: false,
-            isReady: true,
-            modelLoaded: false,
-            violation: null,
-          }));
-        }
+        startInterval();
+      } else if (snap.state === "failed") {
+        setResult((prev) => ({
+          ...prev,
+          isLoading: false,
+          isReady: true,
+          modelLoaded: false,
+          retryAttempt: snap.attempt,
+          maxRetries: snap.maxAttempts,
+        }));
+        stopInterval();
+      } else {
+        // "loading" – show attempt progress
+        setResult((prev) => ({
+          ...prev,
+          isLoading: true,
+          isReady: false,
+          retryAttempt: snap.attempt,
+          maxRetries: snap.maxAttempts,
+        }));
       }
-    })();
+    });
+
+    // Already loaded? Start immediately without waiting for subscribe
+    const snap = getSnapshot();
+    if (snap.state === "loaded") {
+      setResult((prev) => ({
+        ...prev,
+        isLoading: false,
+        isReady: true,
+        modelLoaded: true,
+        retryAttempt: snap.attempt,
+        maxRetries: snap.maxAttempts,
+      }));
+      startInterval();
+    } else {
+      ensureLoaded(); // no-op if already loading
+    }
 
     return () => {
-      cancelled = true;
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      faceDetRef.current?.close();
-      objDetRef.current?.close();
-      faceDetRef.current = null;
-      objDetRef.current = null;
+      unsubscribe();
+      stopInterval();
       lastTsRef.current = 0;
-      setResult(DEFAULT_RESULT);
     };
-  }, [enabled, runDetection]);
+  }, [enabled, startInterval, stopInterval]);
 
-  return result;
+  return { ...result, retry };
 }
 
 // ── Helpers (exported for use in pages) ─────────────────────────────────────

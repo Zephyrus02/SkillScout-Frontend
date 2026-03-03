@@ -36,10 +36,11 @@ export default function PrelaunchPage() {
     faceCheckBadgeLabel = "Initialising…";
     faceCheckDescription = "Loading face detection models…";
   } else if (!proctoring.modelLoaded) {
-    // Graceful degradation – models failed silently, allow user through
-    faceCheckStatus = "ok";
-    faceCheckBadgeLabel = "Skipped";
-    faceCheckDescription = "Face detection unavailable in this browser.";
+    // All attempts exhausted – block the user; proctoring is required
+    faceCheckStatus = "error";
+    faceCheckBadgeLabel = "Failed";
+    faceCheckDescription =
+      "Face detection could not be loaded after 3 attempts. Please use Chrome or refresh the page.";
   } else if (proctoring.faceCount === 0 || proctoring.violation === "no_face") {
     faceCheckStatus = "checking";
     faceCheckBadgeLabel = "Looking…";
@@ -56,6 +57,9 @@ export default function PrelaunchPage() {
       proctoring.violation as ViolationType,
     );
   }
+
+  // true when all retry attempts failed (distinct from a detection-violation error)
+  const faceModelFailed = proctoring.isReady && !proctoring.modelLoaded;
 
   // ── Microphone ───────────────────────────────────────────
   // micPermission: browser permission state
@@ -79,6 +83,10 @@ export default function PrelaunchPage() {
   const [speakerState, setSpeakerState] = useState<SpeakerState>("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // ── Internet connection ──────────────────────────────────
+  const [internetStatus, setInternetStatus] = useState<CheckStatus>("checking");
+  const [internetLabel, setInternetLabel] = useState<string>("");
+
   // ── All-pass gate ─────────────────────────────────────────
   const allOk =
     cameraStatus === "ok" &&
@@ -86,7 +94,8 @@ export default function PrelaunchPage() {
     micQuality === "passed" &&
     deviceStatus === "ok" &&
     speakerState === "audible" &&
-    faceCheckStatus === "ok";
+    faceCheckStatus === "ok" &&
+    internetStatus === "ok";
 
   // ── Camera init ──────────────────────────────────────────
   useEffect(() => {
@@ -214,6 +223,72 @@ export default function PrelaunchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── Internet connection check ─────────────────────────────
+  useEffect(() => {
+    const check = async () => {
+      if (!navigator.onLine) {
+        setInternetStatus("error");
+        setInternetLabel("No internet connection detected");
+        return;
+      }
+      const pingStart = performance.now();
+      try {
+        // Fetch a tiny no-cors resource to measure round-trip
+        await fetch("https://www.gstatic.com/generate_204", {
+          method: "HEAD",
+          cache: "no-store",
+          mode: "no-cors",
+        });
+        const ping = Math.round(performance.now() - pingStart);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const conn =
+          (navigator as any).connection ||
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (navigator as any).mozConnection ||
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (navigator as any).webkitConnection;
+        const downlink: number | undefined = conn?.downlink;
+        const effectiveType: string | undefined = conn?.effectiveType;
+
+        if (
+          effectiveType === "slow-2g" ||
+          effectiveType === "2g" ||
+          ping > 800
+        ) {
+          setInternetStatus("error");
+          setInternetLabel(
+            `Connection too slow (${ping}ms ping${effectiveType ? ` · ${effectiveType}` : ""})`,
+          );
+          return;
+        }
+
+        let label = `Ping: ${ping}ms`;
+        if (downlink) label += ` · ${downlink} Mbps`;
+        else if (effectiveType) label += ` · ${effectiveType.toUpperCase()}`;
+        setInternetStatus("ok");
+        setInternetLabel(label);
+      } catch {
+        // fetch throws on network error even with no-cors
+        setInternetStatus("error");
+        setInternetLabel("Connection check failed – please check your network");
+      }
+    };
+
+    check();
+
+    const handleOnline = () => check();
+    const handleOffline = () => {
+      setInternetStatus("error");
+      setInternetLabel("No internet connection detected");
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   // ── Device compatibility ─────────────────────────────────
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -305,12 +380,8 @@ export default function PrelaunchPage() {
               </div>
             </div>
 
-            {/* Face detection ring */}
-            <div className="relative z-0 flex-1 flex items-center justify-center pointer-events-none my-4">
-              <div className="w-48 h-48 border-2 border-dashed border-white/20 rounded-full flex items-center justify-center">
-                <div className="w-44 h-44 rounded-full border border-white/10" />
-              </div>
-            </div>
+            {/* Spacer to fill the left panel between top bar and bottom */}
+            <div className="flex-1" />
 
             {/* Bottom: name + controls */}
             <div className="relative z-10 flex justify-between items-end">
@@ -357,14 +428,26 @@ export default function PrelaunchPage() {
 
               {/* ── Internet Connection ── */}
               <CheckRow
-                status="ok"
-                icon="wifi"
+                status={internetStatus}
+                icon={internetStatus === "error" ? "wifi_off" : "wifi"}
                 title="Internet Connection"
-                badge={{ label: "Excellent", color: "emerald" }}
+                badge={
+                  internetStatus === "ok"
+                    ? { label: "Connected", color: "emerald" }
+                    : internetStatus === "error"
+                      ? { label: "Issue", color: "red" }
+                      : { label: "Checking…", color: "slate" }
+                }
                 borderBottom
               >
-                <p className="text-xs text-slate-500 mt-1">
-                  Ping: 24ms • Upload: 45 Mbps
+                <p
+                  className={`text-xs mt-1 ${
+                    internetStatus === "error"
+                      ? "text-red-500"
+                      : "text-slate-500"
+                  }`}
+                >
+                  {internetLabel || "Measuring connection…"}
                 </p>
               </CheckRow>
 
@@ -424,7 +507,18 @@ export default function PrelaunchPage() {
                 >
                   {faceCheckDescription}
                 </p>
-                {faceCheckStatus === "error" && (
+                {/* Model failed to load – show retry button */}
+                {faceModelFailed && (
+                  <button
+                    onClick={proctoring.retry}
+                    className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    <span className="material-icons text-sm">refresh</span>
+                    Retry Loading Models
+                  </button>
+                )}
+                {/* Detection violation hint */}
+                {faceCheckStatus === "error" && !faceModelFailed && (
                   <p className="text-[10px] text-slate-400 mt-1">
                     Ensure only you are visible, you are looking at the screen,
                     and no phones or books are in view.
