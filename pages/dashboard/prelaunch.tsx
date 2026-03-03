@@ -6,6 +6,14 @@ import {
   getViolationLabel,
   type ViolationType,
 } from "@/hooks/useMediaPipeProctoring";
+import CheckRow from "@/components/dashboard/prelaunch/CheckRow";
+import SpeakerCheck from "@/components/dashboard/prelaunch/SpeakerCheck";
+import CameraPreview from "@/components/dashboard/prelaunch/CameraPreview";
+import type {
+  CheckStatus,
+  MicQuality,
+  SpeakerState,
+} from "@/components/dashboard/prelaunch/types";
 
 /* ─────────────────────────────────────────────────────────────
    Interview Pre-launch / System Readiness Check
@@ -14,8 +22,6 @@ import {
    – Device compatibility check (desktop vs mobile)
    – Speaker test with /pl_test.wav
 ───────────────────────────────────────────────────────────────── */
-
-type CheckStatus = "pending" | "ok" | "error" | "checking";
 
 export default function PrelaunchPage() {
   // ── Camera ───────────────────────────────────────────────
@@ -27,8 +33,7 @@ export default function PrelaunchPage() {
   const proctoring = useMediaPipeProctoring(videoRef, cameraStatus !== "error");
 
   // Derive a CheckStatus for the face detection row
-  type FaceCheckStatus = CheckStatus;
-  let faceCheckStatus: FaceCheckStatus;
+  let faceCheckStatus: CheckStatus;
   let faceCheckBadgeLabel: string;
   let faceCheckDescription: string;
   if (proctoring.isLoading || !proctoring.isReady) {
@@ -65,7 +70,6 @@ export default function PrelaunchPage() {
   // micPermission: browser permission state
   // micQuality: "listening" | "passed" — quality check result
   const [micPermission, setMicPermission] = useState<CheckStatus>("checking");
-  type MicQuality = "listening" | "passed";
   const [micQuality, setMicQuality] = useState<MicQuality>("listening");
   const [micLevel, setMicLevel] = useState(0);
   const [micLabel, setMicLabel] = useState<string>("");
@@ -79,7 +83,7 @@ export default function PrelaunchPage() {
   const [deviceLabel, setDeviceLabel] = useState<string>("");
 
   // ── Speaker ──────────────────────────────────────────────
-  type SpeakerState = "idle" | "playing" | "audible";
+
   const [speakerState, setSpeakerState] = useState<SpeakerState>("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -343,54 +347,7 @@ export default function PrelaunchPage() {
       <div className="min-h-screen w-full flex items-center justify-center p-4 md:p-6 lg:p-8">
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-5xl overflow-hidden flex flex-col md:flex-row min-h-[580px] relative z-10">
           {/* ── Left: Live Camera Preview ── */}
-          <div className="w-full md:w-1/2 bg-slate-900 relative p-6 flex flex-col justify-between min-h-[320px] overflow-hidden">
-            {/* Live video feed */}
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/20 via-transparent to-slate-900/80 pointer-events-none" />
-            {/* Top bar */}
-            <div className="relative z-10 flex justify-between items-start">
-              <div className="bg-black/40 backdrop-blur-md text-white/90 px-3 py-1.5 rounded-lg flex items-center gap-2 border border-white/10 shadow-sm">
-                <span className="relative flex h-2.5 w-2.5">
-                  {cameraStatus === "ok" ? (
-                    <>
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
-                    </>
-                  ) : (
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-400" />
-                  )}
-                </span>
-                <span className="text-xs font-medium tracking-wide">
-                  {cameraStatus === "ok"
-                    ? "Camera Working"
-                    : cameraStatus === "error"
-                      ? "Camera Error"
-                      : "Checking..."}
-                </span>
-              </div>
-              <div className="bg-black/40 backdrop-blur-md p-1.5 rounded-lg border border-white/10 cursor-pointer hover:bg-black/60 transition-colors text-white/80">
-                <span className="material-icons text-sm">settings</span>
-              </div>
-            </div>
-
-            {/* Spacer to fill the left panel between top bar and bottom */}
-            <div className="flex-1" />
-
-            {/* Bottom: name + controls */}
-            <div className="relative z-10 flex justify-between items-end">
-              <div>
-                <h3 className="text-white font-semibold text-lg">You</h3>
-                <p className="text-slate-400 text-sm">Interview Candidate</p>
-              </div>
-            </div>
-          </div>
+          <CameraPreview videoRef={videoRef} cameraStatus={cameraStatus} />
 
           {/* ── Right: System Readiness Check ── */}
           <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center overflow-y-auto">
@@ -577,91 +534,12 @@ export default function PrelaunchPage() {
               </CheckRow>
 
               {/* ── Speaker Test ── */}
-              <div className="flex items-start gap-4">
-                {/* Icon */}
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 border ${
-                    speakerState === "audible"
-                      ? "bg-emerald-50 border-emerald-200"
-                      : "bg-slate-50 border-slate-200"
-                  }`}
-                >
-                  <span
-                    className={`material-icons text-lg ${speakerState === "audible" ? "text-emerald-500" : "text-slate-400"}`}
-                  >
-                    {speakerState === "audible" ? "check" : "volume_up"}
-                  </span>
-                </div>
-
-                <div className="flex-1">
-                  <div className="flex justify-between items-center mb-1 flex-wrap gap-2">
-                    <h3 className="font-semibold text-slate-900">
-                      Speaker Test
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      {speakerState === "audible" ? (
-                        <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                          <span className="material-icons text-sm">
-                            check_circle
-                          </span>
-                          Audible
-                        </span>
-                      ) : (
-                        <button
-                          onClick={playSound}
-                          className="text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1"
-                        >
-                          <span className="material-icons text-sm">
-                            {speakerState === "playing"
-                              ? "volume_up"
-                              : "play_arrow"}
-                          </span>
-                          {speakerState === "playing"
-                            ? "Playing…"
-                            : "Play Sound"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {speakerState === "idle" && (
-                    <p className="text-xs text-slate-500">
-                      Click to ensure you can hear the AI interviewer clearly.
-                    </p>
-                  )}
-
-                  {speakerState === "playing" && (
-                    <div className="flex items-center gap-3 mt-2 flex-wrap">
-                      <button
-                        onClick={markAudible}
-                        className="text-xs font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-full border border-emerald-200 transition-colors flex items-center gap-1"
-                      >
-                        <span className="material-icons text-sm">check</span>I
-                        can hear it
-                      </button>
-                      <button
-                        onClick={replaySound}
-                        className="text-xs font-medium text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200 transition-colors flex items-center gap-1"
-                      >
-                        <span className="material-icons text-sm">replay</span>
-                        Inaudible: Replay Sound
-                      </button>
-                    </div>
-                  )}
-
-                  {speakerState === "audible" && (
-                    <div className="flex items-center gap-3 mt-2">
-                      <button
-                        onClick={replaySound}
-                        className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1 transition-colors"
-                      >
-                        <span className="material-icons text-sm">replay</span>
-                        Inaudible: Replay Sound
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <SpeakerCheck
+                speakerState={speakerState}
+                onPlay={playSound}
+                onMarkAudible={markAudible}
+                onReplay={replaySound}
+              />
             </div>
 
             {/* Footer */}
@@ -716,96 +594,5 @@ export default function PrelaunchPage() {
         </div>
       </div>
     </>
-  );
-}
-
-/* ── Shared check-row component ───────────────────────────── */
-type BadgeColor = "emerald" | "blue" | "red" | "slate";
-
-function CheckRow({
-  status,
-  icon,
-  title,
-  badge,
-  borderBottom,
-  spinnerIcon,
-  children,
-}: {
-  status: CheckStatus;
-  icon: string;
-  title: string;
-  badge: { label: string; color: BadgeColor };
-  borderBottom?: boolean;
-  spinnerIcon?: boolean;
-  children?: React.ReactNode;
-}) {
-  const iconBg: Record<CheckStatus, string> = {
-    ok: "bg-emerald-50 border-emerald-200",
-    error: "bg-red-50 border-red-200",
-    checking: "bg-slate-50 border-slate-200",
-    pending: "bg-slate-50 border-slate-200",
-  };
-  const iconColor: Record<CheckStatus, string> = {
-    ok: "text-emerald-500",
-    error: "text-red-500",
-    checking: "text-slate-400",
-    pending: "text-slate-400",
-  };
-  const badgeCls: Record<BadgeColor, string> = {
-    emerald: "text-emerald-600 bg-emerald-50 border-emerald-200",
-    blue: "text-blue-600 bg-blue-50 border-blue-200",
-    red: "text-red-600 bg-red-50 border-red-200",
-    slate: "text-slate-500 bg-slate-100 border-slate-200",
-  };
-
-  return (
-    <div className="flex items-start gap-4">
-      <div
-        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 border ${iconBg[status]}`}
-      >
-        {spinnerIcon && status === "ok" ? (
-          <div className="flex gap-[2px] items-center h-3">
-            <div
-              className="w-0.5 bg-blue-500 rounded-full"
-              style={{
-                height: "40%",
-                animation: "mic-bounce 0.5s ease-in-out infinite",
-              }}
-            />
-            <div
-              className="w-0.5 bg-blue-500 rounded-full"
-              style={{
-                height: "40%",
-                animation: "mic-bounce 0.7s ease-in-out infinite",
-              }}
-            />
-            <div
-              className="w-0.5 bg-blue-500 rounded-full"
-              style={{
-                height: "40%",
-                animation: "mic-bounce 0.4s ease-in-out infinite",
-              }}
-            />
-          </div>
-        ) : (
-          <span className={`material-icons text-lg ${iconColor[status]}`}>
-            {status === "checking" ? "hourglass_top" : icon}
-          </span>
-        )}
-      </div>
-      <div
-        className={`flex-1 ${borderBottom ? "border-b border-gray-100 pb-5" : ""}`}
-      >
-        <div className="flex justify-between items-center">
-          <h3 className="font-semibold text-slate-900">{title}</h3>
-          <span
-            className={`text-xs font-medium px-2 py-0.5 rounded border ${badgeCls[badge.color]}`}
-          >
-            {badge.label}
-          </span>
-        </div>
-        {children}
-      </div>
-    </div>
   );
 }

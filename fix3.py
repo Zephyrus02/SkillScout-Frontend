@@ -1,4 +1,4 @@
-import Head from "next/head";
+new_content = '''import Head from "next/head";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { Bell, Search } from "lucide-react";
@@ -10,8 +10,6 @@ import RevenueChart from "@/components/admin/revenue/RevenueChart";
 import SubscriptionChart from "@/components/admin/revenue/SubscriptionChart";
 import TransactionsTable from "@/components/admin/revenue/TransactionsTable";
 import UpcomingRenewals from "@/components/admin/revenue/UpcomingRenewals";
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminRevenuePage() {
   const { user, loading } = useAuth();
@@ -30,14 +28,14 @@ export default function AdminRevenuePage() {
   return (
     <ProtectedRoute>
       <Head>
-        <title>Revenue & Billing – SkillScout Admin</title>
+        <title>Revenue &amp; Billing \\u2013 SkillScout Admin</title>
       </Head>
 
       <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-background-dark dark:text-white">
         <AdminSidebar activeTab="revenue" userName={user?.name} />
 
         <main className="lg:ml-64">
-          {/* ── Sticky header ── */}
+          {/* \\u2500\\u2500 Sticky header \\u2500\\u2500 */}
           <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white/80 px-8 py-4 backdrop-blur-md dark:border-slate-800 dark:bg-background-dark/80">
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white">
@@ -68,7 +66,7 @@ export default function AdminRevenuePage() {
             </div>
           </header>
 
-          {/* ── Body ── */}
+          {/* \\u2500\\u2500 Body \\u2500\\u2500 */}
           <div className="space-y-6 p-8">
             <KpiCards />
 
@@ -89,3 +87,7 @@ export default function AdminRevenuePage() {
     </ProtectedRoute>
   );
 }
+'''
+
+open('pages/admin/revenue.tsx', 'w').write(new_content)
+print("Done!", len(new_content.splitlines()), "lines")

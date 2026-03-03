@@ -1,6 +1,5 @@
 import Head from "next/head";
 import Image from "next/image";
-import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import {
@@ -9,105 +8,21 @@ import {
   Download,
   Eye,
   Filter,
-  Lock,
-  Mail,
   Search,
   Trash2,
   Plus,
-  X,
 } from "lucide-react";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminSidebar from "@/components/dashboard/admin/AdminSidebar";
 import { isAdminUser, useAuth } from "@/contexts/AuthContext";
-
-type Plan = "Free" | "Pro" | "Enterprise";
-type Status = "Active" | "Inactive" | "Suspended";
-
-type UserTableRow = {
-  name: string;
-  email: string;
-  plan: Plan;
-  interviews: string;
-  score: string;
-  scoreClass: string;
-  status: Status;
-  statusDot: string;
-  avatar?: string;
-  avatarImage?: string;
-  avatarClass: string;
-};
-
-const PLAN_STYLES: Record<Plan, string> = {
-  Free: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
-  Pro: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
-  Enterprise:
-    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-};
-
-const tableRows: readonly UserTableRow[] = [
-  {
-    name: "Alex Chen",
-    email: "alex.chen@example.com",
-    plan: "Free",
-    interviews: "14",
-    score: "8.5",
-    scoreClass: "text-green-500",
-    status: "Active",
-    statusDot: "bg-green-500",
-    avatar: "AC",
-    avatarClass: "bg-blue-100 text-primary",
-  },
-  {
-    name: "Sarah Miller",
-    email: "sarah.m@techpro.com",
-    plan: "Pro",
-    interviews: "42",
-    score: "9.2",
-    scoreClass: "text-green-500",
-    status: "Active",
-    statusDot: "bg-green-500",
-    avatarImage:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDlxdT5lpn3iZ3GcSh28hY_lgCxg29fxRCq5yzwaeA9A8eBAUHnMhlanXh7AcgOVrKUkqFyzMXEvwZ2cGOXV3_Q4-LQNiFkDgSaWYiOCRACjEvd-ymOFrUGxKQYFvFCwoKDA1jla9O8dYLXPjg7C-KxIuOfEKEkbz4aN7g6pHlXn1nYJa7HPM8VYtIX3vWybc-T_ImgsPabvshj-YnGeXslVmiVdrgO75Y8rIIAeQ7No0TIf__KcgghjGilaU5Jhom3qB9fQlqq1AR5",
-    avatarClass: "bg-purple-100 text-purple-600",
-  },
-  {
-    name: "James Doe",
-    email: "j.doe@university.edu",
-    plan: "Free",
-    interviews: "2",
-    score: "6.8",
-    scoreClass: "text-yellow-500",
-    status: "Inactive",
-    statusDot: "bg-gray-300",
-    avatar: "JD",
-    avatarClass: "bg-yellow-100 text-yellow-700",
-  },
-  {
-    name: "Emily Zhang",
-    email: "emily.z@startup.io",
-    plan: "Enterprise",
-    interviews: "28",
-    score: "9.5",
-    scoreClass: "text-green-500",
-    status: "Active",
-    statusDot: "bg-green-500",
-    avatarImage:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBz_461xti_MyG7tvkMeelqSH4CNteggTOsafeSr5d6ntz7clRbaEC94TJr9TY4sOpUMxGjYYsNstOUkq9lWqrmtfQuXHPJXXO80xj5jd911qE9J4qkAQexTWJox5Gnh_BVm-qNv88rW77rZP-vutMAh4bu-Duy3FiDM9LhhcmZPVbVmsGJpN9ZFeOiGcKL1feq9b6H2exOj_wvXtSD6qtXdVuRgwyOUdcHKNFgDmkDN1nRNJihFg9fUg5bUEQAli8hSxo2KFETBHIC",
-    avatarClass: "bg-indigo-100 text-indigo-700",
-  },
-  {
-    name: "Marcus Reed",
-    email: "marcus.r@mail.com",
-    plan: "Free",
-    interviews: "0",
-    score: "-",
-    scoreClass: "text-gray-400",
-    status: "Suspended",
-    statusDot: "bg-red-500",
-    avatar: "MR",
-    avatarClass: "bg-red-100 text-red-600",
-  },
-];
+import {
+  tableRows,
+  PLAN_STYLES,
+  type Plan,
+  type Status,
+  type UserTableRow,
+} from "@/components/admin/users/data";
+import UserDetailPanel from "@/components/admin/users/UserDetailPanel";
 
 export default function AdminUsersPage() {
   const { user, loading } = useAuth();
@@ -412,158 +327,10 @@ export default function AdminUsersPage() {
           </div>
         </main>
 
-        <AnimatePresence>
-          {selectedUser ? (
-            <motion.aside
-              key="user-profile-sidebar"
-              initial={{ x: 420, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 420, opacity: 0 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className="fixed right-0 top-0 z-50 hidden h-screen w-[400px] overflow-y-auto border-l border-slate-100 bg-white shadow-2xl dark:border-slate-800 dark:bg-surface-dark xl:block"
-            >
-              <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-surface-dark">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                  User Profile
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setSelectedUserEmail(null)}
-                  className="text-slate-400 hover:text-slate-600"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              <div className="p-6">
-                <div className="mb-8 flex flex-col items-center">
-                  <div className="mb-4 h-24 w-24 rounded-full bg-purple-100 p-1 ring-2 ring-purple-500 ring-offset-2 ring-offset-white dark:ring-offset-surface-dark">
-                    {selectedUser.avatarImage ? (
-                      <Image
-                        alt={selectedUser.name}
-                        width={96}
-                        height={96}
-                        className="h-full w-full rounded-full object-cover"
-                        src={selectedUser.avatarImage}
-                      />
-                    ) : (
-                      <div
-                        className={`flex h-full w-full items-center justify-center rounded-full text-xl font-bold ${selectedUser.avatarClass}`}
-                      >
-                        {selectedUser.avatar}
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                    {selectedUser.name}
-                  </h3>
-                  <p className="mb-2 text-sm text-slate-500">
-                    {selectedUser.email}
-                  </p>
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${PLAN_STYLES[selectedUser.plan]}`}
-                  >
-                    {selectedUser.plan}
-                  </span>
-                </div>
-
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Quick Stats
-                    </h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="rounded-xl bg-slate-50 p-3 text-center dark:bg-slate-800">
-                        <span className="block text-2xl font-bold text-slate-900 dark:text-white">
-                          {selectedUser.interviews}
-                        </span>
-                        <span className="text-xs text-slate-500">
-                          Interviews
-                        </span>
-                      </div>
-                      <div className="rounded-xl bg-slate-50 p-3 text-center dark:bg-slate-800">
-                        <span className="block text-2xl font-bold text-green-500">
-                          {selectedUser.score}
-                        </span>
-                        <span className="text-xs text-slate-500">
-                          Avg Rating
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Recent Activity
-                    </h4>
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-3">
-                        <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                        <div>
-                          <p className="text-sm font-medium text-slate-900 dark:text-white">
-                            Conducted Mock: System Design
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            2 hours ago • Rated 8/10
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                        <div>
-                          <p className="text-sm font-medium text-slate-900 dark:text-white">
-                            Updated Profile Bio
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            Yesterday at 4:30 PM
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-300" />
-                        <div>
-                          <p className="text-sm font-medium text-slate-900 dark:text-white">
-                            Account Created
-                          </p>
-                          <p className="text-xs text-slate-500">Jan 12, 2024</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-slate-100 pt-6 dark:border-slate-800">
-                    <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Admin Actions
-                    </h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-surface-dark dark:text-slate-300 dark:hover:bg-slate-800"
-                      >
-                        <Lock size={14} />
-                        Reset Pwd
-                      </button>
-                      <button
-                        type="button"
-                        className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-red-600 transition hover:bg-red-50 dark:border-slate-700 dark:bg-surface-dark dark:hover:bg-red-900/20"
-                      >
-                        <X size={14} />
-                        Suspend
-                      </button>
-                      <button
-                        type="button"
-                        className="col-span-2 flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-600"
-                      >
-                        <Mail size={14} />
-                        Send Message
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.aside>
-          ) : null}
-        </AnimatePresence>
+        <UserDetailPanel
+          user={selectedUser}
+          onClose={() => setSelectedUserEmail(null)}
+        />
       </div>
     </ProtectedRoute>
   );
