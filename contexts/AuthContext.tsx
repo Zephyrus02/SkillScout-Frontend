@@ -251,7 +251,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     };
 
     loadUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Actions ─────────────────────────────────────────────────────────────

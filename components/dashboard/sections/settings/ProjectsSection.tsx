@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Modal from "@/components/ui/Modal";
+import MonthYearPicker from "@/components/ui/MonthYearPicker";
 import { inputCls, cancelBtnCls, saveBtnCls, cardCls } from "./constants";
 import type { Project } from "./types";
 
@@ -8,7 +9,8 @@ const DEFAULT_PROJECTS: Project[] = [
     id: 1,
     title: "Ascendancy Esports Website",
     type: "(Offsite)",
-    period: "Feb 2025 to Feb 2025 (Full Time)",
+    startDate: "Feb 2025",
+    endDate: "Feb 2025",
     desc: "An full stack web application for end-to-end management of eSports tournaments for Valorant. The website is built using React.js and Node.js and uses MongoDB as the database.",
   },
   {
@@ -16,21 +18,24 @@ const DEFAULT_PROJECTS: Project[] = [
     title:
       "Collaborative Vehicle Localization using LSTM based Federated Learning for Trajectory Prediction",
     type: "(Offsite)",
-    period: "Jan 2025 to Apr 2025 (Full Time)",
+    startDate: "Jan 2025",
+    endDate: "Apr 2025",
     desc: "Built a privacy-preserving trajectory prediction system using federated learning, improving the average displacement error by 29.2% when compared to traditional approaches.",
   },
   {
     id: 3,
     title: "SkillScout",
     type: "(Offsite)",
-    period: "Nov 2024 to Jan 2025 (Full Time)",
+    startDate: "Nov 2024",
+    endDate: "Jan 2025",
     desc: "A smart resume parser which recommends active jobs based on the skills, projects, experiences and educational qualification of the candidates",
   },
   {
     id: 4,
     title: "Light Weight Computational Offloading using Deep Learning",
     type: "(Offsite)",
-    period: "Aug 2024 to Nov 2024 (Full Time)",
+    startDate: "Aug 2024",
+    endDate: "Nov 2024",
     desc: "Analyzed operational metrics and identified key bottlenecks within existing systems, resulting in targeted adjustments that improved system efficiency by more than 30%.",
   },
 ];
@@ -38,7 +43,8 @@ const DEFAULT_PROJECTS: Project[] = [
 const BLANK: Omit<Project, "id"> = {
   title: "",
   type: "(Offsite)",
-  period: "",
+  startDate: "",
+  endDate: "",
   desc: "",
 };
 
@@ -55,7 +61,13 @@ export default function ProjectsSection() {
   };
 
   const openEdit = (p: Project) => {
-    setDraft({ title: p.title, type: p.type, period: p.period, desc: p.desc });
+    setDraft({
+      title: p.title,
+      type: p.type,
+      startDate: p.startDate,
+      endDate: p.endDate,
+      desc: p.desc,
+    });
     setEditingProject(p);
     setAddingProject(false);
   };
@@ -121,7 +133,7 @@ export default function ProjectsSection() {
                 {p.type}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                {p.period}
+                {p.startDate} – {p.endDate}
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                 {p.desc}
@@ -138,29 +150,52 @@ export default function ProjectsSection() {
           onClose={closeModal}
         >
           <div className="space-y-4">
-            {(
-              [
-                { label: "Project Title", key: "title" },
-                { label: "Type (e.g. Offsite)", key: "type" },
-                {
-                  label: "Period (e.g. Jan 2024 to Mar 2024 (Full Time))",
-                  key: "period",
-                },
-              ] as { label: string; key: keyof typeof draft }[]
-            ).map(({ label, key }) => (
-              <div key={key}>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Project Title
+              </label>
+              <input
+                className={inputCls}
+                value={draft.title}
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, title: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Type (e.g. Offsite)
+              </label>
+              <input
+                className={inputCls}
+                value={draft.type}
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, type: e.target.value }))
+                }
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {label}
+                  Start Date
                 </label>
-                <input
-                  className={inputCls}
-                  value={draft[key]}
-                  onChange={(e) =>
-                    setDraft((d) => ({ ...d, [key]: e.target.value }))
-                  }
+                <MonthYearPicker
+                  value={draft.startDate}
+                  onChange={(v) => setDraft((d) => ({ ...d, startDate: v }))}
+                  placeholder="Start month & year"
                 />
               </div>
-            ))}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  End Date
+                </label>
+                <MonthYearPicker
+                  value={draft.endDate}
+                  onChange={(v) => setDraft((d) => ({ ...d, endDate: v }))}
+                  placeholder="End month & year"
+                />
+              </div>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Description

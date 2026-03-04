@@ -10,6 +10,7 @@ export interface ProfileHeader {
 }
 
 export interface CareerProfile {
+  primaryCareerGoal: string;
   currentIndustry: string;
   department: string;
   roleCategory: string;
@@ -25,7 +26,8 @@ export interface Project {
   id: number;
   title: string;
   type: string;
-  period: string;
+  startDate: string;
+  endDate: string;
   desc: string;
 }
 
@@ -44,7 +46,8 @@ export interface Education {
   degree: string;
   institution: string;
   startDate: string; // "MMM YYYY"
-  endDate: string; // "MMM YYYY"
+  endDate: string; // "MMM YYYY" | "Present"
+  current: boolean;
 }
 
 export interface Publication {

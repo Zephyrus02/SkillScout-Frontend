@@ -1,37 +1,58 @@
 import { useRef, useState } from "react";
+import type React from "react";
+import MonthYearPicker from "@/components/ui/MonthYearPicker";
 
-const TARGET_ROLES = [
-  "Product Manager", "Software Engineer", "Data Scientist", "UX Designer",
-  "Frontend Engineer", "Backend Engineer", "Full-Stack Engineer",
-  "Mobile Engineer", "DevOps Engineer", "ML Engineer", "Engineering Manager",
-];
-
-const INDUSTRIES = [
-  "Technology", "Finance", "Healthcare", "Retail", "Education",
-  "Media & Entertainment", "Government", "Non-profit",
-];
-
-const EXP_LEVELS = [
-  { label: "Entry (0-2)", value: "entry" },
-  { label: "Mid (3-5)",   value: "mid" },
-  { label: "Senior (6-9)",value: "senior" },
-  { label: "Lead (10+)",  value: "lead" },
-];
-
-const SUGGESTED_SKILLS: Record<string, string[]> = {
-  "Product Manager":    ["Product Strategy", "Roadmapping", "Agile", "Stakeholder Management", "User Research"],
-  "Software Engineer":  ["TypeScript", "Node.js", "GraphQL", "Docker", "PostgreSQL"],
-  "Data Scientist":     ["Python", "Pandas", "TensorFlow", "SQL", "Spark"],
-  "UX Designer":        ["Figma", "User Research", "Prototyping", "UI/UX Design", "Responsive Design"],
-  "default":            ["TypeScript", "Node.js", "GraphQL", "Docker", "Communication"],
+// ── Entry types (mirror settings/types.ts) ───────────────────────────────────
+type EduEntry = {
+  id: number;
+  degree: string;
+  institution: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+};
+type EmpEntry = {
+  id: number;
+  role: string;
+  company: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  desc: string;
+};
+type ProjEntry = {
+  id: number;
+  title: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  desc: string;
+};
+type PubEntry = {
+  id: number;
+  title: string;
+  publisher: string;
+  date: string;
+  url: string;
+  desc: string;
+};
+type CertEntry = {
+  id: number;
+  name: string;
+  issuer: string;
+  issueDate: string;
+  doesExpire: boolean;
+  expiryDate: string;
 };
 
 export interface ExperienceStepData {
   resumeFile: File | null;
-  targetRole: string;
-  industry: string;
-  yearsOfExp: string;
-  topSkills: string[];
+  profileHeadline: string;
+  education: EduEntry[];
+  employment: EmpEntry[];
+  projects: ProjEntry[];
+  publications: PubEntry[];
+  certifications: CertEntry[];
 }
 
 interface StepRoleProps {
@@ -41,28 +62,236 @@ interface StepRoleProps {
   onBack: () => void;
 }
 
-export default function StepRole({ data, onChange, onContinue, onBack }: StepRoleProps) {
-  const [search, setSearch] = useState("");
+// ── Shared micro-styles ───────────────────────────────────────────────────────
+const iCls =
+  "w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-slate-50 dark:bg-gray-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-gray-400";
+const lCls =
+  "block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1";
+const saveBtnCls =
+  "px-4 py-2 text-xs font-semibold bg-primary text-white rounded-xl hover:bg-primary-hover transition";
+const cancelBtnCls =
+  "px-4 py-2 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition";
+
+// ── OptionalSection ──────────────────────────────────────────────────────────
+interface OptionalSectionProps<T extends { id: number }> {
+  title: string;
+  icon: string;
+  adding: boolean;
+  onAdd: () => void;
+  items: T[];
+  renderItem: (item: T) => React.ReactNode;
+  onRemove: (id: number) => void;
+  form: React.ReactNode;
+}
+
+function OptionalSection<T extends { id: number }>({
+  title,
+  icon,
+  adding,
+  onAdd,
+  items,
+  renderItem,
+  onRemove,
+  form,
+}: OptionalSectionProps<T>) {
+  return (
+    <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 md:p-8">
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-2">
+          <span className="material-icons text-gray-400 text-[20px]">
+            {icon}
+          </span>
+          <div>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+              {title}
+            </h3>
+            <p className="text-[11px] text-gray-400">Optional</p>
+          </div>
+        </div>
+        {!adding && (
+          <button
+            onClick={onAdd}
+            className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+          >
+            <span className="material-icons text-sm">add</span> Add
+          </button>
+        )}
+      </div>
+
+      {items.length > 0 && (
+        <div className="space-y-3 mb-4">
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-start justify-between gap-3 p-3 bg-slate-50 dark:bg-gray-800/60 rounded-xl border border-gray-100 dark:border-gray-700"
+            >
+              <div className="flex-1 min-w-0">{renderItem(item)}</div>
+              <button
+                onClick={() => onRemove(item.id)}
+                className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+              >
+                <span className="material-icons text-[18px]">
+                  delete_outline
+                </span>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!adding && items.length === 0 && (
+        <button
+          onClick={onAdd}
+          className="w-full py-6 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-400 hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
+        >
+          <span className="material-icons text-[18px]">add_circle_outline</span>{" "}
+          Add {title}
+        </button>
+      )}
+
+      {adding && (
+        <div className="border border-primary/30 rounded-xl p-4 bg-blue-50/30 dark:bg-blue-900/10">
+          {form}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+export default function StepRole({
+  data,
+  onChange,
+  onContinue,
+  onBack,
+}: StepRoleProps) {
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [dragging, setDragging] = useState(false);
-  const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const set = <K extends keyof ExperienceStepData>(k: K, v: ExperienceStepData[K]) => onChange({ ...data, [k]: v });
+  const [addingEdu, setAddingEdu] = useState(false);
+  const [addingEmp, setAddingEmp] = useState(false);
+  const [addingProj, setAddingProj] = useState(false);
+  const [addingPub, setAddingPub] = useState(false);
+  const [addingCert, setAddingCert] = useState(false);
 
-  const suggested = SUGGESTED_SKILLS[data.targetRole] ?? SUGGESTED_SKILLS["default"];
-  const filtered = suggested.filter(s => !data.topSkills.includes(s) && s.toLowerCase().includes(search.toLowerCase()));
+  const [eduDraft, setEduDraft] = useState({
+    degree: "",
+    institution: "",
+    startDate: "",
+    endDate: "",
+    current: false,
+  });
+  const [empDraft, setEmpDraft] = useState({
+    role: "",
+    company: "",
+    startDate: "",
+    endDate: "",
+    current: false,
+    desc: "",
+  });
+  const [projDraft, setProjDraft] = useState({
+    title: "",
+    type: "(Offsite)",
+    startDate: "",
+    endDate: "",
+    desc: "",
+  });
+  const [pubDraft, setPubDraft] = useState({
+    title: "",
+    publisher: "",
+    date: "",
+    url: "",
+    desc: "",
+  });
+  const [certDraft, setCertDraft] = useState({
+    name: "",
+    issuer: "",
+    issueDate: "",
+    doesExpire: false,
+    expiryDate: "",
+  });
 
-  const addSkill = (s: string) => { if (!data.topSkills.includes(s)) set("topSkills", [...data.topSkills, s]); setSearch(""); };
-  const removeSkill = (s: string) => set("topSkills", data.topSkills.filter(x => x !== s));
+  const set = <K extends keyof ExperienceStepData>(
+    k: K,
+    v: ExperienceStepData[K],
+  ) => onChange({ ...data, [k]: v });
 
-  const handleFile = (f?: File) => { if (f) set("resumeFile", f); };
+  const handleFile = (f?: File) => {
+    if (f) set("resumeFile", f);
+  };
 
+  // ── Savers ──────────────────────────────────────────────────────────────────
+  const saveEdu = () => {
+    if (!eduDraft.degree.trim() || !eduDraft.institution.trim()) return;
+    set("education", [...data.education, { ...eduDraft, id: Date.now() }]);
+    setEduDraft({
+      degree: "",
+      institution: "",
+      startDate: "",
+      endDate: "",
+      current: false,
+    });
+    setAddingEdu(false);
+  };
+  const saveEmp = () => {
+    if (!empDraft.role.trim() || !empDraft.company.trim()) return;
+    set("employment", [...data.employment, { ...empDraft, id: Date.now() }]);
+    setEmpDraft({
+      role: "",
+      company: "",
+      startDate: "",
+      endDate: "",
+      current: false,
+      desc: "",
+    });
+    setAddingEmp(false);
+  };
+  const saveProj = () => {
+    if (!projDraft.title.trim()) return;
+    set("projects", [...data.projects, { ...projDraft, id: Date.now() }]);
+    setProjDraft({
+      title: "",
+      type: "(Offsite)",
+      startDate: "",
+      endDate: "",
+      desc: "",
+    });
+    setAddingProj(false);
+  };
+  const savePub = () => {
+    if (!pubDraft.title.trim() || !pubDraft.publisher.trim()) return;
+    set("publications", [
+      ...data.publications,
+      { ...pubDraft, id: Date.now() },
+    ]);
+    setPubDraft({ title: "", publisher: "", date: "", url: "", desc: "" });
+    setAddingPub(false);
+  };
+  const saveCert = () => {
+    if (!certDraft.name.trim() || !certDraft.issuer.trim()) return;
+    set("certifications", [
+      ...data.certifications,
+      { ...certDraft, id: Date.now() },
+    ]);
+    setCertDraft({
+      name: "",
+      issuer: "",
+      issueDate: "",
+      doesExpire: false,
+      expiryDate: "",
+    });
+    setAddingCert(false);
+  };
+
+  // ── Validation ───────────────────────────────────────────────────────────────
   const validate = () => {
-    const e: typeof errors = {};
-    if (!data.targetRole) e.targetRole = "Please select a target role.";
-    if (!data.industry) e.industry = "Please select an industry.";
-    if (!data.yearsOfExp) e.yearsOfExp = "Please select your experience level.";
-    if (data.topSkills.length < 1) e.topSkills = "Please add at least one skill.";
+    const e: Record<string, string> = {};
+    if (!data.resumeFile) e.resume = "Please upload your resume.";
+    if (!data.profileHeadline.trim())
+      e.profileHeadline = "Profile headline is required.";
+    if (data.education.length === 0)
+      e.education = "Please add at least one education entry.";
     return e;
   };
 
@@ -72,155 +301,707 @@ export default function StepRole({ data, onChange, onContinue, onBack }: StepRol
     if (!Object.keys(e).length) onContinue();
   };
 
-  const selectCls = (err?: string) =>
-    `w-full appearance-none pl-12 pr-10 py-4 rounded-xl border ${err ? "border-red-400" : "border-gray-200 dark:border-gray-700"} bg-slate-50 dark:bg-gray-800 text-text-light dark:text-text-dark focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm cursor-pointer`;
-
   return (
-    <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
-      <div className="p-8 md:p-10 space-y-8">
-
-        {/* Resume upload */}
-        <div>
-          <label className="text-sm font-semibold text-text-light dark:text-text-dark block mb-3">
-            Upload Resume <span className="text-subtext-light dark:text-subtext-dark font-normal">(Optional)</span>
-          </label>
-          <div
-            className={`relative rounded-xl p-6 border-2 border-dashed text-center cursor-pointer transition-colors ${
-              dragging ? "border-primary bg-blue-50 dark:bg-blue-900/20"
-              : data.resumeFile ? "border-green-400 bg-green-50 dark:bg-green-900/10"
-              : "border-gray-300 dark:border-gray-600 hover:border-primary bg-slate-50 dark:bg-gray-800/50"
-            }`}
-            onDragOver={e => { e.preventDefault(); setDragging(true); }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={e => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files?.[0]); }}
-            onClick={() => fileRef.current?.click()}
-          >
-            <input ref={fileRef} type="file" accept=".pdf,.doc,.docx" className="hidden"
-              onChange={e => handleFile(e.target.files?.[0])} />
-            <span className="material-icons text-primary text-3xl mb-2 block">cloud_upload</span>
-            {data.resumeFile
-              ? <p className="text-sm font-medium text-green-700 dark:text-green-400">{data.resumeFile.name}</p>
-              : <>
-                  <p className="text-sm font-medium text-text-light dark:text-text-dark">Click to upload or drag and drop</p>
-                  <p className="text-xs text-subtext-light dark:text-subtext-dark mt-1">PDF, DOCX up to 10MB</p>
-                </>
-            }
-          </div>
-          <div className="mt-2 flex items-center gap-2 text-xs text-primary bg-primary/5 rounded-lg px-3 py-2 w-fit">
-            <span className="material-icons text-sm">auto_awesome</span>
-            We&apos;ll auto-fill your skills based on your resume.
-          </div>
-        </div>
-
-        {/* Target Role + Industry */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="flex flex-col gap-1.5 group">
-            <label className="text-sm font-semibold text-text-light dark:text-text-dark">
-              Target Role <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <span className="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-subtext-light group-focus-within:text-primary transition-colors text-[20px] pointer-events-none">work</span>
-              <select value={data.targetRole} onChange={e => set("targetRole", e.target.value)} className={selectCls(errors.targetRole)}>
-                <option value="">Select your target role</option>
-                {TARGET_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
-              <span className="material-icons absolute right-4 top-1/2 -translate-y-1/2 text-subtext-light pointer-events-none text-[20px]">expand_more</span>
-            </div>
-            {errors.targetRole && <p className="text-xs text-red-500">{errors.targetRole}</p>}
-          </div>
-
-          <div className="flex flex-col gap-1.5 group">
-            <label className="text-sm font-semibold text-text-light dark:text-text-dark">
-              Industry <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <span className="material-icons absolute left-4 top-1/2 -translate-y-1/2 text-subtext-light group-focus-within:text-primary transition-colors text-[20px] pointer-events-none">business</span>
-              <select value={data.industry} onChange={e => set("industry", e.target.value)} className={selectCls(errors.industry)}>
-                <option value="">Select industry</option>
-                {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
-              </select>
-              <span className="material-icons absolute right-4 top-1/2 -translate-y-1/2 text-subtext-light pointer-events-none text-[20px]">expand_more</span>
-            </div>
-            {errors.industry && <p className="text-xs text-red-500">{errors.industry}</p>}
-          </div>
-        </div>
-
-        {/* Years of experience */}
-        <div>
-          <div className="flex justify-between items-center mb-3">
-            <label className="text-sm font-semibold text-text-light dark:text-text-dark">
-              Years of Experience <span className="text-red-500">*</span>
-            </label>
-            <span className="text-sm font-bold text-primary">
-              {EXP_LEVELS.find(l => l.value === data.yearsOfExp)?.label ?? "Select"}
-            </span>
-          </div>
-          <div className="flex gap-3">
-            {EXP_LEVELS.map(l => (
-              <button key={l.value} type="button"
-                onClick={() => set("yearsOfExp", l.value)}
-                className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all ${
-                  data.yearsOfExp === l.value
-                    ? "bg-primary text-white border-primary shadow-lg shadow-blue-500/20"
-                    : "bg-slate-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-subtext-light dark:text-subtext-dark hover:border-primary"
-                }`}>
-                {l.label}
-              </button>
-            ))}
-          </div>
-          {errors.yearsOfExp && <p className="text-xs text-red-500 mt-1">{errors.yearsOfExp}</p>}
-        </div>
-
-        {/* Top Skills */}
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <label className="text-sm font-semibold text-text-light dark:text-text-dark">
-              Top Skills <span className="text-red-500">*</span>
-            </label>
-            <span className="text-xs text-subtext-light dark:text-subtext-dark">Select at least 1</span>
-          </div>
-          <div className="relative mb-3">
-            <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-subtext-light text-[18px]">search</span>
-            <input type="text" placeholder="Search skills (e.g. Python, Leadership, Agile)"
-              value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 text-text-light dark:text-text-dark text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-subtext-light" />
-          </div>
-          {data.topSkills.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {data.topSkills.map(s => (
-                <span key={s} className="flex items-center gap-1.5 bg-primary text-white px-3 py-1.5 rounded-full text-xs font-semibold">
-                  {s}
-                  <button type="button" onClick={() => removeSkill(s)} className="hover:opacity-70 transition-opacity">
-                    <span className="material-icons text-[14px]">close</span>
-                  </button>
-                </span>
-              ))}
-            </div>
+    <div className="space-y-5">
+      {/* ── Resume Upload ──────────────────────────────────────────────────── */}
+      <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 md:p-8">
+        <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">
+          Upload Resume <span className="text-red-500">*</span>
+        </h3>
+        <div
+          className={`rounded-xl p-6 border-2 border-dashed text-center cursor-pointer transition-colors ${
+            dragging
+              ? "border-primary bg-blue-50 dark:bg-blue-900/20"
+              : data.resumeFile
+                ? "border-green-400 bg-green-50 dark:bg-green-900/10"
+                : "border-gray-300 dark:border-gray-600 hover:border-primary bg-slate-50 dark:bg-gray-800/50"
+          }`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            handleFile(e.dataTransfer.files?.[0]);
+          }}
+          onClick={() => fileRef.current?.click()}
+        >
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".pdf,.doc,.docx"
+            className="hidden"
+            onChange={(e) => handleFile(e.target.files?.[0])}
+          />
+          <span className="material-icons text-primary text-3xl mb-2 block">
+            cloud_upload
+          </span>
+          {data.resumeFile ? (
+            <p className="text-sm font-medium text-green-700 dark:text-green-400">
+              {data.resumeFile.name}
+            </p>
+          ) : (
+            <>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Click to upload or drag and drop
+              </p>
+              <p className="text-xs text-gray-500 mt-1">PDF, DOCX up to 10MB</p>
+            </>
           )}
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-subtext-light dark:text-subtext-dark mb-2">Suggested for your role</p>
-            <div className="flex flex-wrap gap-2">
-              {(search ? filtered : suggested.filter(s => !data.topSkills.includes(s))).map(s => (
-                <button key={s} type="button" onClick={() => addSkill(s)}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-subtext-light dark:text-subtext-dark text-xs font-semibold hover:border-primary hover:text-primary transition-all">
-                  <span className="material-icons text-[13px]">add</span>{s}
-                </button>
-              ))}
-            </div>
-          </div>
-          {errors.topSkills && <p className="text-xs text-red-500 mt-1">{errors.topSkills}</p>}
         </div>
+        {errors.resume && (
+          <p className="text-xs text-red-500 mt-2">{errors.resume}</p>
+        )}
       </div>
 
-      {/* Footer */}
-      <div className="bg-gray-50 dark:bg-gray-900/50 px-8 py-5 flex justify-between items-center border-t border-gray-200 dark:border-gray-800">
-        <button type="button" onClick={onBack}
-          className="flex items-center gap-1 text-subtext-light dark:text-subtext-dark hover:text-text-light dark:hover:text-text-dark font-medium px-4 py-2 rounded-lg transition-colors text-sm">
+      {/* ── Profile Headline ───────────────────────────────────────────────── */}
+      <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 md:p-8">
+        <label className="text-sm font-bold text-gray-900 dark:text-white block mb-1">
+          Profile Headline <span className="text-red-500">*</span>
+        </label>
+        <p className="text-xs text-gray-400 mb-3">
+          A short, impactful summary shown at the top of your public profile.
+        </p>
+        <input
+          type="text"
+          placeholder="e.g. Senior Full-Stack Engineer · React · Node.js · AWS"
+          value={data.profileHeadline}
+          onChange={(e) => set("profileHeadline", e.target.value)}
+          className={`w-full px-4 py-3 border ${errors.profileHeadline ? "border-red-400 dark:border-red-500" : "border-gray-200 dark:border-gray-700"} rounded-xl bg-slate-50 dark:bg-gray-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-gray-400`}
+        />
+        {errors.profileHeadline && (
+          <p className="text-xs text-red-500 mt-1.5">
+            {errors.profileHeadline}
+          </p>
+        )}
+      </div>
+
+      {/* ── Education (required) ──────────────────────────────────────────── */}
+      <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 md:p-8">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+              Education <span className="text-red-500">*</span>
+            </h3>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Add at least one qualification.
+            </p>
+          </div>
+          {!addingEdu && (
+            <button
+              onClick={() => setAddingEdu(true)}
+              className="flex items-center gap-1 text-xs font-bold text-primary hover:underline flex-shrink-0"
+            >
+              <span className="material-icons text-sm">add</span> Add
+            </button>
+          )}
+        </div>
+
+        {data.education.length > 0 && (
+          <div className="space-y-3 mb-4">
+            {data.education.map((e) => (
+              <div
+                key={e.id}
+                className="flex items-start justify-between gap-3 p-3 bg-slate-50 dark:bg-gray-800/60 rounded-xl border border-gray-100 dark:border-gray-700"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                    {e.degree}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {e.institution}
+                  </p>
+                  {(e.startDate || e.endDate) && (
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      {e.startDate}
+                      {e.startDate && e.endDate ? " – " : ""}
+                      {e.endDate}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() =>
+                    set(
+                      "education",
+                      data.education.filter((x) => x.id !== e.id),
+                    )
+                  }
+                  className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+                >
+                  <span className="material-icons text-[18px]">
+                    delete_outline
+                  </span>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!addingEdu && data.education.length === 0 && (
+          <button
+            onClick={() => setAddingEdu(true)}
+            className="w-full py-6 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-400 hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
+          >
+            <span className="material-icons text-[18px]">
+              add_circle_outline
+            </span>{" "}
+            Add Education
+          </button>
+        )}
+
+        {addingEdu && (
+          <div className="border border-primary/30 rounded-xl p-4 bg-blue-50/30 dark:bg-blue-900/10 space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className={lCls}>Degree / Qualification *</label>
+                <input
+                  placeholder="e.g. B.Tech Computer Science"
+                  value={eduDraft.degree}
+                  onChange={(e) =>
+                    setEduDraft((d) => ({ ...d, degree: e.target.value }))
+                  }
+                  className={iCls}
+                />
+              </div>
+              <div>
+                <label className={lCls}>Institution *</label>
+                <input
+                  placeholder="e.g. IIT Bombay"
+                  value={eduDraft.institution}
+                  onChange={(e) =>
+                    setEduDraft((d) => ({ ...d, institution: e.target.value }))
+                  }
+                  className={iCls}
+                />
+              </div>
+              <div>
+                <label className={lCls}>Start Date</label>
+                <MonthYearPicker
+                  value={eduDraft.startDate}
+                  onChange={(v) => setEduDraft((d) => ({ ...d, startDate: v }))}
+                  placeholder="Start month & year"
+                />
+              </div>
+              <div>
+                <label className={lCls}>End Date</label>
+                {eduDraft.current ? (
+                  <div className={`${iCls} text-gray-400 italic`}>Present</div>
+                ) : (
+                  <MonthYearPicker
+                    value={eduDraft.endDate}
+                    onChange={(v) => setEduDraft((d) => ({ ...d, endDate: v }))}
+                    placeholder="End month & year"
+                  />
+                )}
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={eduDraft.current}
+                onChange={(e) =>
+                  setEduDraft((d) => ({
+                    ...d,
+                    current: e.target.checked,
+                    endDate: e.target.checked ? "Present" : "",
+                  }))
+                }
+                className="rounded"
+              />
+              Currently pursuing
+            </label>
+            <div className="flex gap-2 justify-end pt-1">
+              <button
+                onClick={() => {
+                  setAddingEdu(false);
+                  setEduDraft({
+                    degree: "",
+                    institution: "",
+                    startDate: "",
+                    endDate: "",
+                    current: false,
+                  });
+                }}
+                className={cancelBtnCls}
+              >
+                Cancel
+              </button>
+              <button onClick={saveEdu} className={saveBtnCls}>
+                Save
+              </button>
+            </div>
+          </div>
+        )}
+
+        {errors.education && (
+          <p className="text-xs text-red-500 mt-2">{errors.education}</p>
+        )}
+      </div>
+
+      {/* ── Employment (optional) ────────────────────────────────────────────── */}
+      <OptionalSection
+        title="Employment"
+        icon="work"
+        adding={addingEmp}
+        onAdd={() => setAddingEmp(true)}
+        items={data.employment}
+        renderItem={(e: EmpEntry) => (
+          <>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">
+              {e.role}
+            </p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              {e.company}
+            </p>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              {e.startDate} – {e.current ? "Present" : e.endDate}
+            </p>
+          </>
+        )}
+        onRemove={(id: number) =>
+          set(
+            "employment",
+            data.employment.filter((x) => x.id !== id),
+          )
+        }
+        form={
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className={lCls}>Job Title *</label>
+                <input
+                  placeholder="e.g. Software Engineer"
+                  value={empDraft.role}
+                  onChange={(e) =>
+                    setEmpDraft((d) => ({ ...d, role: e.target.value }))
+                  }
+                  className={iCls}
+                />
+              </div>
+              <div>
+                <label className={lCls}>Company *</label>
+                <input
+                  placeholder="e.g. Google"
+                  value={empDraft.company}
+                  onChange={(e) =>
+                    setEmpDraft((d) => ({ ...d, company: e.target.value }))
+                  }
+                  className={iCls}
+                />
+              </div>
+              <div>
+                <label className={lCls}>Start Date</label>
+                <MonthYearPicker
+                  value={empDraft.startDate}
+                  onChange={(v) => setEmpDraft((d) => ({ ...d, startDate: v }))}
+                  placeholder="Start month & year"
+                />
+              </div>
+              <div>
+                <label className={lCls}>End Date</label>
+                {empDraft.current ? (
+                  <div className={`${iCls} text-gray-400 italic`}>Present</div>
+                ) : (
+                  <MonthYearPicker
+                    value={empDraft.endDate}
+                    onChange={(v) => setEmpDraft((d) => ({ ...d, endDate: v }))}
+                    placeholder="End month & year"
+                  />
+                )}
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={empDraft.current}
+                onChange={(e) =>
+                  setEmpDraft((d) => ({
+                    ...d,
+                    current: e.target.checked,
+                    endDate: e.target.checked ? "" : d.endDate,
+                  }))
+                }
+                className="rounded"
+              />
+              Currently working here
+            </label>
+            <div>
+              <label className={lCls}>Description</label>
+              <textarea
+                rows={2}
+                placeholder="Brief description of your role and key achievements…"
+                value={empDraft.desc}
+                onChange={(e) =>
+                  setEmpDraft((d) => ({ ...d, desc: e.target.value }))
+                }
+                className={`${iCls} resize-none`}
+              />
+            </div>
+            <div className="flex gap-2 justify-end pt-1">
+              <button
+                onClick={() => {
+                  setAddingEmp(false);
+                  setEmpDraft({
+                    role: "",
+                    company: "",
+                    startDate: "",
+                    endDate: "",
+                    current: false,
+                    desc: "",
+                  });
+                }}
+                className={cancelBtnCls}
+              >
+                Cancel
+              </button>
+              <button onClick={saveEmp} className={saveBtnCls}>
+                Save
+              </button>
+            </div>
+          </div>
+        }
+      />
+
+      {/* ── Projects (optional) ──────────────────────────────────────────────── */}
+      <OptionalSection
+        title="Projects"
+        icon="code"
+        adding={addingProj}
+        onAdd={() => setAddingProj(true)}
+        items={data.projects}
+        renderItem={(p: ProjEntry) => (
+          <>
+            <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+              {p.title}
+            </p>
+            {(p.startDate || p.endDate) && (
+              <p className="text-[11px] text-gray-400">
+                {p.startDate}
+                {p.startDate && p.endDate ? " – " : ""}
+                {p.endDate}
+              </p>
+            )}
+          </>
+        )}
+        onRemove={(id: number) =>
+          set(
+            "projects",
+            data.projects.filter((x) => x.id !== id),
+          )
+        }
+        form={
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="md:col-span-2">
+                <label className={lCls}>Project Title *</label>
+                <input
+                  placeholder="e.g. AI-powered Resume Parser"
+                  value={projDraft.title}
+                  onChange={(e) =>
+                    setProjDraft((d) => ({ ...d, title: e.target.value }))
+                  }
+                  className={iCls}
+                />
+              </div>
+              <div>
+                <label className={lCls}>Start Date</label>
+                <MonthYearPicker
+                  value={projDraft.startDate}
+                  onChange={(v) =>
+                    setProjDraft((d) => ({ ...d, startDate: v }))
+                  }
+                  placeholder="Start month & year"
+                />
+              </div>
+              <div>
+                <label className={lCls}>End Date</label>
+                <MonthYearPicker
+                  value={projDraft.endDate}
+                  onChange={(v) => setProjDraft((d) => ({ ...d, endDate: v }))}
+                  placeholder="End month & year"
+                />
+              </div>
+              <div>
+                <label className={lCls}>Type</label>
+                <select
+                  value={projDraft.type}
+                  onChange={(e) =>
+                    setProjDraft((d) => ({ ...d, type: e.target.value }))
+                  }
+                  className={`${iCls} appearance-none`}
+                >
+                  <option value="(Offsite)">(Offsite)</option>
+                  <option value="(Onsite)">(Onsite)</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className={lCls}>Description</label>
+              <textarea
+                rows={2}
+                placeholder="What did you build and what impact did it have?"
+                value={projDraft.desc}
+                onChange={(e) =>
+                  setProjDraft((d) => ({ ...d, desc: e.target.value }))
+                }
+                className={`${iCls} resize-none`}
+              />
+            </div>
+            <div className="flex gap-2 justify-end pt-1">
+              <button
+                onClick={() => {
+                  setAddingProj(false);
+                  setProjDraft({
+                    title: "",
+                    type: "(Offsite)",
+                    startDate: "",
+                    endDate: "",
+                    desc: "",
+                  });
+                }}
+                className={cancelBtnCls}
+              >
+                Cancel
+              </button>
+              <button onClick={saveProj} className={saveBtnCls}>
+                Save
+              </button>
+            </div>
+          </div>
+        }
+      />
+
+      {/* ── Research Publications (optional) ─────────────────────────────────── */}
+      <OptionalSection
+        title="Research Publications"
+        icon="menu_book"
+        adding={addingPub}
+        onAdd={() => setAddingPub(true)}
+        items={data.publications}
+        renderItem={(p: PubEntry) => (
+          <>
+            <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+              {p.title}
+            </p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              {p.publisher}
+              {p.date ? ` · ${p.date}` : ""}
+            </p>
+          </>
+        )}
+        onRemove={(id: number) =>
+          set(
+            "publications",
+            data.publications.filter((x) => x.id !== id),
+          )
+        }
+        form={
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="md:col-span-2">
+                <label className={lCls}>Title *</label>
+                <input
+                  placeholder="e.g. Federated Learning for Edge Devices"
+                  value={pubDraft.title}
+                  onChange={(e) =>
+                    setPubDraft((d) => ({ ...d, title: e.target.value }))
+                  }
+                  className={iCls}
+                />
+              </div>
+              <div>
+                <label className={lCls}>Publisher / Journal *</label>
+                <input
+                  placeholder="e.g. IEEE Software"
+                  value={pubDraft.publisher}
+                  onChange={(e) =>
+                    setPubDraft((d) => ({ ...d, publisher: e.target.value }))
+                  }
+                  className={iCls}
+                />
+              </div>
+              <div>
+                <label className={lCls}>Publication Date</label>
+                <MonthYearPicker
+                  value={pubDraft.date}
+                  onChange={(v) => setPubDraft((d) => ({ ...d, date: v }))}
+                  placeholder="Select month & year"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className={lCls}>URL / DOI</label>
+                <input
+                  placeholder="https://doi.org/..."
+                  value={pubDraft.url}
+                  onChange={(e) =>
+                    setPubDraft((d) => ({ ...d, url: e.target.value }))
+                  }
+                  className={iCls}
+                />
+              </div>
+            </div>
+            <div>
+              <label className={lCls}>Abstract / Summary</label>
+              <textarea
+                rows={2}
+                placeholder="Brief description of the publication…"
+                value={pubDraft.desc}
+                onChange={(e) =>
+                  setPubDraft((d) => ({ ...d, desc: e.target.value }))
+                }
+                className={`${iCls} resize-none`}
+              />
+            </div>
+            <div className="flex gap-2 justify-end pt-1">
+              <button
+                onClick={() => {
+                  setAddingPub(false);
+                  setPubDraft({
+                    title: "",
+                    publisher: "",
+                    date: "",
+                    url: "",
+                    desc: "",
+                  });
+                }}
+                className={cancelBtnCls}
+              >
+                Cancel
+              </button>
+              <button onClick={savePub} className={saveBtnCls}>
+                Save
+              </button>
+            </div>
+          </div>
+        }
+      />
+
+      {/* ── Certifications (optional) ─────────────────────────────────────────── */}
+      <OptionalSection
+        title="Certifications"
+        icon="verified"
+        adding={addingCert}
+        onAdd={() => setAddingCert(true)}
+        items={data.certifications}
+        renderItem={(c: CertEntry) => (
+          <>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">
+              {c.name}
+            </p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              {c.issuer}
+              {c.issueDate ? ` · Issued ${c.issueDate}` : ""}
+              {c.doesExpire && c.expiryDate ? ` · Expires ${c.expiryDate}` : ""}
+            </p>
+          </>
+        )}
+        onRemove={(id: number) =>
+          set(
+            "certifications",
+            data.certifications.filter((x) => x.id !== id),
+          )
+        }
+        form={
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className={lCls}>Certificate Name *</label>
+                <input
+                  placeholder="e.g. AWS Solutions Architect"
+                  value={certDraft.name}
+                  onChange={(e) =>
+                    setCertDraft((d) => ({ ...d, name: e.target.value }))
+                  }
+                  className={iCls}
+                />
+              </div>
+              <div>
+                <label className={lCls}>Issuing Organisation *</label>
+                <input
+                  placeholder="e.g. Amazon Web Services"
+                  value={certDraft.issuer}
+                  onChange={(e) =>
+                    setCertDraft((d) => ({ ...d, issuer: e.target.value }))
+                  }
+                  className={iCls}
+                />
+              </div>
+              <div>
+                <label className={lCls}>Issue Date</label>
+                <MonthYearPicker
+                  value={certDraft.issueDate}
+                  onChange={(v) =>
+                    setCertDraft((d) => ({ ...d, issueDate: v }))
+                  }
+                  placeholder="Select month & year"
+                />
+              </div>
+              {certDraft.doesExpire && (
+                <div>
+                  <label className={lCls}>Expiry Date</label>
+                  <MonthYearPicker
+                    value={certDraft.expiryDate}
+                    onChange={(v) =>
+                      setCertDraft((d) => ({ ...d, expiryDate: v }))
+                    }
+                    placeholder="Select month & year"
+                  />
+                </div>
+              )}
+            </div>
+            <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={certDraft.doesExpire}
+                onChange={(e) =>
+                  setCertDraft((d) => ({ ...d, doesExpire: e.target.checked }))
+                }
+                className="rounded"
+              />
+              This certificate expires
+            </label>
+            <div className="flex gap-2 justify-end pt-1">
+              <button
+                onClick={() => {
+                  setAddingCert(false);
+                  setCertDraft({
+                    name: "",
+                    issuer: "",
+                    issueDate: "",
+                    doesExpire: false,
+                    expiryDate: "",
+                  });
+                }}
+                className={cancelBtnCls}
+              >
+                Cancel
+              </button>
+              <button onClick={saveCert} className={saveBtnCls}>
+                Save
+              </button>
+            </div>
+          </div>
+        }
+      />
+
+      {/* ── Navigation ───────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between pt-2">
+        <button
+          type="button"
+          onClick={onBack}
+          className="px-6 py-3 rounded-xl font-semibold text-subtext-light dark:text-subtext-dark hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 text-sm"
+        >
           <span className="material-icons text-sm">arrow_back</span> Back
         </button>
-        <button type="button" onClick={handleContinue}
-          className="bg-primary hover:bg-primary-hover text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/20 flex items-center gap-2 transition-all active:scale-95 text-sm">
-          Next Step <span className="material-icons text-sm">arrow_forward</span>
+        <button
+          type="button"
+          onClick={handleContinue}
+          className="bg-primary hover:bg-primary-hover text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/20 flex items-center gap-2 transition-all active:scale-95 text-sm"
+        >
+          Next Step{" "}
+          <span className="material-icons text-sm">arrow_forward</span>
         </button>
       </div>
     </div>

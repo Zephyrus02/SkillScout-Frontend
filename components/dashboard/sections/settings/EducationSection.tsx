@@ -11,6 +11,7 @@ const DEFAULT_EDUCATION: Education[] = [
     institution: "Stanford University",
     startDate: "Sep 2017",
     endDate: "Jun 2019",
+    current: false,
   },
   {
     id: 2,
@@ -18,6 +19,7 @@ const DEFAULT_EDUCATION: Education[] = [
     institution: "MIT",
     startDate: "Aug 2013",
     endDate: "May 2017",
+    current: false,
   },
 ];
 
@@ -26,6 +28,7 @@ const BLANK: Omit<Education, "id"> = {
   institution: "",
   startDate: "",
   endDate: "",
+  current: false,
 };
 
 export default function EducationSection() {
@@ -46,6 +49,7 @@ export default function EducationSection() {
       institution: e.institution,
       startDate: e.startDate,
       endDate: e.endDate,
+      current: e.current,
     });
     setEditingEdu(e);
     setAddingEdu(false);
@@ -100,7 +104,7 @@ export default function EducationSection() {
                     {e.institution}
                   </p>
                   <p className="text-[10px] text-gray-400 mt-0.5">
-                    {e.startDate} – {e.endDate}
+                    {e.startDate} – {e.current ? "Present" : e.endDate}
                   </p>
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
@@ -171,13 +175,36 @@ export default function EducationSection() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   End Date
                 </label>
-                <MonthYearPicker
-                  value={draft.endDate}
-                  onChange={(v) => setDraft((d) => ({ ...d, endDate: v }))}
-                  placeholder="End month & year"
-                />
+                {draft.current ? (
+                  <div className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-sm text-gray-400 italic">
+                    Present
+                  </div>
+                ) : (
+                  <MonthYearPicker
+                    value={draft.endDate}
+                    onChange={(v) => setDraft((d) => ({ ...d, endDate: v }))}
+                    placeholder="End month & year"
+                  />
+                )}
               </div>
             </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={draft.current}
+                onChange={(e) =>
+                  setDraft((d) => ({
+                    ...d,
+                    current: e.target.checked,
+                    endDate: e.target.checked ? "Present" : "",
+                  }))
+                }
+                className="rounded"
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Currently pursuing
+              </span>
+            </label>
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={closeModal} className={cancelBtnCls}>
                 Cancel

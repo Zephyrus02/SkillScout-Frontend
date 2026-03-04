@@ -3,7 +3,20 @@ import Modal from "@/components/ui/Modal";
 import { inputCls, cancelBtnCls, saveBtnCls, cardCls } from "./constants";
 import type { CareerProfile } from "./types";
 
+const CAREER_GOAL_OPTIONS = [
+  {
+    value: "placement",
+    label: "Land my first job & transition into the corporate world",
+  },
+  { value: "transition", label: "Transition into a new industry" },
+  { value: "promotion", label: "Get promoted in current role" },
+  { value: "freelance", label: "Start a freelance career" },
+  { value: "upskill", label: "Upskill for current market trends" },
+  { value: "leadership", label: "Step into a leadership position" },
+];
+
 const DEFAULT_CAREER: CareerProfile = {
+  primaryCareerGoal: "upskill",
   currentIndustry: "Software Product",
   department: "Engineering - Software & QA",
   roleCategory: "Software Development",
@@ -16,6 +29,7 @@ const DEFAULT_CAREER: CareerProfile = {
 };
 
 const CAREER_LABELS: Record<keyof CareerProfile, string> = {
+  primaryCareerGoal: "Primary Career Goal",
   currentIndustry: "Current Industry",
   department: "Department",
   roleCategory: "Role Category",
@@ -68,7 +82,11 @@ export default function CareerProfileSection() {
                 {label}
               </p>
               <p className="text-sm font-bold text-gray-900 dark:text-white">
-                {careerProfile[key]}
+                {key === "primaryCareerGoal"
+                  ? (CAREER_GOAL_OPTIONS.find(
+                      (o) => o.value === careerProfile[key],
+                    )?.label ?? careerProfile[key])
+                  : careerProfile[key]}
               </p>
             </div>
           ))}
@@ -85,13 +103,29 @@ export default function CareerProfileSection() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {CAREER_LABELS[key]}
                   </label>
-                  <input
-                    className={inputCls}
-                    value={draft[key]}
-                    onChange={(e) =>
-                      setDraft((d) => ({ ...d, [key]: e.target.value }))
-                    }
-                  />
+                  {key === "primaryCareerGoal" ? (
+                    <select
+                      className={`${inputCls} appearance-none`}
+                      value={draft[key]}
+                      onChange={(e) =>
+                        setDraft((d) => ({ ...d, [key]: e.target.value }))
+                      }
+                    >
+                      {CAREER_GOAL_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      className={inputCls}
+                      value={draft[key]}
+                      onChange={(e) =>
+                        setDraft((d) => ({ ...d, [key]: e.target.value }))
+                      }
+                    />
+                  )}
                 </div>
               ),
             )}

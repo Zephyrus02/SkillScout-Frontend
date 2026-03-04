@@ -31,27 +31,30 @@ export default function ProfileSetupPage() {
 
   const [personalData, setPersonalData] = useState<PersonalStepData>({
     fullName: "",
-    preferredTitle: "",
     careerGoal: "",
+    profilePicture: null,
+    profilePictureUrl: null,
   });
 
   const [experienceData, setExperienceData] = useState<ExperienceStepData>({
     resumeFile: null,
-    targetRole: "",
-    industry: "",
-    yearsOfExp: "",
-    topSkills: [],
+    profileHeadline: "",
+    education: [],
+    employment: [],
+    projects: [],
+    publications: [],
+    certifications: [],
   });
 
   const [jobLevelData, setJobLevelData] = useState<JobLevelStepData>({
     careerLevel: "",
+    targetIndustries: [],
     targetRoles: [],
-    customRole: "",
   });
 
   const [skillsData, setSkillsData] = useState<SkillsTagsData>({
     techSkills: [],
-    softSkills: [],
+    socialLinks: { linkedin: "", github: "", twitter: "", website: "" },
   });
 
   const next = () => setStep((s) => Math.min(s + 1, 4));
@@ -108,6 +111,7 @@ export default function ProfileSetupPage() {
             <Step4Skills
               data={skillsData}
               onChange={setSkillsData}
+              jobLevel={jobLevelData}
               onContinue={next}
               onBack={back}
             />
@@ -120,6 +124,7 @@ export default function ProfileSetupPage() {
               skills={skillsData}
               onFinish={finish}
               onBack={back}
+              onGoToStep={setStep}
             />
           )}
         </main>

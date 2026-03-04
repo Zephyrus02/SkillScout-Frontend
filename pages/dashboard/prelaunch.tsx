@@ -79,8 +79,28 @@ export default function PrelaunchPage() {
   const animFrameRef = useRef<number>(0);
 
   // ── Device compatibility ─────────────────────────────────
-  const [deviceStatus, setDeviceStatus] = useState<CheckStatus>("checking");
-  const [deviceLabel, setDeviceLabel] = useState<string>("");
+  // Computed once from UA — lazy init avoids a synchronous setState in an effect.
+  const [deviceStatus] = useState<CheckStatus>(() => {
+    if (typeof window === "undefined") return "checking";
+    const ua = navigator.userAgent;
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const isTablet = /iPad|Android(?!.*Mobile)/i.test(ua);
+    if (isMobile && !isTablet) return "error";
+    if (isTablet) return "error";
+    return "ok";
+  });
+  const [deviceLabel] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    const ua = navigator.userAgent;
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const isTablet = /iPad|Android(?!.*Mobile)/i.test(ua);
+    if (isMobile && !isTablet)
+      return "Mobile device detected – desktop required";
+    if (isTablet) return "Tablet detected – desktop required";
+    return "Desktop / Laptop detected";
+  });
 
   // ── Speaker ──────────────────────────────────────────────
 
@@ -104,14 +124,15 @@ export default function PrelaunchPage() {
   // ── Camera init ──────────────────────────────────────────
   useEffect(() => {
     let stream: MediaStream;
+    const video = videoRef.current;
     (async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: false,
         });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+        if (video) {
+          video.srcObject = stream;
         }
         const track = stream.getVideoTracks()[0];
         setCameraLabel(track?.label || "Camera");
@@ -123,8 +144,8 @@ export default function PrelaunchPage() {
     })();
     return () => {
       stream?.getTracks().forEach((t) => t.stop());
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
+      if (video) {
+        video.srcObject = null;
       }
     };
   }, []);
@@ -224,7 +245,6 @@ export default function PrelaunchPage() {
       micStreamRef.current?.getTracks().forEach((t) => t.stop());
       audioCtx?.close();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Internet connection check ─────────────────────────────
@@ -244,13 +264,18 @@ export default function PrelaunchPage() {
           mode: "no-cors",
         });
         const ping = Math.round(performance.now() - pingStart);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        interface NetworkConnection {
+          downlink?: number;
+          effectiveType?: string;
+        }
+        interface NetworkNavigator {
+          connection?: NetworkConnection;
+          mozConnection?: NetworkConnection;
+          webkitConnection?: NetworkConnection;
+        }
+        const netNav = navigator as unknown as NetworkNavigator;
         const conn =
-          (navigator as any).connection ||
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (navigator as any).mozConnection ||
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (navigator as any).webkitConnection;
+          netNav.connection ?? netNav.mozConnection ?? netNav.webkitConnection;
         const downlink: number | undefined = conn?.downlink;
         const effectiveType: string | undefined = conn?.effectiveType;
 
@@ -291,24 +316,6 @@ export default function PrelaunchPage() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, []);
-
-  // ── Device compatibility ─────────────────────────────────
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    const isMobile =
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-    const isTablet = /iPad|Android(?!.*Mobile)/i.test(ua);
-    if (isMobile && !isTablet) {
-      setDeviceStatus("error");
-      setDeviceLabel("Mobile device detected – desktop required");
-    } else if (isTablet) {
-      setDeviceStatus("error");
-      setDeviceLabel("Tablet detected – desktop required");
-    } else {
-      setDeviceStatus("ok");
-      setDeviceLabel("Desktop / Laptop detected");
-    }
   }, []);
 
   // ── Speaker test ─────────────────────────────────────────

@@ -268,17 +268,11 @@ export function useMediaPipeProctoring(
       }
     });
 
-    // Already loaded? Start immediately without waiting for subscribe
+    // Already loaded? Start immediately without waiting for subscribe.
+    // State is already hydrated by the useState initializer, so just kick
+    // off the detection interval without triggering a redundant setState.
     const snap = getSnapshot();
     if (snap.state === "loaded") {
-      setResult((prev) => ({
-        ...prev,
-        isLoading: false,
-        isReady: true,
-        modelLoaded: true,
-        retryAttempt: snap.attempt,
-        maxRetries: snap.maxAttempts,
-      }));
       startInterval();
     } else {
       ensureLoaded(); // no-op if already loading

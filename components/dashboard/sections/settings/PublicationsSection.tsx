@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Modal from "@/components/ui/Modal";
+import MonthYearPicker from "@/components/ui/MonthYearPicker";
 import { inputCls, cancelBtnCls, saveBtnCls, cardCls } from "./constants";
 import type { Publication } from "./types";
 
@@ -140,48 +141,55 @@ export default function PublicationsSection() {
           onClose={closeModal}
         >
           <div className="space-y-4">
-            {(
-              [
-                {
-                  label: "Publication Title",
-                  key: "title",
-                  placeholder: "e.g. Optimizing Microservices for Scale",
-                },
-                {
-                  label: "Publisher / Journal",
-                  key: "publisher",
-                  placeholder: "e.g. IEEE Software",
-                },
-                {
-                  label: "Publication Date (e.g. Nov 2023)",
-                  key: "date",
-                  placeholder: "e.g. Nov 2023",
-                },
-                {
-                  label: "Publication URL",
-                  key: "url",
-                  placeholder: "https://...",
-                },
-              ] as {
-                label: string;
-                key: keyof typeof draft;
-                placeholder: string;
-              }[]
-            ).map(({ label, key, placeholder }) => (
-              <div key={key}>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {label}
-                </label>
-                <input
-                  className={inputCls}
-                  value={draft[key]}
-                  placeholder={placeholder}
-                  onChange={(e) =>
-                    setDraft((d) => ({ ...d, [key]: e.target.value }))
-                  }
-                />
-              </div>
-            ))}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Publication Title
+              </label>
+              <input
+                className={inputCls}
+                value={draft.title}
+                placeholder="e.g. Optimizing Microservices for Scale"
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, title: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Publisher / Journal
+              </label>
+              <input
+                className={inputCls}
+                value={draft.publisher}
+                placeholder="e.g. IEEE Software"
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, publisher: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Publication Date
+              </label>
+              <MonthYearPicker
+                value={draft.date}
+                onChange={(v) => setDraft((d) => ({ ...d, date: v }))}
+                placeholder="Select month & year"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Publication URL
+              </label>
+              <input
+                className={inputCls}
+                value={draft.url}
+                placeholder="https://..."
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, url: e.target.value }))
+                }
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Description
