@@ -15,6 +15,9 @@ import StepSkills, {
 import Step4Skills, {
   SkillsTagsData,
 } from "@/components/profile-setup/Step4Skills";
+import Step5PlanSelect, {
+  PlanId,
+} from "@/components/profile-setup/Step5PlanSelect";
 import Step5Review from "@/components/profile-setup/Step5Review";
 import { profileAPI } from "@/lib/api";
 
@@ -23,7 +26,8 @@ const STEP_TITLES: Record<number, string> = {
   1: "Experience, Background & Preferences",
   2: "Job Level & Target Roles",
   3: "Skills & Technologies",
-  4: "Review & Finish",
+  4: "Choose Your Plan",
+  5: "Review & Finish",
 };
 
 export default function ProfileSetupPage() {
@@ -31,6 +35,7 @@ export default function ProfileSetupPage() {
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null);
 
   const [personalData, setPersonalData] = useState<PersonalStepData>({
     fullName: "",
@@ -65,7 +70,7 @@ export default function ProfileSetupPage() {
     socialLinks: { linkedin: "", github: "", twitter: "", website: "" },
   });
 
-  const next = () => setStep((s) => Math.min(s + 1, 4));
+  const next = () => setStep((s) => Math.min(s + 1, 5));
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
   const finish = async () => {
@@ -83,6 +88,7 @@ export default function ProfileSetupPage() {
       }
       fd.append("profileHeadline", experienceData.profileHeadline);
       fd.append("careerLevel", jobLevelData.careerLevel);
+      if (selectedPlan) fd.append("plan", selectedPlan);
       if (experienceData.currentLocation)
         fd.append("currentLocation", experienceData.currentLocation);
       if (experienceData.preferredLocation)
@@ -192,13 +198,17 @@ export default function ProfileSetupPage() {
       <div className="min-h-screen bg-background-light dark:bg-background-dark">
         <SetupNav />
 
-        <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10 pb-20">
-          <SetupProgressBar currentStep={step} />
+        <main
+          className={`${step === 4 ? "max-w-6xl" : "max-w-3xl"} mx-auto px-4 sm:px-6 py-10 pb-20 transition-all duration-300`}
+        >
+          <div className={step === 4 || step === 5 ? "max-w-3xl" : ""}>
+            <SetupProgressBar currentStep={step} />
 
-          <div className="mb-8">
-            <h1 className="text-3xl font-extrabold text-text-light dark:text-text-dark">
-              {STEP_TITLES[step]}
-            </h1>
+            <div className="mb-8">
+              <h1 className="text-3xl font-extrabold text-text-light dark:text-text-dark">
+                {STEP_TITLES[step]}
+              </h1>
+            </div>
           </div>
 
           {step === 0 && (
@@ -235,6 +245,14 @@ export default function ProfileSetupPage() {
             />
           )}
           {step === 4 && (
+            <Step5PlanSelect
+              selectedPlan={selectedPlan}
+              onSelectPlan={setSelectedPlan}
+              onContinue={next}
+              onBack={back}
+            />
+          )}
+          {step === 5 && (
             <Step5Review
               personal={personalData}
               experience={experienceData}

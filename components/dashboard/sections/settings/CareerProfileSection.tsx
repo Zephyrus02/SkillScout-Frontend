@@ -127,13 +127,14 @@ export default function CareerProfileSection() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-          {/* Primary Career Goal */}
-          <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+        {/* ── Career overview ─────────────────────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-5 gap-x-8 mb-6">
+          {/* Primary Career Goal — full width, value can be long */}
+          <div className="md:col-span-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">
               Primary Career Goal
             </p>
-            <p className="text-sm font-bold text-gray-900 dark:text-white">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">
               {CAREER_GOAL_OPTIONS.find(
                 (o) => o.value === careerProfile.primaryCareerGoal,
               )?.label ||
@@ -144,105 +145,110 @@ export default function CareerProfileSection() {
 
           {/* Current Job Role */}
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">
               Current Job Role
             </p>
-            <p className="text-sm font-bold text-gray-900 dark:text-white">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">
               {careerProfile.jobRole || "—"}
-            </p>
-          </div>
-
-          {/* Desired Industry — read-only from step 3 */}
-          <div className="md:col-span-2">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-              Desired Industry
-            </p>
-            {targetIndustries.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {targetIndustries.map((ind) => (
-                  <span
-                    key={ind}
-                    className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full"
-                  >
-                    {ind}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm font-bold text-gray-900 dark:text-white">
-                —
-              </p>
-            )}
-          </div>
-
-          {/* Desired Job Roles — read-only from step 3 */}
-          <div className="md:col-span-2">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-              Desired Job Roles
-            </p>
-            {targetRoles.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {targetRoles.map((role) => (
-                  <span
-                    key={role}
-                    className="px-3 py-1 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full"
-                  >
-                    {role}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm font-bold text-gray-900 dark:text-white">
-                —
-              </p>
-            )}
-          </div>
-
-          {/* Desired Employment Type */}
-          <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-              Desired Employment Type
-            </p>
-            <p className="text-sm font-bold text-gray-900 dark:text-white capitalize">
-              {careerProfile.desiredEmploymentType || "—"}
-            </p>
-          </div>
-
-          {/* Preferred Shift */}
-          <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-              Preferred Shift
-            </p>
-            <p className="text-sm font-bold text-gray-900 dark:text-white">
-              {careerProfile.preferredShift || "—"}
-            </p>
-          </div>
-
-          {/* Preferred Work Location */}
-          <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-              Preferred Work Location
-            </p>
-            <p className="text-sm font-bold text-gray-900 dark:text-white">
-              {careerProfile.preferredWorkLocation || "—"}
-            </p>
-          </div>
-
-          {/* Expected Salary */}
-          <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-              Expected Salary
-            </p>
-            <p className="text-sm font-bold text-gray-900 dark:text-white">
-              {displaySalary(careerProfile.expectedSalary)}
             </p>
           </div>
         </div>
 
-        <p className="mt-6 text-xs text-gray-400 dark:text-gray-500 italic">
-          Desired Industry &amp; Job Roles are set in Step 3 of Profile Setup
-          and cannot be edited here.
-        </p>
+        {/* ── Target industries & roles ────────────────────────────── */}
+        <div className="border-t border-gray-100 dark:border-gray-800 pt-5 mb-6">
+          <div className="flex items-center gap-1.5 mb-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+              Targets
+            </p>
+            <span className="text-xs text-gray-300 dark:text-gray-600 italic">
+              — set in Profile Setup · Step 3
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Desired Industry */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">
+                Desired Industry
+              </p>
+              {targetIndustries.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {targetIndustries.map((ind) => (
+                    <span
+                      key={ind}
+                      className="px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full border border-blue-100 dark:border-blue-800/40"
+                    >
+                      {ind}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">—</p>
+              )}
+            </div>
+
+            {/* Desired Job Roles */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">
+                Desired Job Roles
+              </p>
+              {targetRoles.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {targetRoles.map((role) => (
+                    <span
+                      key={role}
+                      className="px-2.5 py-1 text-xs font-medium bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full border border-green-100 dark:border-green-800/40"
+                    >
+                      {role}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">—</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Preferences ─────────────────────────────────────────── */}
+        <div className="border-t border-gray-100 dark:border-gray-800 pt-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-4">
+            Preferences
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-y-5 gap-x-6">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">
+                Employment Type
+              </p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white capitalize">
+                {careerProfile.desiredEmploymentType || "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">
+                Preferred Shift
+              </p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                {careerProfile.preferredShift || "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">
+                Work Location
+              </p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                {careerProfile.preferredWorkLocation || "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">
+                Expected Salary
+              </p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                {displaySalary(careerProfile.expectedSalary)}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Edit Modal */}

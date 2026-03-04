@@ -3,10 +3,11 @@ const STEP_TITLES: Record<number, string> = {
   1: "Experience & Skills",
   2: "Job Level & Target Roles",
   3: "Skills & Technologies",
-  4: "Review & Finish",
+  4: "Select Pricing",
+  5: "Review & Finish",
 };
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 interface SetupProgressBarProps {
   currentStep: number; // 0-indexed
@@ -21,7 +22,7 @@ export default function SetupProgressBar({
     <div className="mb-10">
       {/* Heading + step counter */}
       <div className="flex justify-between items-center mb-3">
-        <p className="text-2xl font-bold text-text-light dark:text-text-dark font-display">
+        <p className="text-2xl font-bold text-text-light dark:text-text-dark font-display text-center">
           {STEP_TITLES[currentStep]}
         </p>
         <p className="text-sm font-semibold text-subtext-light dark:text-subtext-dark whitespace-nowrap">
