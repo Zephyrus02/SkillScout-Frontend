@@ -145,7 +145,7 @@ export default function ForgotPasswordForm() {
               Forgot Password?
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-base">
-              No worries – enter your email and we'll send you a reset code.
+              No worries – enter your email and we&apos;ll send you a reset code.
             </p>
           </div>
 

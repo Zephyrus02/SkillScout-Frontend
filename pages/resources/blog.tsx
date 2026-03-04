@@ -112,10 +112,10 @@ export default function BlogDetailPage() {
               <div className="text-subtext-light dark:text-subtext-dark">
                 <p className="text-lg leading-relaxed mb-6">
                   System design interviews are notoriously difficult. Unlike
-                  coding rounds where there&apos;s often a single "correct"
-                  optimal solution, system design is open-ended, ambiguous, and
-                  requires a breadth of knowledge spanning databases,
-                  networking, and distributed systems.
+                  coding rounds where there&apos;s often a single
+                  &quot;correct&quot; optimal solution, system design is
+                  open-ended, ambiguous, and requires a breadth of knowledge
+                  spanning databases, networking, and distributed systems.
                 </p>
                 <p className="mb-8 leading-relaxed">
                   However, with the rise of AI assistants, candidates now have a
@@ -213,12 +213,12 @@ export default function BlogDetailPage() {
 
                 <div className="bg-slate-900 rounded-lg p-5 text-slate-300 font-mono text-sm overflow-x-auto mb-8 border border-slate-700">
                   <p className="mb-0">
-                    "Act as a Staff Engineer at Meta conducting a system design
-                    interview. I am the candidate. Ask me to design
+                    &quot;Act as a Staff Engineer at Meta conducting a system
+                    design interview. I am the candidate. Ask me to design
                     Instagram&apos;s News Feed. Do not give me the solution.
                     Start by giving me the problem statement, then wait for my
                     clarifying questions. Grade my responses on scalability,
-                    reliability, and completeness."
+                    reliability, and completeness.&quot;
                   </p>
                 </div>
 

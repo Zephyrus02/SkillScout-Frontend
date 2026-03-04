@@ -42,18 +42,22 @@ interface UseGoogleAuthProps {
 }
 
 export const useGoogleAuth = ({ onSuccess, onError }: UseGoogleAuthProps) => {
-  const [gisReady, setGisReady] = useState(false);
+  const [gisReady, setGisReady] = useState(
+    () => typeof window !== "undefined" && !!window.google,
+  );
   const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
   const buttonRenderedRef = useRef(false);
 
   // Load the Google Identity Services script once
   useEffect(() => {
+    // If the lazy initializer already picked up window.google, nothing to do.
+    if (window.google) return;
+
     const existing = document.querySelector<HTMLScriptElement>(
       'script[src="https://accounts.google.com/gsi/client"]',
     );
     if (existing) {
-      if (window.google) setGisReady(true);
-      else existing.addEventListener("load", () => setGisReady(true));
+      existing.addEventListener("load", () => setGisReady(true));
       return;
     }
 

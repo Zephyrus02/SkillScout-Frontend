@@ -84,7 +84,10 @@ export default function StepResume({
           {/* Profile picture */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold text-text-light dark:text-text-dark ml-1">
-              Profile Picture <span className="text-subtext-light dark:text-subtext-dark font-normal">(optional)</span>
+              Profile Picture{" "}
+              <span className="text-subtext-light dark:text-subtext-dark font-normal">
+                (optional)
+              </span>
             </label>
             <div className="flex items-center gap-5">
               <div className="relative flex-shrink-0">
@@ -96,7 +99,9 @@ export default function StepResume({
                   />
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-indigo-200 dark:from-gray-700 dark:to-gray-600 border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                    <span className="material-icons text-subtext-light text-3xl">person</span>
+                    <span className="material-icons text-subtext-light text-3xl">
+                      person
+                    </span>
                   </div>
                 )}
               </div>
@@ -125,7 +130,9 @@ export default function StepResume({
                     Remove
                   </button>
                 )}
-                <p className="text-xs text-subtext-light dark:text-subtext-dark">JPG, PNG or WebP · Max 5 MB</p>
+                <p className="text-xs text-subtext-light dark:text-subtext-dark">
+                  JPG, PNG or WebP · Max 5 MB
+                </p>
               </div>
             </div>
           </div>

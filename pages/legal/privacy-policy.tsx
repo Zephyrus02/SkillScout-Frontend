@@ -32,10 +32,10 @@ export default function PrivacyPolicyPage() {
     >
       <Section id="introduction" number={1} title="Introduction">
         <p>
-          SkillScout ("we", "us", or "our") operates an AI-powered mock
-          interview and job-readiness platform. This Privacy Policy describes
-          how we collect, use, disclose, and safeguard your information when you
-          use our website and Service.
+          SkillScout (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;)
+          operates an AI-powered mock interview and job-readiness platform. This
+          Privacy Policy describes how we collect, use, disclose, and safeguard
+          your information when you use our website and Service.
         </p>
         <p>
           By using SkillScout, you consent to the data practices described in

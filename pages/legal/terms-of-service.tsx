@@ -32,10 +32,11 @@ export default function TermsOfServicePage() {
     >
       <Section id="introduction" number={1} title="Introduction">
         <p>
-          Welcome to SkillScout. These Terms of Service ("Terms") govern your
-          access to and use of our website, AI-powered mock interview platform,
-          assessment engine, and any other software or services provided by
-          SkillScout (collectively, the "Service").
+          Welcome to SkillScout. These Terms of Service (&quot;Terms&quot;)
+          govern your access to and use of our website, AI-powered mock
+          interview platform, assessment engine, and any other software or
+          services provided by SkillScout (collectively, the
+          &quot;Service&quot;).
         </p>
         <p>
           By accessing or using the Service, you agree to be bound by these
@@ -170,11 +171,12 @@ export default function TermsOfServicePage() {
 
       <Section id="disclaimer" number={7} title="Disclaimer of Warranties">
         <p>
-          The Service is provided "as is" and "as available" without warranties
-          of any kind, either express or implied. SkillScout does not warrant
-          that the Service will be uninterrupted, error-free, or free of harmful
-          components. AI-generated feedback is for educational purposes only and
-          does not constitute career or legal advice.
+          The Service is provided &quot;as is&quot; and &quot;as available&quot;
+          without warranties of any kind, either express or implied. SkillScout
+          does not warrant that the Service will be uninterrupted, error-free,
+          or free of harmful components. AI-generated feedback is for
+          educational purposes only and does not constitute career or legal
+          advice.
         </p>
         <p>
           To the maximum extent permitted by law, SkillScout is not liable for
