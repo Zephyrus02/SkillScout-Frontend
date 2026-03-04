@@ -254,11 +254,7 @@ export interface ProfileHeader {
 
 export interface CareerProfile {
   primaryCareerGoal?: string;
-  currentIndustry?: string;
-  department?: string;
-  roleCategory?: string;
   jobRole?: string;
-  desiredJobType?: string;
   desiredEmploymentType?: string;
   preferredShift?: string;
   preferredWorkLocation?: string;
@@ -282,6 +278,8 @@ export interface EmploymentEntry {
   endDate?: string;
   current?: boolean;
   desc?: string;
+  salary?: string;
+  noticePeriod?: string;
 }
 
 export interface ProjectEntry {

@@ -327,13 +327,15 @@ export default function Step4Skills({
   const socialLinks = data.socialLinks ?? DEFAULT_SOCIAL_LINKS;
   const recommended = getRecommended(jobLevel);
 
+  const hasSkill = (s: string) =>
+    data.techSkills.some((x) => x.toLowerCase() === s.toLowerCase());
+
   // Filter full SKILLS list for dropdown
   const dropdownOptions =
     techSearch.trim().length > 0
       ? SKILLS.filter(
           (s) =>
-            !data.techSkills.includes(s) &&
-            s.toLowerCase().includes(techSearch.toLowerCase()),
+            !hasSkill(s) && s.toLowerCase().includes(techSearch.toLowerCase()),
         ).slice(0, 30)
       : [];
 
@@ -355,7 +357,7 @@ export default function Step4Skills({
 
   const addTech = (s: string) => {
     const trimmed = s.trim();
-    if (trimmed && !data.techSkills.includes(trimmed)) {
+    if (trimmed && !hasSkill(trimmed)) {
       onChange({ ...data, techSkills: [...data.techSkills, trimmed] });
     }
     setTechSearch("");
@@ -470,7 +472,7 @@ export default function Step4Skills({
           </p>
           <div className="flex flex-wrap gap-2">
             {recommended
-              .filter((s) => !data.techSkills.includes(s))
+              .filter((s) => !hasSkill(s))
               .map((s) => (
                 <button
                   key={s}

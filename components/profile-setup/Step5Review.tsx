@@ -311,12 +311,76 @@ export default function Step5Review({
                         {emp.desc}
                       </p>
                     )}
+                    {(emp.salary || emp.noticePeriod) && (
+                      <p className="text-xs text-subtext-light dark:text-subtext-dark mt-0.5">
+                        {emp.salary && `${emp.salary} LPA`}
+                        {emp.salary && emp.noticePeriod && " · "}
+                        {emp.noticePeriod && `Notice: ${emp.noticePeriod}`}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+
+        {/* Location & Job Preferences */}
+        {(experience.currentLocation ||
+          experience.preferredLocation ||
+          experience.preferredShift ||
+          experience.desiredWorkType ||
+          experience.expectedSalary) && (
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-subtext-light dark:text-subtext-dark mb-2">
+              Location &amp; Preferences
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {experience.currentLocation && (
+                <div className="p-2 rounded-lg bg-slate-50 dark:bg-gray-800/60">
+                  <p className="text-[10px] text-gray-400">Current Location</p>
+                  <p className="text-xs font-semibold text-text-light dark:text-text-dark">
+                    {experience.currentLocation}
+                  </p>
+                </div>
+              )}
+              {experience.preferredLocation && (
+                <div className="p-2 rounded-lg bg-slate-50 dark:bg-gray-800/60">
+                  <p className="text-[10px] text-gray-400">
+                    Preferred Location
+                  </p>
+                  <p className="text-xs font-semibold text-text-light dark:text-text-dark">
+                    {experience.preferredLocation}
+                  </p>
+                </div>
+              )}
+              {experience.preferredShift && (
+                <div className="p-2 rounded-lg bg-slate-50 dark:bg-gray-800/60">
+                  <p className="text-[10px] text-gray-400">Preferred Shift</p>
+                  <p className="text-xs font-semibold text-text-light dark:text-text-dark">
+                    {experience.preferredShift}
+                  </p>
+                </div>
+              )}
+              {experience.desiredWorkType && (
+                <div className="p-2 rounded-lg bg-slate-50 dark:bg-gray-800/60">
+                  <p className="text-[10px] text-gray-400">Employment Type</p>
+                  <p className="text-xs font-semibold text-text-light dark:text-text-dark capitalize">
+                    {experience.desiredWorkType}
+                  </p>
+                </div>
+              )}
+              {experience.expectedSalary && (
+                <div className="p-2 rounded-lg bg-slate-50 dark:bg-gray-800/60">
+                  <p className="text-[10px] text-gray-400">Expected Salary</p>
+                  <p className="text-xs font-semibold text-text-light dark:text-text-dark">
+                    {experience.expectedSalary} LPA
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Projects */}
         {experience.projects.length > 0 && (

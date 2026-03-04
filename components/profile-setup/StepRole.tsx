@@ -19,6 +19,8 @@ type EmpEntry = {
   endDate: string;
   current: boolean;
   desc: string;
+  salary: string;
+  noticePeriod: string;
 };
 type ProjEntry = {
   id: number;
@@ -53,6 +55,11 @@ export interface ExperienceStepData {
   projects: ProjEntry[];
   publications: PubEntry[];
   certifications: CertEntry[];
+  currentLocation: string;
+  preferredLocation: string;
+  preferredShift: string;
+  expectedSalary: string;
+  desiredWorkType: string;
 }
 
 interface StepRoleProps {
@@ -189,6 +196,8 @@ export default function StepRole({
     endDate: "",
     current: false,
     desc: "",
+    salary: "",
+    noticePeriod: "",
   });
   const [projDraft, setProjDraft] = useState({
     title: "",
@@ -244,6 +253,8 @@ export default function StepRole({
       endDate: "",
       current: false,
       desc: "",
+      salary: "",
+      noticePeriod: "",
     });
     setAddingEmp(false);
   };
@@ -558,6 +569,13 @@ export default function StepRole({
             <p className="text-[11px] text-gray-400 mt-0.5">
               {e.startDate} – {e.current ? "Present" : e.endDate}
             </p>
+            {(e.salary || e.noticePeriod) && (
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                {e.salary && `${e.salary} LPA`}
+                {e.salary && e.noticePeriod && " · "}
+                {e.noticePeriod && `Notice: ${e.noticePeriod}`}
+              </p>
+            )}
           </>
         )}
         onRemove={(id: number) =>
@@ -639,6 +657,44 @@ export default function StepRole({
                 className={`${iCls} resize-none`}
               />
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className={lCls}>Salary (at this job)</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 12"
+                    value={empDraft.salary}
+                    onChange={(e) =>
+                      setEmpDraft((d) => ({ ...d, salary: e.target.value }))
+                    }
+                    className={`${iCls} pr-14`}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400 pointer-events-none">
+                    LPA
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className={lCls}>Notice Period</label>
+                <select
+                  value={empDraft.noticePeriod}
+                  onChange={(e) =>
+                    setEmpDraft((d) => ({ ...d, noticePeriod: e.target.value }))
+                  }
+                  className={`${iCls} appearance-none`}
+                >
+                  <option value="">Select notice period</option>
+                  <option value="Immediate">Immediate</option>
+                  <option value="15 Days">15 Days</option>
+                  <option value="1 Month">1 Month</option>
+                  <option value="2 Months">2 Months</option>
+                  <option value="3 Months">3 Months</option>
+                  <option value="6 Months">6 Months</option>
+                </select>
+              </div>
+            </div>
             <div className="flex gap-2 justify-end pt-1">
               <button
                 onClick={() => {
@@ -650,6 +706,8 @@ export default function StepRole({
                     endDate: "",
                     current: false,
                     desc: "",
+                    salary: "",
+                    noticePeriod: "",
                   });
                 }}
                 className={cancelBtnCls}
@@ -985,6 +1043,87 @@ export default function StepRole({
           </div>
         }
       />
+
+      {/* ── Location & Job Preferences (separate section) ─────────────────── */}
+      <div className="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 md:p-8">
+        <div className="flex items-center gap-2 mb-5">
+          <span className="material-icons text-primary text-[22px]">
+            location_on
+          </span>
+          <div>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+              Location &amp; Job Preferences
+            </h3>
+            <p className="text-[11px] text-gray-400">
+              Helps us match you with the right opportunities.
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className={lCls}>Current Location</label>
+            <input
+              type="text"
+              placeholder="e.g. Bengaluru, India"
+              value={data.currentLocation}
+              onChange={(e) => set("currentLocation", e.target.value)}
+              className={iCls}
+            />
+          </div>
+          <div>
+            <label className={lCls}>Preferred Location</label>
+            <input
+              type="text"
+              placeholder="e.g. Mumbai, Remote"
+              value={data.preferredLocation}
+              onChange={(e) => set("preferredLocation", e.target.value)}
+              className={iCls}
+            />
+          </div>
+          <div>
+            <label className={lCls}>Preferred Shift</label>
+            <select
+              value={data.preferredShift}
+              onChange={(e) => set("preferredShift", e.target.value)}
+              className={`${iCls} appearance-none`}
+            >
+              <option value="">Select shift preference</option>
+              <option value="Day">Day</option>
+              <option value="Night">Night</option>
+              <option value="Any">Any / Flexible</option>
+            </select>
+          </div>
+          <div>
+            <label className={lCls}>Desired Employment Type</label>
+            <select
+              value={data.desiredWorkType}
+              onChange={(e) => set("desiredWorkType", e.target.value)}
+              className={`${iCls} appearance-none`}
+            >
+              <option value="">Select work mode</option>
+              <option value="onsite">Onsite</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="remote">Remote</option>
+            </select>
+          </div>
+          <div className="md:col-span-2">
+            <label className={lCls}>Expected Salary</label>
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                placeholder="e.g. 15"
+                value={data.expectedSalary}
+                onChange={(e) => set("expectedSalary", e.target.value)}
+                className={`${iCls} pr-14`}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400 pointer-events-none">
+                LPA
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* ── Navigation ───────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between pt-2">

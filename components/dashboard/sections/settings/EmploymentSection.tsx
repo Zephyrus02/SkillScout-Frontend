@@ -13,6 +13,8 @@ const BLANK: Omit<Employment, "id"> = {
   endDate: "",
   current: false,
   desc: "",
+  salary: "",
+  noticePeriod: "",
 };
 
 export default function EmploymentSection() {
@@ -35,6 +37,8 @@ export default function EmploymentSection() {
           endDate: e.endDate ?? "",
           current: e.current ?? false,
           desc: e.desc ?? "",
+          salary: (e as any).salary ?? "",
+          noticePeriod: (e as any).noticePeriod ?? "",
         })),
       );
     }
@@ -55,6 +59,8 @@ export default function EmploymentSection() {
       endDate: e.endDate,
       current: e.current,
       desc: e.desc,
+      salary: e.salary ? e.salary.replace(/\s*LPA$/i, "").trim() : "",
+      noticePeriod: e.noticePeriod,
     });
     setEditingEmp(e);
     setSaveError(null);
@@ -69,17 +75,27 @@ export default function EmploymentSection() {
   const save = async () => {
     setSaving(true);
     setSaveError(null);
+    const submitDraft = {
+      ...draft,
+      salary:
+        draft.salary && !draft.salary.endsWith("LPA")
+          ? `${draft.salary} LPA`
+          : draft.salary,
+    };
     try {
       if (editingEmp) {
-        const res = await profileAPI.updateEmployment(editingEmp.id, draft);
+        const res = await profileAPI.updateEmployment(
+          editingEmp.id,
+          submitDraft,
+        );
         setEmployment((es) =>
           es.map((e) =>
-            e.id === editingEmp.id ? { ...draft, id: res.data.id } : e,
+            e.id === editingEmp.id ? { ...submitDraft, id: res.data.id } : e,
           ),
         );
       } else {
-        const res = await profileAPI.addEmployment(draft);
-        setEmployment((es) => [...es, { ...draft, id: res.data.id }]);
+        const res = await profileAPI.addEmployment(submitDraft);
+        setEmployment((es) => [...es, { ...submitDraft, id: res.data.id }]);
       }
       closeModal();
     } catch (e: unknown) {
@@ -152,6 +168,16 @@ export default function EmploymentSection() {
                     <p className="text-[10px] text-gray-400 mt-0.5">
                       {e.startDate} – {e.current ? "Present" : e.endDate}
                     </p>
+                    {(e.salary || e.noticePeriod) && (
+                      <p className="text-[10px] text-gray-400 mt-0.5">
+                        {e.salary &&
+                          (e.salary.endsWith("LPA")
+                            ? e.salary
+                            : `${e.salary} LPA`)}
+                        {e.salary && e.noticePeriod && " · "}
+                        {e.noticePeriod && `Notice: ${e.noticePeriod}`}
+                      </p>
+                    )}
                     {e.desc && (
                       <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-relaxed line-clamp-2">
                         {e.desc}
@@ -269,6 +295,48 @@ export default function EmploymentSection() {
                   setDraft((d) => ({ ...d, desc: e.target.value }))
                 }
               />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Salary
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    className={`${inputCls} pr-14`}
+                    value={draft.salary}
+                    placeholder="e.g. 12"
+                    onChange={(e) =>
+                      setDraft((d) => ({ ...d, salary: e.target.value }))
+                    }
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400 pointer-events-none">
+                    LPA
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Notice Period
+                </label>
+                <select
+                  className={`${inputCls} appearance-none`}
+                  value={draft.noticePeriod}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, noticePeriod: e.target.value }))
+                  }
+                >
+                  <option value="">Select notice period</option>
+                  <option value="Immediate">Immediate</option>
+                  <option value="15 Days">15 Days</option>
+                  <option value="1 Month">1 Month</option>
+                  <option value="2 Months">2 Months</option>
+                  <option value="3 Months">3 Months</option>
+                  <option value="6 Months">6 Months</option>
+                </select>
+              </div>
             </div>
             {saveError && (
               <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">

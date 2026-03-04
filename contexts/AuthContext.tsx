@@ -10,8 +10,7 @@
  * Candidate-only flow: after login/google-auth we check profile status and
  * redirect candidates to:
  *   1. /profile-setup  — if profile not yet completed
- *   2. /choose-plan    — if hasAccess is false
- *   3. /dashboard      — happy path
+ *   2. /dashboard      — happy path
  */
 
 import React, {
@@ -92,7 +91,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  *
  * Admins → /admin/dashboard
  * Candidates without completed profile → /profile-setup
- * Candidates without access → /choose-plan
  * Candidates OK → /dashboard
  */
 async function navigateAfterAuth(
@@ -115,10 +113,6 @@ async function navigateAfterAuth(
       false;
     if (!completedProfile) {
       await router.replace("/profile-setup");
-      return;
-    }
-    if (userForNav.hasAccess === false) {
-      await router.replace("/choose-plan");
       return;
     }
   } catch (err) {

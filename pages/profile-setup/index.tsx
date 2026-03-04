@@ -20,7 +20,7 @@ import { profileAPI } from "@/lib/api";
 
 const STEP_TITLES: Record<number, string> = {
   0: "Let's start with the basics",
-  1: "Experience & Skills",
+  1: "Experience, Background & Preferences",
   2: "Job Level & Target Roles",
   3: "Skills & Technologies",
   4: "Review & Finish",
@@ -47,6 +47,11 @@ export default function ProfileSetupPage() {
     projects: [],
     publications: [],
     certifications: [],
+    currentLocation: "",
+    preferredLocation: "",
+    preferredShift: "",
+    expectedSalary: "",
+    desiredWorkType: "",
   });
 
   const [jobLevelData, setJobLevelData] = useState<JobLevelStepData>({
@@ -78,6 +83,16 @@ export default function ProfileSetupPage() {
       }
       fd.append("profileHeadline", experienceData.profileHeadline);
       fd.append("careerLevel", jobLevelData.careerLevel);
+      if (experienceData.currentLocation)
+        fd.append("currentLocation", experienceData.currentLocation);
+      if (experienceData.preferredLocation)
+        fd.append("preferredLocation", experienceData.preferredLocation);
+      if (experienceData.preferredShift)
+        fd.append("preferredShift", experienceData.preferredShift);
+      if (experienceData.expectedSalary)
+        fd.append("expectedSalary", `${experienceData.expectedSalary} LPA`);
+      if (experienceData.desiredWorkType)
+        fd.append("desiredWorkType", experienceData.desiredWorkType);
       if (jobLevelData.targetIndustries.length) {
         jobLevelData.targetIndustries.forEach((ind) =>
           fd.append("targetIndustries[]", ind),
@@ -103,7 +118,10 @@ export default function ProfileSetupPage() {
         fd.append(
           "employment",
           JSON.stringify(
-            experienceData.employment.map(({ id: _id, ...rest }) => rest),
+            experienceData.employment.map(({ id: _id, ...rest }) => ({
+              ...rest,
+              salary: rest.salary ? `${rest.salary} LPA` : rest.salary,
+            })),
           ),
         );
       }

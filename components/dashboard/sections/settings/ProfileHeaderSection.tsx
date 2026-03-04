@@ -22,10 +22,9 @@ const PROFILE_FIELDS: {
 }[] = [
   { label: "Full Name", key: "name" },
   { label: "Title / Position", key: "title" },
-  { label: "Location", key: "location" },
-  { label: "Experience (e.g. 5 Years 2 Months)", key: "experience" },
-  { label: "Current Salary", key: "salary" },
-  { label: "Notice Period", key: "noticePeriod" },
+  { label: "Location (Current)", key: "location" },
+  { label: "Current Salary (override)", key: "salary" },
+  { label: "Notice Period (override)", key: "noticePeriod" },
 ];
 
 function toInitials(name: string) {

@@ -19,34 +19,19 @@ const CAREER_GOAL_OPTIONS = [
 
 const EMPTY_CAREER: CareerProfile = {
   primaryCareerGoal: "",
-  currentIndustry: "",
-  department: "",
-  roleCategory: "",
   jobRole: "",
-  desiredJobType: "",
   desiredEmploymentType: "",
   preferredShift: "",
   preferredWorkLocation: "",
   expectedSalary: "",
 };
 
-const CAREER_LABELS: Record<keyof CareerProfile, string> = {
-  primaryCareerGoal: "Primary Career Goal",
-  currentIndustry: "Current Industry",
-  department: "Department",
-  roleCategory: "Role Category",
-  jobRole: "Job Role",
-  desiredJobType: "Desired Job Type",
-  desiredEmploymentType: "Desired Employment Type",
-  preferredShift: "Preferred Shift",
-  preferredWorkLocation: "Preferred Work Location",
-  expectedSalary: "Expected Salary",
-};
-
 export default function CareerProfileSection() {
   const { profile: apiProfile, loading } = useProfile();
   const [careerProfile, setCareerProfile] =
     useState<CareerProfile>(EMPTY_CAREER);
+  const [targetIndustries, setTargetIndustries] = useState<string[]>([]);
+  const [targetRoles, setTargetRoles] = useState<string[]>([]);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<CareerProfile>(EMPTY_CAREER);
   const [saving, setSaving] = useState(false);
@@ -57,16 +42,16 @@ export default function CareerProfileSection() {
       const c = apiProfile.career;
       setCareerProfile({
         primaryCareerGoal: c.primaryCareerGoal ?? "",
-        currentIndustry: c.currentIndustry ?? "",
-        department: c.department ?? "",
-        roleCategory: c.roleCategory ?? "",
         jobRole: c.jobRole ?? "",
-        desiredJobType: c.desiredJobType ?? "",
         desiredEmploymentType: c.desiredEmploymentType ?? "",
         preferredShift: c.preferredShift ?? "",
         preferredWorkLocation: c.preferredWorkLocation ?? "",
         expectedSalary: c.expectedSalary ?? "",
       });
+    }
+    if (apiProfile?.careerDirection) {
+      setTargetIndustries(apiProfile.careerDirection.targetIndustries ?? []);
+      setTargetRoles(apiProfile.careerDirection.targetRoles ?? []);
     }
   }, [apiProfile]);
 
@@ -79,9 +64,15 @@ export default function CareerProfileSection() {
   const save = async () => {
     setSaving(true);
     setSaveError(null);
+    const salaryVal = draft.expectedSalary;
+    const normalized =
+      salaryVal && !salaryVal.trim().endsWith("LPA")
+        ? `${salaryVal.trim()} LPA`
+        : salaryVal;
+    const submitDraft = { ...draft, expectedSalary: normalized };
     try {
-      await profileAPI.updateCareer(draft);
-      setCareerProfile(draft);
+      await profileAPI.updateCareer(submitDraft);
+      setCareerProfile(submitDraft);
       setEditing(false);
     } catch (e: unknown) {
       const err = e as {
@@ -98,7 +89,12 @@ export default function CareerProfileSection() {
     }
   };
 
-  if (loading && !careerProfile.currentIndustry) {
+  const displaySalary = (s: string) => {
+    if (!s) return "—";
+    return s.endsWith("LPA") ? s : `${s} LPA`;
+  };
+
+  if (loading && !careerProfile.primaryCareerGoal) {
     return (
       <div className={`${cardCls} animate-pulse space-y-4`}>
         <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32" />
@@ -120,7 +116,7 @@ export default function CareerProfileSection() {
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-              Career profile
+              Career Profile
             </h2>
             <button
               onClick={openEdit}
@@ -130,63 +126,251 @@ export default function CareerProfileSection() {
             </button>
           </div>
         </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-          {(
-            Object.entries(CAREER_LABELS) as [keyof CareerProfile, string][]
-          ).map(([key, label]) => (
-            <div key={key}>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                {label}
-              </p>
+          {/* Primary Career Goal */}
+          <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+              Primary Career Goal
+            </p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">
+              {CAREER_GOAL_OPTIONS.find(
+                (o) => o.value === careerProfile.primaryCareerGoal,
+              )?.label ||
+                careerProfile.primaryCareerGoal ||
+                "—"}
+            </p>
+          </div>
+
+          {/* Current Job Role */}
+          <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+              Current Job Role
+            </p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">
+              {careerProfile.jobRole || "—"}
+            </p>
+          </div>
+
+          {/* Desired Industry — read-only from step 3 */}
+          <div className="md:col-span-2">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              Desired Industry
+            </p>
+            {targetIndustries.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {targetIndustries.map((ind) => (
+                  <span
+                    key={ind}
+                    className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full"
+                  >
+                    {ind}
+                  </span>
+                ))}
+              </div>
+            ) : (
               <p className="text-sm font-bold text-gray-900 dark:text-white">
-                {key === "primaryCareerGoal"
-                  ? (CAREER_GOAL_OPTIONS.find(
-                      (o) => o.value === careerProfile[key],
-                    )?.label ?? careerProfile[key])
-                  : careerProfile[key] || "—"}
+                —
               </p>
-            </div>
-          ))}
+            )}
+          </div>
+
+          {/* Desired Job Roles — read-only from step 3 */}
+          <div className="md:col-span-2">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              Desired Job Roles
+            </p>
+            {targetRoles.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {targetRoles.map((role) => (
+                  <span
+                    key={role}
+                    className="px-3 py-1 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full"
+                  >
+                    {role}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm font-bold text-gray-900 dark:text-white">
+                —
+              </p>
+            )}
+          </div>
+
+          {/* Desired Employment Type */}
+          <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+              Desired Employment Type
+            </p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white capitalize">
+              {careerProfile.desiredEmploymentType || "—"}
+            </p>
+          </div>
+
+          {/* Preferred Shift */}
+          <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+              Preferred Shift
+            </p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">
+              {careerProfile.preferredShift || "—"}
+            </p>
+          </div>
+
+          {/* Preferred Work Location */}
+          <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+              Preferred Work Location
+            </p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">
+              {careerProfile.preferredWorkLocation || "—"}
+            </p>
+          </div>
+
+          {/* Expected Salary */}
+          <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+              Expected Salary
+            </p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">
+              {displaySalary(careerProfile.expectedSalary)}
+            </p>
+          </div>
         </div>
+
+        <p className="mt-6 text-xs text-gray-400 dark:text-gray-500 italic">
+          Desired Industry &amp; Job Roles are set in Step 3 of Profile Setup
+          and cannot be edited here.
+        </p>
       </div>
 
       {/* Edit Modal */}
       {editing && (
         <Modal title="Edit Career Profile" onClose={() => setEditing(false)}>
           <div className="space-y-4">
-            {(Object.keys(CAREER_LABELS) as (keyof CareerProfile)[]).map(
-              (key) => (
-                <div key={key}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {CAREER_LABELS[key]}
-                  </label>
-                  {key === "primaryCareerGoal" ? (
-                    <select
-                      className={`${inputCls} appearance-none`}
-                      value={draft[key]}
-                      onChange={(e) =>
-                        setDraft((d) => ({ ...d, [key]: e.target.value }))
-                      }
-                    >
-                      <option value="">Select a career goal…</option>
-                      {CAREER_GOAL_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      className={inputCls}
-                      value={draft[key]}
-                      onChange={(e) =>
-                        setDraft((d) => ({ ...d, [key]: e.target.value }))
-                      }
-                    />
-                  )}
-                </div>
-              ),
-            )}
+            {/* Primary Career Goal */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Primary Career Goal
+              </label>
+              <select
+                className={`${inputCls} appearance-none`}
+                value={draft.primaryCareerGoal}
+                onChange={(e) =>
+                  setDraft((d) => ({
+                    ...d,
+                    primaryCareerGoal: e.target.value,
+                  }))
+                }
+              >
+                <option value="">Select a career goal…</option>
+                {CAREER_GOAL_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Current Job Role */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Current Job Role
+              </label>
+              <input
+                className={inputCls}
+                placeholder="e.g. Software Engineer"
+                value={draft.jobRole}
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, jobRole: e.target.value }))
+                }
+              />
+            </div>
+
+            {/* Desired Employment Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Desired Employment Type
+              </label>
+              <select
+                className={`${inputCls} appearance-none`}
+                value={draft.desiredEmploymentType}
+                onChange={(e) =>
+                  setDraft((d) => ({
+                    ...d,
+                    desiredEmploymentType: e.target.value,
+                  }))
+                }
+              >
+                <option value="">Select type…</option>
+                <option value="onsite">Onsite</option>
+                <option value="hybrid">Hybrid</option>
+                <option value="remote">Remote</option>
+              </select>
+            </div>
+
+            {/* Preferred Shift */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Preferred Shift
+              </label>
+              <select
+                className={`${inputCls} appearance-none`}
+                value={draft.preferredShift}
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, preferredShift: e.target.value }))
+                }
+              >
+                <option value="">Select shift…</option>
+                <option value="Day">Day</option>
+                <option value="Night">Night</option>
+                <option value="Any">Any</option>
+              </select>
+            </div>
+
+            {/* Preferred Work Location */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Preferred Work Location
+              </label>
+              <input
+                className={inputCls}
+                placeholder="e.g. Bangalore"
+                value={draft.preferredWorkLocation}
+                onChange={(e) =>
+                  setDraft((d) => ({
+                    ...d,
+                    preferredWorkLocation: e.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            {/* Expected Salary */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Expected Salary
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  className={`${inputCls} pr-14`}
+                  placeholder="e.g. 12"
+                  value={draft.expectedSalary.replace(/\s*LPA$/i, "")}
+                  onChange={(e) =>
+                    setDraft((d) => ({
+                      ...d,
+                      expectedSalary: e.target.value,
+                    }))
+                  }
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium pointer-events-none">
+                  LPA
+                </span>
+              </div>
+            </div>
+
             {saveError && (
               <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
                 {saveError}
