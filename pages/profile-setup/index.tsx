@@ -16,6 +16,7 @@ import Step4Skills, {
   SkillsTagsData,
 } from "@/components/profile-setup/Step4Skills";
 import Step5Review from "@/components/profile-setup/Step5Review";
+import { profileAPI } from "@/lib/api";
 
 const STEP_TITLES: Record<number, string> = {
   0: "Let's start with the basics",
@@ -28,6 +29,8 @@ const STEP_TITLES: Record<number, string> = {
 export default function ProfileSetupPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [personalData, setPersonalData] = useState<PersonalStepData>({
     fullName: "",
@@ -59,7 +62,104 @@ export default function ProfileSetupPage() {
 
   const next = () => setStep((s) => Math.min(s + 1, 4));
   const back = () => setStep((s) => Math.max(s - 1, 0));
-  const finish = () => router.push("/dashboard");
+
+  const finish = async () => {
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const fd = new FormData();
+      fd.append("fullName", personalData.fullName);
+      fd.append("careerGoal", personalData.careerGoal);
+      if (personalData.profilePicture) {
+        fd.append("profilePicture", personalData.profilePicture);
+      }
+      if (experienceData.resumeFile) {
+        fd.append("resume", experienceData.resumeFile);
+      }
+      fd.append("profileHeadline", experienceData.profileHeadline);
+      fd.append("careerLevel", jobLevelData.careerLevel);
+      if (jobLevelData.targetIndustries.length) {
+        jobLevelData.targetIndustries.forEach((ind) =>
+          fd.append("targetIndustries[]", ind),
+        );
+      }
+      if (jobLevelData.targetRoles.length) {
+        jobLevelData.targetRoles.forEach((role) =>
+          fd.append("targetRoles[]", role),
+        );
+      }
+      skillsData.techSkills.forEach((skill) =>
+        fd.append("techSkills[]", skill),
+      );
+      if (experienceData.education.length) {
+        fd.append(
+          "education",
+          JSON.stringify(
+            experienceData.education.map(({ id: _id, ...rest }) => rest),
+          ),
+        );
+      }
+      if (experienceData.employment.length) {
+        fd.append(
+          "employment",
+          JSON.stringify(
+            experienceData.employment.map(({ id: _id, ...rest }) => rest),
+          ),
+        );
+      }
+      if (experienceData.projects.length) {
+        fd.append(
+          "projects",
+          JSON.stringify(
+            experienceData.projects.map(({ id: _id, ...rest }) => rest),
+          ),
+        );
+      }
+      if (experienceData.publications.length) {
+        fd.append(
+          "publications",
+          JSON.stringify(
+            experienceData.publications.map(({ id: _id, ...rest }) => rest),
+          ),
+        );
+      }
+      if (experienceData.certifications.length) {
+        fd.append(
+          "certifications",
+          JSON.stringify(
+            experienceData.certifications.map(({ id: _id, ...rest }) => rest),
+          ),
+        );
+      }
+      const sl = skillsData.socialLinks;
+      if (sl && Object.values(sl).some((v) => v.trim())) {
+        fd.append(
+          "socialLinks",
+          JSON.stringify({
+            linkedin: sl.linkedin ?? "",
+            github: sl.github ?? "",
+            twitter: sl.twitter ?? "",
+            website: sl.website ?? "",
+          }),
+        );
+      }
+
+      await profileAPI.setupProfile(fd);
+      router.push("/dashboard");
+    } catch (e: unknown) {
+      const axiosErr = e as {
+        response?: { data?: { error?: { message?: string } } };
+        message?: string;
+      };
+      const msg =
+        axiosErr?.response?.data?.error?.message ??
+        axiosErr?.message ??
+        "Something went wrong. Please try again.";
+      setSubmitError(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <>
@@ -125,6 +225,8 @@ export default function ProfileSetupPage() {
               onFinish={finish}
               onBack={back}
               onGoToStep={setStep}
+              submitting={submitting}
+              submitError={submitError}
             />
           )}
         </main>

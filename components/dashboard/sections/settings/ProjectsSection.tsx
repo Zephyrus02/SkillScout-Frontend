@@ -1,44 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import MonthYearPicker from "@/components/ui/MonthYearPicker";
 import { inputCls, cancelBtnCls, saveBtnCls, cardCls } from "./constants";
 import type { Project } from "./types";
-
-const DEFAULT_PROJECTS: Project[] = [
-  {
-    id: 1,
-    title: "Ascendancy Esports Website",
-    type: "(Offsite)",
-    startDate: "Feb 2025",
-    endDate: "Feb 2025",
-    desc: "An full stack web application for end-to-end management of eSports tournaments for Valorant. The website is built using React.js and Node.js and uses MongoDB as the database.",
-  },
-  {
-    id: 2,
-    title:
-      "Collaborative Vehicle Localization using LSTM based Federated Learning for Trajectory Prediction",
-    type: "(Offsite)",
-    startDate: "Jan 2025",
-    endDate: "Apr 2025",
-    desc: "Built a privacy-preserving trajectory prediction system using federated learning, improving the average displacement error by 29.2% when compared to traditional approaches.",
-  },
-  {
-    id: 3,
-    title: "SkillScout",
-    type: "(Offsite)",
-    startDate: "Nov 2024",
-    endDate: "Jan 2025",
-    desc: "A smart resume parser which recommends active jobs based on the skills, projects, experiences and educational qualification of the candidates",
-  },
-  {
-    id: 4,
-    title: "Light Weight Computational Offloading using Deep Learning",
-    type: "(Offsite)",
-    startDate: "Aug 2024",
-    endDate: "Nov 2024",
-    desc: "Analyzed operational metrics and identified key bottlenecks within existing systems, resulting in targeted adjustments that improved system efficiency by more than 30%.",
-  },
-];
+import { useProfile } from "@/hooks/useProfile";
+import { profileAPI } from "@/lib/api";
 
 const BLANK: Omit<Project, "id"> = {
   title: "",
@@ -49,14 +15,33 @@ const BLANK: Omit<Project, "id"> = {
 };
 
 export default function ProjectsSection() {
-  const [projects, setProjects] = useState<Project[]>(DEFAULT_PROJECTS);
+  const { profile: apiProfile, loading } = useProfile();
+  const [projects, setProjects] = useState<Project[]>([]);
   const [draft, setDraft] = useState<Omit<Project, "id">>(BLANK);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [addingProject, setAddingProject] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (apiProfile?.projects) {
+      setProjects(
+        apiProfile.projects.map((p) => ({
+          id: p.id,
+          title: p.title ?? "",
+          type: p.type ?? "(Offsite)",
+          startDate: p.startDate ?? "",
+          endDate: p.endDate ?? "",
+          desc: p.desc ?? "",
+        })),
+      );
+    }
+  }, [apiProfile]);
 
   const openAdd = () => {
     setDraft(BLANK);
     setEditingProject(null);
+    setSaveError(null);
     setAddingProject(true);
   };
 
@@ -69,6 +54,7 @@ export default function ProjectsSection() {
       desc: p.desc,
     });
     setEditingProject(p);
+    setSaveError(null);
     setAddingProject(false);
   };
 
@@ -77,21 +63,45 @@ export default function ProjectsSection() {
     setEditingProject(null);
   };
 
-  const save = () => {
-    if (editingProject) {
-      setProjects((ps) =>
-        ps.map((p) =>
-          p.id === editingProject.id ? { ...draft, id: p.id } : p,
-        ),
+  const save = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      if (editingProject) {
+        const res = await profileAPI.updateProject(editingProject.id, draft);
+        setProjects((ps) =>
+          ps.map((p) =>
+            p.id === editingProject.id ? { ...draft, id: res.data.id } : p,
+          ),
+        );
+      } else {
+        const res = await profileAPI.addProject(draft);
+        setProjects((ps) => [...ps, { ...draft, id: res.data.id }]);
+      }
+      closeModal();
+    } catch (e: unknown) {
+      const err = e as {
+        response?: { data?: { error?: { message?: string } } };
+        message?: string;
+      };
+      setSaveError(
+        err?.response?.data?.error?.message ??
+          err?.message ??
+          "Failed to save.",
       );
-    } else {
-      setProjects((ps) => [...ps, { ...draft, id: Date.now() }]);
+    } finally {
+      setSaving(false);
     }
-    closeModal();
   };
 
-  const remove = (id: number) =>
-    setProjects((ps) => ps.filter((p) => p.id !== id));
+  const remove = async (id: string) => {
+    try {
+      await profileAPI.deleteProject(id);
+      setProjects((ps) => ps.filter((p) => p.id !== id));
+    } catch {
+      // deletion failed silently
+    }
+  };
 
   return (
     <>
@@ -107,40 +117,51 @@ export default function ProjectsSection() {
             Add project
           </button>
         </div>
-        <div className="space-y-8">
-          {projects.map((p) => (
-            <div key={p.id} className="group">
-              <div className="flex justify-between items-start mb-1">
-                <h4 className="text-base font-bold text-gray-900 dark:text-white pr-2">
-                  {p.title}
-                </h4>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
-                  <button
-                    onClick={() => openEdit(p)}
-                    className="p-1 text-gray-400 hover:text-blue-600 transition rounded-full hover:bg-gray-50 dark:hover:bg-gray-800"
-                  >
-                    <span className="material-icons text-base">edit</span>
-                  </button>
-                  <button
-                    onClick={() => remove(p.id)}
-                    className="p-1 text-gray-400 hover:text-red-500 transition rounded-full hover:bg-gray-50 dark:hover:bg-gray-800"
-                  >
-                    <span className="material-icons text-base">delete</span>
-                  </button>
+        {loading && !projects.length ? (
+          <div className="space-y-4 animate-pulse">
+            {[1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-20 bg-gray-200 dark:bg-gray-700 rounded-lg"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {projects.map((p) => (
+              <div key={p.id} className="group">
+                <div className="flex justify-between items-start mb-1">
+                  <h4 className="text-base font-bold text-gray-900 dark:text-white pr-2">
+                    {p.title}
+                  </h4>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
+                    <button
+                      onClick={() => openEdit(p)}
+                      className="p-1 text-gray-400 hover:text-blue-600 transition rounded-full hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
+                      <span className="material-icons text-base">edit</span>
+                    </button>
+                    <button
+                      onClick={() => remove(p.id)}
+                      className="p-1 text-gray-400 hover:text-red-500 transition rounded-full hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
+                      <span className="material-icons text-base">delete</span>
+                    </button>
+                  </div>
                 </div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                  {p.type}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  {p.startDate} – {p.endDate}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                  {p.desc}
+                </p>
               </div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                {p.type}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                {p.startDate} – {p.endDate}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                {p.desc}
-              </p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Add / Edit Modal */}
@@ -208,12 +229,21 @@ export default function ProjectsSection() {
                 }
               />
             </div>
+            {saveError && (
+              <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+                {saveError}
+              </p>
+            )}
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={closeModal} className={cancelBtnCls}>
                 Cancel
               </button>
-              <button onClick={save} className={saveBtnCls}>
-                {editingProject ? "Save Changes" : "Add Project"}
+              <button onClick={save} disabled={saving} className={saveBtnCls}>
+                {saving
+                  ? "Saving…"
+                  : editingProject
+                    ? "Save Changes"
+                    : "Add Project"}
               </button>
             </div>
           </div>

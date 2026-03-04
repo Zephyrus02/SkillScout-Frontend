@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { PersonalStepData } from "./StepResume";
 import { ExperienceStepData } from "./StepRole";
 import { JobLevelStepData } from "./StepSkills";
@@ -88,9 +87,11 @@ interface Step5ReviewProps {
   experience: ExperienceStepData;
   jobLevel: JobLevelStepData;
   skills: SkillsTagsData;
-  onFinish: () => void;
+  onFinish: () => Promise<void>;
   onBack: () => void;
   onGoToStep: (step: number) => void;
+  submitting?: boolean;
+  submitError?: string | null;
 }
 
 function SectionHeader({
@@ -134,6 +135,8 @@ export default function Step5Review({
   onFinish,
   onBack,
   onGoToStep,
+  submitting = false,
+  submitError = null,
 }: Step5ReviewProps) {
   const socialLinks = skills.socialLinks ?? {};
   const filledSocials = SOCIAL_META.filter(
@@ -514,22 +517,42 @@ export default function Step5Review({
       </div>
 
       {/* Nav */}
-      <div className="flex items-center justify-between pt-2">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex items-center gap-1 text-subtext-light dark:text-subtext-dark hover:text-text-light dark:hover:text-text-dark font-medium px-4 py-2 rounded-lg transition-colors text-sm"
-        >
-          <span className="material-icons text-sm">arrow_back</span> Back
-        </button>
-        <Link
-          href="/dashboard"
-          onClick={onFinish}
-          className="bg-primary hover:bg-primary-hover text-white px-10 py-4 rounded-xl font-bold shadow-lg shadow-blue-500/25 flex items-center gap-2 transition-all active:scale-95 text-base"
-        >
-          <span className="material-icons">rocket_launch</span> Complete Setup
-          &amp; Go to Dashboard
-        </Link>
+      <div className="space-y-3">
+        {submitError && (
+          <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300">
+            {submitError}
+          </div>
+        )}
+        <div className="flex items-center justify-between pt-2">
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={submitting}
+            className="flex items-center gap-1 text-subtext-light dark:text-subtext-dark hover:text-text-light dark:hover:text-text-dark font-medium px-4 py-2 rounded-lg transition-colors text-sm disabled:opacity-40"
+          >
+            <span className="material-icons text-sm">arrow_back</span> Back
+          </button>
+          <button
+            type="button"
+            onClick={onFinish}
+            disabled={submitting}
+            className="bg-primary hover:bg-primary-hover text-white px-10 py-4 rounded-xl font-bold shadow-lg shadow-blue-500/25 flex items-center gap-2 transition-all active:scale-95 text-base disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100"
+          >
+            {submitting ? (
+              <>
+                <span className="material-icons animate-spin text-xl">
+                  refresh
+                </span>
+                Saving…
+              </>
+            ) : (
+              <>
+                <span className="material-icons">rocket_launch</span>
+                Complete Setup &amp; Go to Dashboard
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

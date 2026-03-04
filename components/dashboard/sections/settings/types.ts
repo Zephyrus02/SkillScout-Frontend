@@ -23,7 +23,7 @@ export interface CareerProfile {
 }
 
 export interface Project {
-  id: number;
+  id: string;
   title: string;
   type: string;
   startDate: string;
@@ -32,7 +32,7 @@ export interface Project {
 }
 
 export interface Employment {
-  id: number;
+  id: string;
   role: string;
   company: string;
   startDate: string; // "MMM YYYY"
@@ -42,7 +42,7 @@ export interface Employment {
 }
 
 export interface Education {
-  id: number;
+  id: string;
   degree: string;
   institution: string;
   startDate: string; // "MMM YYYY"
@@ -51,7 +51,7 @@ export interface Education {
 }
 
 export interface Publication {
-  id: number;
+  id: string;
   title: string;
   publisher: string;
   date: string;
@@ -60,7 +60,7 @@ export interface Publication {
 }
 
 export interface Certification {
-  id: number;
+  id: string;
   name: string;
   issuer: string;
   issueDate: string; // "MMM YYYY"

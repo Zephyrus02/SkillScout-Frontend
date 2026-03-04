@@ -1,25 +1,48 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import SKILLS from "@/data/skills";
 import { cardCls } from "./constants";
+import { useProfile } from "@/hooks/useProfile";
+import { profileAPI } from "@/lib/api";
 
-const DEFAULT_SKILLS = [
-  "React.js",
-  "Node.js",
-  "TypeScript",
-  "AWS Lambda",
-  "System Design",
-  "GraphQL",
-  "PostgreSQL",
-  "Docker",
-  "Microservices",
-];
+// Debounce helper
+function useDebouncedCallback<T extends unknown[]>(
+  fn: (...args: T) => void,
+  delay: number,
+) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  return useCallback(
+    (...args: T) => {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => fn(...args), delay);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fn, delay],
+  );
+}
 
 export default function KeySkillsSection() {
-  const [skills, setSkills] = useState<string[]>(DEFAULT_SKILLS);
+  const { profile: apiProfile } = useProfile();
+  const [skills, setSkills] = useState<string[]>([]);
   const [skillQuery, setSkillQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const skillInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (apiProfile?.skills) {
+      setSkills(apiProfile.skills);
+    }
+  }, [apiProfile]);
+
+  const persistSkills = useCallback(async (newSkills: string[]) => {
+    try {
+      await profileAPI.updateSkills(newSkills);
+    } catch {
+      // silently ignore transient errors
+    }
+  }, []);
+
+  const debouncedPersist = useDebouncedCallback(persistSkills, 600);
 
   const filteredSuggestions = skillQuery.trim()
     ? SKILLS.filter((s) =>
@@ -30,14 +53,19 @@ export default function KeySkillsSection() {
   const addSkill = (s: string) => {
     const trimmed = s.trim();
     if (trimmed && !skills.includes(trimmed)) {
-      setSkills((prev) => [...prev, trimmed]);
+      const next = [...skills, trimmed];
+      setSkills(next);
+      debouncedPersist(next);
     }
     setSkillQuery("");
     setShowDropdown(false);
   };
 
-  const removeSkill = (skill: string) =>
-    setSkills((prev) => prev.filter((s) => s !== skill));
+  const removeSkill = (skill: string) => {
+    const next = skills.filter((s) => s !== skill);
+    setSkills(next);
+    debouncedPersist(next);
+  };
 
   return (
     <div id="key-skills" className={cardCls}>

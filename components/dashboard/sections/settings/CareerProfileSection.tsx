@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import { inputCls, cancelBtnCls, saveBtnCls, cardCls } from "./constants";
 import type { CareerProfile } from "./types";
+import { useProfile } from "@/hooks/useProfile";
+import { profileAPI } from "@/lib/api";
 
 const CAREER_GOAL_OPTIONS = [
   {
@@ -15,17 +17,17 @@ const CAREER_GOAL_OPTIONS = [
   { value: "leadership", label: "Step into a leadership position" },
 ];
 
-const DEFAULT_CAREER: CareerProfile = {
-  primaryCareerGoal: "upskill",
-  currentIndustry: "Software Product",
-  department: "Engineering - Software & QA",
-  roleCategory: "Software Development",
-  jobRole: "Full Stack Developer",
-  desiredJobType: "permanent",
-  desiredEmploymentType: "Full Time",
-  preferredShift: "Day",
-  preferredWorkLocation: "Pune",
-  expectedSalary: "₹8,00,000",
+const EMPTY_CAREER: CareerProfile = {
+  primaryCareerGoal: "",
+  currentIndustry: "",
+  department: "",
+  roleCategory: "",
+  jobRole: "",
+  desiredJobType: "",
+  desiredEmploymentType: "",
+  preferredShift: "",
+  preferredWorkLocation: "",
+  expectedSalary: "",
 };
 
 const CAREER_LABELS: Record<keyof CareerProfile, string> = {
@@ -42,20 +44,75 @@ const CAREER_LABELS: Record<keyof CareerProfile, string> = {
 };
 
 export default function CareerProfileSection() {
+  const { profile: apiProfile, loading } = useProfile();
   const [careerProfile, setCareerProfile] =
-    useState<CareerProfile>(DEFAULT_CAREER);
+    useState<CareerProfile>(EMPTY_CAREER);
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState<CareerProfile>(DEFAULT_CAREER);
+  const [draft, setDraft] = useState<CareerProfile>(EMPTY_CAREER);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (apiProfile?.career) {
+      const c = apiProfile.career;
+      setCareerProfile({
+        primaryCareerGoal: c.primaryCareerGoal ?? "",
+        currentIndustry: c.currentIndustry ?? "",
+        department: c.department ?? "",
+        roleCategory: c.roleCategory ?? "",
+        jobRole: c.jobRole ?? "",
+        desiredJobType: c.desiredJobType ?? "",
+        desiredEmploymentType: c.desiredEmploymentType ?? "",
+        preferredShift: c.preferredShift ?? "",
+        preferredWorkLocation: c.preferredWorkLocation ?? "",
+        expectedSalary: c.expectedSalary ?? "",
+      });
+    }
+  }, [apiProfile]);
 
   const openEdit = () => {
     setDraft(careerProfile);
+    setSaveError(null);
     setEditing(true);
   };
 
-  const save = () => {
-    setCareerProfile(draft);
-    setEditing(false);
+  const save = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await profileAPI.updateCareer(draft);
+      setCareerProfile(draft);
+      setEditing(false);
+    } catch (e: unknown) {
+      const err = e as {
+        response?: { data?: { error?: { message?: string } } };
+        message?: string;
+      };
+      setSaveError(
+        err?.response?.data?.error?.message ??
+          err?.message ??
+          "Failed to save.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading && !careerProfile.currentIndustry) {
+    return (
+      <div className={`${cardCls} animate-pulse space-y-4`}>
+        <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32" />
+        <div className="grid grid-cols-2 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -86,7 +143,7 @@ export default function CareerProfileSection() {
                   ? (CAREER_GOAL_OPTIONS.find(
                       (o) => o.value === careerProfile[key],
                     )?.label ?? careerProfile[key])
-                  : careerProfile[key]}
+                  : careerProfile[key] || "—"}
               </p>
             </div>
           ))}
@@ -111,6 +168,7 @@ export default function CareerProfileSection() {
                         setDraft((d) => ({ ...d, [key]: e.target.value }))
                       }
                     >
+                      <option value="">Select a career goal…</option>
                       {CAREER_GOAL_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
                           {opt.label}
@@ -129,6 +187,11 @@ export default function CareerProfileSection() {
                 </div>
               ),
             )}
+            {saveError && (
+              <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+                {saveError}
+              </p>
+            )}
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setEditing(false)}
@@ -136,8 +199,8 @@ export default function CareerProfileSection() {
               >
                 Cancel
               </button>
-              <button onClick={save} className={saveBtnCls}>
-                Save Changes
+              <button onClick={save} disabled={saving} className={saveBtnCls}>
+                {saving ? "Saving…" : "Save Changes"}
               </button>
             </div>
           </div>

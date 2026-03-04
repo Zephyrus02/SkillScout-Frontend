@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import { inputCls, cancelBtnCls, saveBtnCls } from "./constants";
 import type { SocialLinks } from "./types";
+import { useProfile } from "@/hooks/useProfile";
+import { profileAPI } from "@/lib/api";
 
-const DEFAULT_LINKS: SocialLinks = {
-  linkedin: "linkedin.com/in/alexchen",
-  github: "github.com/alexchen-dev",
-  twitter: "twitter.com/alexchen",
-  website: "alexchen.io",
+const EMPTY_LINKS: SocialLinks = {
+  linkedin: "",
+  github: "",
+  twitter: "",
+  website: "",
 };
 
 const SOCIAL_FIELDS: { label: string; key: keyof SocialLinks }[] = [
@@ -73,18 +75,50 @@ const SOCIAL_ICONS: {
 ];
 
 export default function SidebarSocialLinks() {
-  const [socialLinks, setSocialLinks] = useState<SocialLinks>(DEFAULT_LINKS);
+  const { profile: apiProfile } = useProfile();
+  const [socialLinks, setSocialLinks] = useState<SocialLinks>(EMPTY_LINKS);
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState<SocialLinks>(DEFAULT_LINKS);
+  const [draft, setDraft] = useState<SocialLinks>(EMPTY_LINKS);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (apiProfile?.socialLinks) {
+      setSocialLinks({
+        linkedin: apiProfile.socialLinks.linkedin ?? "",
+        github: apiProfile.socialLinks.github ?? "",
+        twitter: apiProfile.socialLinks.twitter ?? "",
+        website: apiProfile.socialLinks.website ?? "",
+      });
+    }
+  }, [apiProfile]);
 
   const openEdit = () => {
     setDraft(socialLinks);
+    setSaveError(null);
     setEditing(true);
   };
 
-  const save = () => {
-    setSocialLinks(draft);
-    setEditing(false);
+  const save = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await profileAPI.updateSocialLinks(draft);
+      setSocialLinks(draft);
+      setEditing(false);
+    } catch (e: unknown) {
+      const err = e as {
+        response?: { data?: { error?: { message?: string } } };
+        message?: string;
+      };
+      setSaveError(
+        err?.response?.data?.error?.message ??
+          err?.message ??
+          "Failed to save.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -145,6 +179,11 @@ export default function SidebarSocialLinks() {
                 />
               </div>
             ))}
+            {saveError && (
+              <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+                {saveError}
+              </p>
+            )}
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setEditing(false)}
@@ -152,8 +191,8 @@ export default function SidebarSocialLinks() {
               >
                 Cancel
               </button>
-              <button onClick={save} className={saveBtnCls}>
-                Save Changes
+              <button onClick={save} disabled={saving} className={saveBtnCls}>
+                {saving ? "Saving…" : "Save Changes"}
               </button>
             </div>
           </div>

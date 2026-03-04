@@ -240,6 +240,110 @@ export const authAPI = {
   },
 };
 
+// ── Profile API types ────────────────────────────────────────────────────────
+
+export interface ProfileHeader {
+  name?: string;
+  title?: string;
+  location?: string;
+  experience?: string;
+  salary?: string;
+  noticePeriod?: string;
+  avatarUrl?: string | null;
+}
+
+export interface CareerProfile {
+  primaryCareerGoal?: string;
+  currentIndustry?: string;
+  department?: string;
+  roleCategory?: string;
+  jobRole?: string;
+  desiredJobType?: string;
+  desiredEmploymentType?: string;
+  preferredShift?: string;
+  preferredWorkLocation?: string;
+  expectedSalary?: string;
+}
+
+export interface EducationEntry {
+  id: string;
+  degree: string;
+  institution: string;
+  startDate: string;
+  endDate?: string;
+  current?: boolean;
+}
+
+export interface EmploymentEntry {
+  id: string;
+  role: string;
+  company: string;
+  startDate: string;
+  endDate?: string;
+  current?: boolean;
+  desc?: string;
+}
+
+export interface ProjectEntry {
+  id: string;
+  title: string;
+  type?: string;
+  startDate?: string;
+  endDate?: string;
+  desc?: string;
+}
+
+export interface PublicationEntry {
+  id: string;
+  title: string;
+  publisher?: string;
+  date?: string;
+  url?: string;
+  desc?: string;
+}
+
+export interface CertificationEntry {
+  id: string;
+  name: string;
+  issuer: string;
+  issueDate: string;
+  doesExpire?: boolean;
+  expiryDate?: string;
+}
+
+export interface SocialLinks {
+  linkedin?: string;
+  github?: string;
+  twitter?: string;
+  website?: string;
+}
+
+export interface CareerDirection {
+  careerLevel?: string;
+  targetIndustries?: string[];
+  targetRoles?: string[];
+}
+
+export interface FullProfile {
+  profileId: string;
+  userId: string;
+  completionPercentage: number;
+  header: ProfileHeader;
+  career: CareerProfile;
+  careerDirection: CareerDirection;
+  education: EducationEntry[];
+  employment: EmploymentEntry[];
+  projects: ProjectEntry[];
+  publications: PublicationEntry[];
+  certifications: CertificationEntry[];
+  skills: string[];
+  socialLinks: SocialLinks;
+  resumeUrl?: string | null;
+  resumeFileName?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ── Profile API ─────────────────────────────────────────────────────────────
 
 export const profileAPI = {
@@ -252,10 +356,271 @@ export const profileAPI = {
     };
   },
 
-  /** GET /api/profile */
-  getProfile: async () => {
+  /** GET /api/profile  — full profile object */
+  getFullProfile: async () => {
     const res = await apiClient.get("/profile");
-    return res.data;
+    return res.data as { success: boolean; data: FullProfile };
+  },
+
+  /** POST /api/profile/setup  — multipart, one-shot wizard submit */
+  setupProfile: async (formData: FormData) => {
+    const res = await apiClient.post("/profile/setup", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data as {
+      success: boolean;
+      data: {
+        profileId: string;
+        userId: string;
+        completionPercentage: number;
+        createdAt: string;
+      };
+    };
+  },
+
+  // ── Header ──────────────────────────────────────────────────────────────
+
+  /** GET /api/profile/header */
+  getHeader: async () => {
+    const res = await apiClient.get("/profile/header");
+    return res.data as { success: boolean; data: ProfileHeader };
+  },
+
+  /** PUT /api/profile/header */
+  updateHeader: async (data: ProfileHeader) => {
+    const res = await apiClient.put("/profile/header", data);
+    return res.data as { success: boolean; data: ProfileHeader };
+  },
+
+  // ── Avatar ──────────────────────────────────────────────────────────────
+
+  /** POST /api/profile/avatar  — multipart, field name: avatar */
+  uploadAvatar: async (file: File) => {
+    const fd = new FormData();
+    fd.append("avatar", file);
+    const res = await apiClient.post("/profile/avatar", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data as { success: boolean; data: { avatarUrl: string } };
+  },
+
+  /** DELETE /api/profile/avatar */
+  deleteAvatar: async () => {
+    const res = await apiClient.delete("/profile/avatar");
+    return res.data as { success: boolean; message: string };
+  },
+
+  // ── Resume ──────────────────────────────────────────────────────────────
+
+  /** POST /api/profile/resume  — multipart, field name: resume */
+  uploadResume: async (file: File) => {
+    const fd = new FormData();
+    fd.append("resume", file);
+    const res = await apiClient.post("/profile/resume", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data as {
+      success: boolean;
+      data: { resumeUrl: string; resumeFileName: string; uploadedAt: string };
+    };
+  },
+
+  /** DELETE /api/profile/resume */
+  deleteResume: async () => {
+    const res = await apiClient.delete("/profile/resume");
+    return res.data as { success: boolean; message: string };
+  },
+
+  // ── Career ──────────────────────────────────────────────────────────────
+
+  /** GET /api/profile/career */
+  getCareer: async () => {
+    const res = await apiClient.get("/profile/career");
+    return res.data as { success: boolean; data: CareerProfile };
+  },
+
+  /** PUT /api/profile/career */
+  updateCareer: async (data: CareerProfile) => {
+    const res = await apiClient.put("/profile/career", data);
+    return res.data as { success: boolean; data: CareerProfile };
+  },
+
+  // ── Career Direction ────────────────────────────────────────────────────
+
+  /** GET /api/profile/career-direction */
+  getCareerDirection: async () => {
+    const res = await apiClient.get("/profile/career-direction");
+    return res.data as { success: boolean; data: CareerDirection };
+  },
+
+  /** PUT /api/profile/career-direction */
+  updateCareerDirection: async (data: CareerDirection) => {
+    const res = await apiClient.put("/profile/career-direction", data);
+    return res.data as { success: boolean; data: CareerDirection };
+  },
+
+  // ── Education ───────────────────────────────────────────────────────────
+
+  /** GET /api/profile/education */
+  getEducation: async () => {
+    const res = await apiClient.get("/profile/education");
+    return res.data as { success: boolean; data: EducationEntry[] };
+  },
+
+  /** POST /api/profile/education */
+  addEducation: async (data: Omit<EducationEntry, "id">) => {
+    const res = await apiClient.post("/profile/education", data);
+    return res.data as { success: boolean; data: EducationEntry };
+  },
+
+  /** PUT /api/profile/education/:id */
+  updateEducation: async (id: string, data: Partial<EducationEntry>) => {
+    const res = await apiClient.put(`/profile/education/${id}`, data);
+    return res.data as { success: boolean; data: EducationEntry };
+  },
+
+  /** DELETE /api/profile/education/:id */
+  deleteEducation: async (id: string) => {
+    const res = await apiClient.delete(`/profile/education/${id}`);
+    return res.data as { success: boolean; message: string };
+  },
+
+  // ── Employment ──────────────────────────────────────────────────────────
+
+  /** GET /api/profile/employment */
+  getEmployment: async () => {
+    const res = await apiClient.get("/profile/employment");
+    return res.data as { success: boolean; data: EmploymentEntry[] };
+  },
+
+  /** POST /api/profile/employment */
+  addEmployment: async (data: Omit<EmploymentEntry, "id">) => {
+    const res = await apiClient.post("/profile/employment", data);
+    return res.data as { success: boolean; data: EmploymentEntry };
+  },
+
+  /** PUT /api/profile/employment/:id */
+  updateEmployment: async (id: string, data: Partial<EmploymentEntry>) => {
+    const res = await apiClient.put(`/profile/employment/${id}`, data);
+    return res.data as { success: boolean; data: EmploymentEntry };
+  },
+
+  /** DELETE /api/profile/employment/:id */
+  deleteEmployment: async (id: string) => {
+    const res = await apiClient.delete(`/profile/employment/${id}`);
+    return res.data as { success: boolean; message: string };
+  },
+
+  // ── Projects ────────────────────────────────────────────────────────────
+
+  /** GET /api/profile/projects */
+  getProjects: async () => {
+    const res = await apiClient.get("/profile/projects");
+    return res.data as { success: boolean; data: ProjectEntry[] };
+  },
+
+  /** POST /api/profile/projects */
+  addProject: async (data: Omit<ProjectEntry, "id">) => {
+    const res = await apiClient.post("/profile/projects", data);
+    return res.data as { success: boolean; data: ProjectEntry };
+  },
+
+  /** PUT /api/profile/projects/:id */
+  updateProject: async (id: string, data: Partial<ProjectEntry>) => {
+    const res = await apiClient.put(`/profile/projects/${id}`, data);
+    return res.data as { success: boolean; data: ProjectEntry };
+  },
+
+  /** DELETE /api/profile/projects/:id */
+  deleteProject: async (id: string) => {
+    const res = await apiClient.delete(`/profile/projects/${id}`);
+    return res.data as { success: boolean; message: string };
+  },
+
+  // ── Publications ────────────────────────────────────────────────────────
+
+  /** GET /api/profile/publications */
+  getPublications: async () => {
+    const res = await apiClient.get("/profile/publications");
+    return res.data as { success: boolean; data: PublicationEntry[] };
+  },
+
+  /** POST /api/profile/publications */
+  addPublication: async (data: Omit<PublicationEntry, "id">) => {
+    const res = await apiClient.post("/profile/publications", data);
+    return res.data as { success: boolean; data: PublicationEntry };
+  },
+
+  /** PUT /api/profile/publications/:id */
+  updatePublication: async (id: string, data: Partial<PublicationEntry>) => {
+    const res = await apiClient.put(`/profile/publications/${id}`, data);
+    return res.data as { success: boolean; data: PublicationEntry };
+  },
+
+  /** DELETE /api/profile/publications/:id */
+  deletePublication: async (id: string) => {
+    const res = await apiClient.delete(`/profile/publications/${id}`);
+    return res.data as { success: boolean; message: string };
+  },
+
+  // ── Certifications ──────────────────────────────────────────────────────
+
+  /** GET /api/profile/certifications */
+  getCertifications: async () => {
+    const res = await apiClient.get("/profile/certifications");
+    return res.data as { success: boolean; data: CertificationEntry[] };
+  },
+
+  /** POST /api/profile/certifications */
+  addCertification: async (data: Omit<CertificationEntry, "id">) => {
+    const res = await apiClient.post("/profile/certifications", data);
+    return res.data as { success: boolean; data: CertificationEntry };
+  },
+
+  /** PUT /api/profile/certifications/:id */
+  updateCertification: async (
+    id: string,
+    data: Partial<CertificationEntry>,
+  ) => {
+    const res = await apiClient.put(`/profile/certifications/${id}`, data);
+    return res.data as { success: boolean; data: CertificationEntry };
+  },
+
+  /** DELETE /api/profile/certifications/:id */
+  deleteCertification: async (id: string) => {
+    const res = await apiClient.delete(`/profile/certifications/${id}`);
+    return res.data as { success: boolean; message: string };
+  },
+
+  // ── Skills ──────────────────────────────────────────────────────────────
+
+  /** GET /api/profile/skills */
+  getSkills: async () => {
+    const res = await apiClient.get("/profile/skills");
+    return res.data as { success: boolean; data: { skills: string[] } };
+  },
+
+  /** PUT /api/profile/skills */
+  updateSkills: async (skills: string[]) => {
+    const res = await apiClient.put("/profile/skills", { skills });
+    return res.data as {
+      success: boolean;
+      data: { skills: string[]; updatedAt: string };
+    };
+  },
+
+  // ── Social Links ────────────────────────────────────────────────────────
+
+  /** GET /api/profile/social-links */
+  getSocialLinks: async () => {
+    const res = await apiClient.get("/profile/social-links");
+    return res.data as { success: boolean; data: SocialLinks };
+  },
+
+  /** PUT /api/profile/social-links */
+  updateSocialLinks: async (data: SocialLinks) => {
+    const res = await apiClient.put("/profile/social-links", data);
+    return res.data as { success: boolean; data: SocialLinks };
   },
 };
 

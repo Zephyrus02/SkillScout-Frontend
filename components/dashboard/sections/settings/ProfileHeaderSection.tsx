@@ -1,20 +1,25 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import Modal from "@/components/ui/Modal";
 import { inputCls, cancelBtnCls, saveBtnCls } from "./constants";
 import type { ProfileHeader } from "./types";
+import { useProfile } from "@/hooks/useProfile";
+import { profileAPI } from "@/lib/api";
 
-const DEFAULT_PROFILE: ProfileHeader = {
-  name: "Alex Chen",
-  title: "Senior Software Engineer at TechCorp",
-  location: "San Francisco, CA",
-  experience: "5 Years 2 Months",
-  salary: "$165,000",
-  noticePeriod: "1 Month",
+const EMPTY: ProfileHeader = {
+  name: "",
+  title: "",
+  location: "",
+  experience: "",
+  salary: "",
+  noticePeriod: "",
   avatarUrl: null,
-  avatarInitials: "AC",
+  avatarInitials: "",
 };
 
-const PROFILE_FIELDS: { label: string; key: keyof ProfileHeader }[] = [
+const PROFILE_FIELDS: {
+  label: string;
+  key: keyof Omit<ProfileHeader, "avatarUrl" | "avatarInitials">;
+}[] = [
   { label: "Full Name", key: "name" },
   { label: "Title / Position", key: "title" },
   { label: "Location", key: "location" },
@@ -23,29 +28,116 @@ const PROFILE_FIELDS: { label: string; key: keyof ProfileHeader }[] = [
   { label: "Notice Period", key: "noticePeriod" },
 ];
 
+function toInitials(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0] ?? "")
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
 export default function ProfileHeaderSection() {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [profile, setProfile] = useState<ProfileHeader>(DEFAULT_PROFILE);
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState<ProfileHeader>(DEFAULT_PROFILE);
+  const { profile: apiProfile, loading, refresh } = useProfile();
+  const completionPct = apiProfile?.completionPercentage ?? 0;
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [profile, setProfile] = useState<ProfileHeader>(EMPTY);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<ProfileHeader>(EMPTY);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+
+  // Seed local state whenever the API profile loads / refreshes
+  useEffect(() => {
+    if (apiProfile?.header) {
+      const h = apiProfile.header;
+      setProfile({
+        name: h.name ?? "",
+        title: h.title ?? "",
+        location: h.location ?? "",
+        experience: h.experience ?? "",
+        salary: h.salary ?? "",
+        noticePeriod: h.noticePeriod ?? "",
+        avatarUrl: h.avatarUrl ?? null,
+        avatarInitials: toInitials(h.name ?? ""),
+      });
+    }
+  }, [apiProfile]);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setProfile((p) => ({ ...p, avatarUrl: url }));
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      await profileAPI.uploadAvatar(file);
+      await refresh();
+    } catch {
+      // silently ignore - avatar is non-critical
+    } finally {
+      setAvatarUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
   const openEdit = () => {
     setDraft(profile);
+    setSaveError(null);
     setEditing(true);
   };
 
-  const save = () => {
-    setProfile(draft);
-    setEditing(false);
+  const save = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await profileAPI.updateHeader({
+        name: draft.name,
+        title: draft.title,
+        location: draft.location,
+        experience: draft.experience,
+        salary: draft.salary,
+        noticePeriod: draft.noticePeriod,
+      });
+      setProfile({ ...draft, avatarInitials: toInitials(draft.name) });
+      setEditing(false);
+    } catch (e: unknown) {
+      const err = e as {
+        response?: { data?: { error?: { message?: string } } };
+        message?: string;
+      };
+      setSaveError(
+        err?.response?.data?.error?.message ??
+          err?.message ??
+          "Failed to save.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
+
+  // Loading skeleton
+  if (loading && !profile.name) {
+    return (
+      <div className="bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-6 animate-pulse">
+        <div className="flex gap-6 items-end pt-8">
+          <div className="w-28 h-28 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+          <div className="flex-1 space-y-3">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-lg w-48" />
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-lg w-72" />
+            <div className="grid grid-cols-4 gap-4 pt-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -73,20 +165,23 @@ export default function ProfileHeaderSection() {
                   />
                 ) : (
                   <span className="text-white text-3xl font-bold">
-                    {profile.avatarInitials}
+                    {profile.avatarInitials || "?"}
                   </span>
                 )}
               </div>
             </div>
             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 bg-green-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full border-2 border-white dark:border-surface-dark shadow-md whitespace-nowrap">
-              100%
+              {completionPct}%
             </div>
             <button
               onClick={() => fileInputRef.current?.click()}
+              disabled={avatarUploading}
               title="Upload profile picture"
-              className="absolute bottom-1 right-0 z-20 p-1.5 bg-white dark:bg-gray-700 rounded-full shadow-sm border border-gray-100 dark:border-gray-600 text-gray-500 hover:text-blue-600 transition"
+              className="absolute bottom-1 right-0 z-20 p-1.5 bg-white dark:bg-gray-700 rounded-full shadow-sm border border-gray-100 dark:border-gray-600 text-gray-500 hover:text-blue-600 transition disabled:opacity-50"
             >
-              <span className="material-icons text-sm">edit</span>
+              <span className="material-icons text-sm">
+                {avatarUploading ? "hourglass_empty" : "edit"}
+              </span>
             </button>
           </div>
 
@@ -95,7 +190,7 @@ export default function ProfileHeaderSection() {
             <div className="flex justify-between items-start gap-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {profile.name}
+                  {profile.name || "—"}
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
                   {profile.title}
@@ -151,7 +246,7 @@ export default function ProfileHeaderSection() {
                       {s.label}
                     </p>
                     <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                      {s.value}
+                      {s.value || "—"}
                     </p>
                   </div>
                 </div>
@@ -179,6 +274,11 @@ export default function ProfileHeaderSection() {
                 />
               </div>
             ))}
+            {saveError && (
+              <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+                {saveError}
+              </p>
+            )}
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setEditing(false)}
@@ -186,8 +286,8 @@ export default function ProfileHeaderSection() {
               >
                 Cancel
               </button>
-              <button onClick={save} className={saveBtnCls}>
-                Save Changes
+              <button onClick={save} disabled={saving} className={saveBtnCls}>
+                {saving ? "Saving…" : "Save Changes"}
               </button>
             </div>
           </div>

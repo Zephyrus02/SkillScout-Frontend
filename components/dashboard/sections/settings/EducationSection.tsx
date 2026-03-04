@@ -1,27 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import MonthYearPicker from "@/components/ui/MonthYearPicker";
 import { inputCls, cancelBtnCls, saveBtnCls, cardCls } from "./constants";
 import type { Education } from "./types";
-
-const DEFAULT_EDUCATION: Education[] = [
-  {
-    id: 1,
-    degree: "M.S. Computer Science",
-    institution: "Stanford University",
-    startDate: "Sep 2017",
-    endDate: "Jun 2019",
-    current: false,
-  },
-  {
-    id: 2,
-    degree: "B.Tech Information Technology",
-    institution: "MIT",
-    startDate: "Aug 2013",
-    endDate: "May 2017",
-    current: false,
-  },
-];
+import { useProfile } from "@/hooks/useProfile";
+import { profileAPI } from "@/lib/api";
 
 const BLANK: Omit<Education, "id"> = {
   degree: "",
@@ -32,14 +15,33 @@ const BLANK: Omit<Education, "id"> = {
 };
 
 export default function EducationSection() {
-  const [education, setEducation] = useState<Education[]>(DEFAULT_EDUCATION);
+  const { profile: apiProfile, loading } = useProfile();
+  const [education, setEducation] = useState<Education[]>([]);
   const [draft, setDraft] = useState<Omit<Education, "id">>(BLANK);
   const [editingEdu, setEditingEdu] = useState<Education | null>(null);
   const [addingEdu, setAddingEdu] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (apiProfile?.education) {
+      setEducation(
+        apiProfile.education.map((e) => ({
+          id: e.id,
+          degree: e.degree ?? "",
+          institution: e.institution ?? "",
+          startDate: e.startDate ?? "",
+          endDate: e.endDate ?? "",
+          current: e.current ?? false,
+        })),
+      );
+    }
+  }, [apiProfile]);
 
   const openAdd = () => {
     setDraft(BLANK);
     setEditingEdu(null);
+    setSaveError(null);
     setAddingEdu(true);
   };
 
@@ -52,6 +54,7 @@ export default function EducationSection() {
       current: e.current,
     });
     setEditingEdu(e);
+    setSaveError(null);
     setAddingEdu(false);
   };
 
@@ -60,19 +63,45 @@ export default function EducationSection() {
     setEditingEdu(null);
   };
 
-  const save = () => {
-    if (editingEdu) {
-      setEducation((eds) =>
-        eds.map((e) => (e.id === editingEdu.id ? { ...draft, id: e.id } : e)),
+  const save = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      if (editingEdu) {
+        const res = await profileAPI.updateEducation(editingEdu.id, draft);
+        setEducation((eds) =>
+          eds.map((e) =>
+            e.id === editingEdu.id ? { ...draft, id: res.data.id } : e,
+          ),
+        );
+      } else {
+        const res = await profileAPI.addEducation(draft);
+        setEducation((eds) => [...eds, { ...draft, id: res.data.id }]);
+      }
+      closeModal();
+    } catch (e: unknown) {
+      const err = e as {
+        response?: { data?: { error?: { message?: string } } };
+        message?: string;
+      };
+      setSaveError(
+        err?.response?.data?.error?.message ??
+          err?.message ??
+          "Failed to save.",
       );
-    } else {
-      setEducation((eds) => [...eds, { ...draft, id: Date.now() }]);
+    } finally {
+      setSaving(false);
     }
-    closeModal();
   };
 
-  const remove = (id: number) =>
-    setEducation((eds) => eds.filter((e) => e.id !== id));
+  const remove = async (id: string) => {
+    try {
+      await profileAPI.deleteEducation(id);
+      setEducation((eds) => eds.filter((e) => e.id !== id));
+    } catch {
+      // deletion failed silently
+    }
+  };
 
   return (
     <>
@@ -88,43 +117,54 @@ export default function EducationSection() {
             Add
           </button>
         </div>
-        <div className="space-y-6">
-          {education.map((e) => (
-            <div
-              key={e.id}
-              className="group relative pl-4 border-l-2 border-gray-200 dark:border-gray-700"
-            >
-              <div className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600 border-2 border-white dark:border-surface-dark" />
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                    {e.degree}
-                  </h4>
-                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                    {e.institution}
-                  </p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">
-                    {e.startDate} – {e.current ? "Present" : e.endDate}
-                  </p>
-                </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                  <button
-                    onClick={() => openEdit(e)}
-                    className="p-1 text-gray-400 hover:text-blue-600 transition rounded"
-                  >
-                    <span className="material-icons text-sm">edit</span>
-                  </button>
-                  <button
-                    onClick={() => remove(e.id)}
-                    className="p-1 text-gray-400 hover:text-red-500 transition rounded"
-                  >
-                    <span className="material-icons text-sm">delete</span>
-                  </button>
+        {loading && !education.length ? (
+          <div className="space-y-4 animate-pulse">
+            {[1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-14 bg-gray-200 dark:bg-gray-700 rounded-lg"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {education.map((e) => (
+              <div
+                key={e.id}
+                className="group relative pl-4 border-l-2 border-gray-200 dark:border-gray-700"
+              >
+                <div className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600 border-2 border-white dark:border-surface-dark" />
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                      {e.degree}
+                    </h4>
+                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                      {e.institution}
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      {e.startDate} – {e.current ? "Present" : e.endDate}
+                    </p>
+                  </div>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                    <button
+                      onClick={() => openEdit(e)}
+                      className="p-1 text-gray-400 hover:text-blue-600 transition rounded"
+                    >
+                      <span className="material-icons text-sm">edit</span>
+                    </button>
+                    <button
+                      onClick={() => remove(e.id)}
+                      className="p-1 text-gray-400 hover:text-red-500 transition rounded"
+                    >
+                      <span className="material-icons text-sm">delete</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Add / Edit Modal */}
@@ -209,8 +249,12 @@ export default function EducationSection() {
               <button onClick={closeModal} className={cancelBtnCls}>
                 Cancel
               </button>
-              <button onClick={save} className={saveBtnCls}>
-                {editingEdu ? "Save Changes" : "Add Education"}
+              <button onClick={save} disabled={saving} className={saveBtnCls}>
+                {saving
+                  ? "Saving…"
+                  : editingEdu
+                    ? "Save Changes"
+                    : "Add Education"}
               </button>
             </div>
           </div>

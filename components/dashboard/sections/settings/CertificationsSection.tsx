@@ -1,27 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import MonthYearPicker from "@/components/ui/MonthYearPicker";
 import { inputCls, cancelBtnCls, saveBtnCls, cardCls } from "./constants";
 import type { Certification } from "./types";
-
-const DEFAULT_CERTIFICATIONS: Certification[] = [
-  {
-    id: 1,
-    name: "AWS Certified Solutions Architect",
-    issuer: "Amazon Web Services",
-    issueDate: "Dec 2022",
-    doesExpire: true,
-    expiryDate: "Dec 2025",
-  },
-  {
-    id: 2,
-    name: "Certified Kubernetes Administrator",
-    issuer: "CNCF",
-    issueDate: "Jan 2023",
-    doesExpire: false,
-    expiryDate: "",
-  },
-];
+import { useProfile } from "@/hooks/useProfile";
+import { profileAPI } from "@/lib/api";
 
 const BLANK: Omit<Certification, "id"> = {
   name: "",
@@ -32,16 +15,33 @@ const BLANK: Omit<Certification, "id"> = {
 };
 
 export default function CertificationsSection() {
-  const [certifications, setCertifications] = useState<Certification[]>(
-    DEFAULT_CERTIFICATIONS,
-  );
+  const { profile: apiProfile, loading } = useProfile();
+  const [certifications, setCertifications] = useState<Certification[]>([]);
   const [draft, setDraft] = useState<Omit<Certification, "id">>(BLANK);
   const [editingCert, setEditingCert] = useState<Certification | null>(null);
   const [addingCert, setAddingCert] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (apiProfile?.certifications) {
+      setCertifications(
+        apiProfile.certifications.map((c) => ({
+          id: c.id,
+          name: c.name ?? "",
+          issuer: c.issuer ?? "",
+          issueDate: c.issueDate ?? "",
+          doesExpire: c.doesExpire ?? false,
+          expiryDate: c.expiryDate ?? "",
+        })),
+      );
+    }
+  }, [apiProfile]);
 
   const openAdd = () => {
     setDraft(BLANK);
     setEditingCert(null);
+    setSaveError(null);
     setAddingCert(true);
   };
 
@@ -54,6 +54,7 @@ export default function CertificationsSection() {
       expiryDate: c.expiryDate,
     });
     setEditingCert(c);
+    setSaveError(null);
     setAddingCert(false);
   };
 
@@ -62,19 +63,45 @@ export default function CertificationsSection() {
     setEditingCert(null);
   };
 
-  const save = () => {
-    if (editingCert) {
-      setCertifications((cs) =>
-        cs.map((c) => (c.id === editingCert.id ? { ...draft, id: c.id } : c)),
+  const save = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      if (editingCert) {
+        const res = await profileAPI.updateCertification(editingCert.id, draft);
+        setCertifications((cs) =>
+          cs.map((c) =>
+            c.id === editingCert.id ? { ...draft, id: res.data.id } : c,
+          ),
+        );
+      } else {
+        const res = await profileAPI.addCertification(draft);
+        setCertifications((cs) => [...cs, { ...draft, id: res.data.id }]);
+      }
+      closeModal();
+    } catch (e: unknown) {
+      const err = e as {
+        response?: { data?: { error?: { message?: string } } };
+        message?: string;
+      };
+      setSaveError(
+        err?.response?.data?.error?.message ??
+          err?.message ??
+          "Failed to save.",
       );
-    } else {
-      setCertifications((cs) => [...cs, { ...draft, id: Date.now() }]);
+    } finally {
+      setSaving(false);
     }
-    closeModal();
   };
 
-  const remove = (id: number) =>
-    setCertifications((cs) => cs.filter((c) => c.id !== id));
+  const remove = async (id: string) => {
+    try {
+      await profileAPI.deleteCertification(id);
+      setCertifications((cs) => cs.filter((c) => c.id !== id));
+    } catch {
+      // deletion failed silently
+    }
+  };
 
   return (
     <>
@@ -90,58 +117,69 @@ export default function CertificationsSection() {
             Add
           </button>
         </div>
-        <div className="space-y-4">
-          {certifications.map((cert, idx) => (
-            <div
-              key={cert.id}
-              className="group flex items-start gap-3 p-3 border border-gray-100 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/30 transition"
-            >
+        {loading && !certifications.length ? (
+          <div className="space-y-3 animate-pulse">
+            {[1, 2].map((i) => (
               <div
-                className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                  idx % 2 === 0
-                    ? "bg-orange-100 dark:bg-orange-900/20"
-                    : "bg-blue-100 dark:bg-blue-900/20"
-                }`}
+                key={i}
+                className="h-14 bg-gray-200 dark:bg-gray-700 rounded-lg"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {certifications.map((cert, idx) => (
+              <div
+                key={cert.id}
+                className="group flex items-start gap-3 p-3 border border-gray-100 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/30 transition"
               >
-                <span
-                  className={`material-icons text-lg ${
-                    idx % 2 === 0 ? "text-orange-500" : "text-blue-500"
+                <div
+                  className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                    idx % 2 === 0
+                      ? "bg-orange-100 dark:bg-orange-900/20"
+                      : "bg-blue-100 dark:bg-blue-900/20"
                   }`}
                 >
-                  verified
-                </span>
+                  <span
+                    className={`material-icons text-lg ${
+                      idx % 2 === 0 ? "text-orange-500" : "text-blue-500"
+                    }`}
+                  >
+                    verified
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                    {cert.name}
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    {cert.issuer}
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    Issued: {cert.issueDate}
+                    {cert.doesExpire && cert.expiryDate
+                      ? ` • Expires: ${cert.expiryDate}`
+                      : " • No Expiry"}
+                  </p>
+                </div>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
+                  <button
+                    onClick={() => openEdit(cert)}
+                    className="p-1 text-gray-400 hover:text-blue-600 transition rounded"
+                  >
+                    <span className="material-icons text-sm">edit</span>
+                  </button>
+                  <button
+                    onClick={() => remove(cert.id)}
+                    className="p-1 text-gray-400 hover:text-red-500 transition rounded"
+                  >
+                    <span className="material-icons text-sm">delete</span>
+                  </button>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                  {cert.name}
-                </h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  {cert.issuer}
-                </p>
-                <p className="text-[10px] text-gray-400 mt-0.5">
-                  Issued: {cert.issueDate}
-                  {cert.doesExpire && cert.expiryDate
-                    ? ` • Expires: ${cert.expiryDate}`
-                    : " • No Expiry"}
-                </p>
-              </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
-                <button
-                  onClick={() => openEdit(cert)}
-                  className="p-1 text-gray-400 hover:text-blue-600 transition rounded"
-                >
-                  <span className="material-icons text-sm">edit</span>
-                </button>
-                <button
-                  onClick={() => remove(cert.id)}
-                  className="p-1 text-gray-400 hover:text-red-500 transition rounded"
-                >
-                  <span className="material-icons text-sm">delete</span>
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Add / Edit Modal */}
@@ -216,12 +254,21 @@ export default function CertificationsSection() {
                 />
               </div>
             )}
+            {saveError && (
+              <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+                {saveError}
+              </p>
+            )}
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={closeModal} className={cancelBtnCls}>
                 Cancel
               </button>
-              <button onClick={save} className={saveBtnCls}>
-                {editingCert ? "Save Changes" : "Add Certification"}
+              <button onClick={save} disabled={saving} className={saveBtnCls}>
+                {saving
+                  ? "Saving…"
+                  : editingCert
+                    ? "Save Changes"
+                    : "Add Certification"}
               </button>
             </div>
           </div>
