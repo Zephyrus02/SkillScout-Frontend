@@ -6,15 +6,16 @@ import SignUpForm from "@/components/auth/SignUpForm";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function SignUpPage() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, authFlowNavigating } = useAuth();
   const router = useRouter();
 
-  // Redirect already authenticated users
+  // Redirect already-authenticated users. Skip when the auth handler is
+  // actively navigating to avoid a competing router.replace call.
   useEffect(() => {
-    if (!loading && isAuthenticated) {
+    if (!loading && isAuthenticated && !authFlowNavigating) {
       router.replace("/dashboard");
     }
-  }, [loading, isAuthenticated, router]);
+  }, [loading, isAuthenticated, router, authFlowNavigating]);
 
   if (loading || isAuthenticated) return null;
   return (

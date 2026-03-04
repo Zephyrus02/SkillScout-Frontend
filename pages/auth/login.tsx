@@ -6,12 +6,15 @@ import SignInForm from "@/components/auth/SignInForm";
 import { isAdminUser, useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
-  const { isAuthenticated, loading, user } = useAuth();
+  const { isAuthenticated, loading, user, authFlowNavigating } = useAuth();
   const router = useRouter();
 
-  // Redirect already authenticated users to the correct dashboard
+  // Redirect already-authenticated users away from the login page.
+  // Skip if the auth flow (login/googleAuth/githubCallbackAuth) is already
+  // handling post-auth navigation — firing two concurrent router.replace calls
+  // can race and cause the 401 interceptor to clear the refresh-token cookie.
   useEffect(() => {
-    if (!loading && isAuthenticated) {
+    if (!loading && isAuthenticated && !authFlowNavigating) {
       const redirect = router.query.redirect as string | undefined;
       // Admins always go to /admin/dashboard — never honour a ?redirect param
       // that might point to a candidate page (e.g. from a prior ProtectedRoute save).
@@ -20,7 +23,7 @@ export default function LoginPage() {
         : (redirect ?? "/dashboard");
       router.replace(targetPath);
     }
-  }, [loading, isAuthenticated, user, router]);
+  }, [loading, isAuthenticated, user, router, authFlowNavigating]);
 
   if (loading || isAuthenticated) return null;
   return (

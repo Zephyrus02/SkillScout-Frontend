@@ -45,6 +45,23 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+// ── Refresh-token mutex ─────────────────────────────────────────────────────
+// Prevents multiple concurrent 401s from all triggering a /auth/refresh call.
+// The first request that gets a 401 performs the refresh; every other request
+// that arrives while the refresh is in-flight queues a callback and waits.
+let _isRefreshing = false;
+type RefreshCallback = (newToken: string | null) => void;
+let _refreshSubscribers: RefreshCallback[] = [];
+
+function _subscribeTokenRefresh(cb: RefreshCallback) {
+  _refreshSubscribers.push(cb);
+}
+
+function _notifyRefreshSubscribers(newToken: string | null) {
+  _refreshSubscribers.forEach((cb) => cb(newToken));
+  _refreshSubscribers = [];
+}
+
 // Auto-refresh access token on 401
 apiClient.interceptors.response.use(
   (response) => response,
@@ -66,6 +83,24 @@ apiClient.interceptors.response.use(
     ) {
       originalRequest._retry = true;
 
+      // If a refresh is already in progress, queue this request and wait.
+      if (_isRefreshing) {
+        return new Promise<ReturnType<typeof apiClient>>((resolve, reject) => {
+          _subscribeTokenRefresh((newToken) => {
+            if (newToken) {
+              if (originalRequest.headers) {
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              }
+              resolve(apiClient(originalRequest));
+            } else {
+              reject(error);
+            }
+          });
+        });
+      }
+
+      _isRefreshing = true;
+
       try {
         const res = await axios.post(
           `${API_BASE}/auth/refresh`,
@@ -74,11 +109,15 @@ apiClient.interceptors.response.use(
         );
         const { accessToken } = res.data.data;
         setAccessToken(accessToken);
+        _isRefreshing = false;
+        _notifyRefreshSubscribers(accessToken);
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         }
         return apiClient(originalRequest);
       } catch {
+        _isRefreshing = false;
+        _notifyRefreshSubscribers(null);
         clearAccessToken();
         clearUserData();
         if (!isAuthPage && typeof window !== "undefined") {

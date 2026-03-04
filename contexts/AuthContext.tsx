@@ -45,10 +45,23 @@ type UserWithRoles = User & {
   roles?: string[] | string;
 };
 
+/**
+ * Module-level flag set while login/googleAuth/githubCallbackAuth is actively
+ * navigating.  The login page reads this to avoid firing its own redirect when
+ * the auth handler is already taking care of it (prevents double-navigation
+ * that can trigger concurrent 401/refresh cycles and clear the cookie).
+ */
+let _authFlowNavigating = false;
+export const isAuthFlowNavigating = () => _authFlowNavigating;
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
+  /** True while login/googleAuth/githubCallbackAuth is running and will
+   *  handle post-auth navigation itself. The login page uses this to skip
+   *  its own redundant redirect. */
+  authFlowNavigating: boolean;
   setUser: (user: User | null) => void;
   login: (
     email: string,
@@ -94,7 +107,13 @@ async function navigateAfterAuth(
   // Candidate flow
   try {
     const profileStatus = await profileAPI.checkProfileStatus();
-    if (!profileStatus.data.hasCompletedProfile) {
+    // Support both the legacy `hasCompletedProfile` key and the current
+    // `isComplete` key returned by the backend /api/profile/status endpoint.
+    const completedProfile =
+      (profileStatus.data as any)?.hasCompletedProfile ??
+      (profileStatus.data as any)?.isComplete ??
+      false;
+    if (!completedProfile) {
       await router.replace("/profile-setup");
       return;
     }
@@ -157,6 +176,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const router = useRouter();
   const [user, setUserState] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authFlowNavigating, setAuthFlowNavigating] = useState(false);
 
   // ── Load user on mount ──────────────────────────────────────────────────
 
@@ -277,10 +297,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         // use the login response user data as fallback
       }
 
+      // Signal that this auth handler will take care of navigation so the
+      // login page's own isAuthenticated effect does not double-navigate.
+      _authFlowNavigating = true;
+      setAuthFlowNavigating(true);
       setUserState(userForNav);
       setUserData(userForNav);
       toast.success("Login successful!");
-      await navigateAfterAuth(userForNav, router);
+      try {
+        await navigateAfterAuth(userForNav, router);
+      } finally {
+        _authFlowNavigating = false;
+        setAuthFlowNavigating(false);
+      }
     }
   };
 
@@ -336,6 +365,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         // use the google-auth response user data as fallback
       }
 
+      // Flag that this handler manages navigation so the login page's
+      // isAuthenticated effect does not fire a competing router.replace.
+      _authFlowNavigating = true;
+      setAuthFlowNavigating(true);
       setUserState(userForNav);
       setUserData(userForNav);
       toast.success(
@@ -343,7 +376,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           ? "Account created successfully with Google!"
           : "Login successful with Google!",
       );
-      await navigateAfterAuth(userForNav, router);
+      try {
+        await navigateAfterAuth(userForNav, router);
+      } finally {
+        _authFlowNavigating = false;
+        setAuthFlowNavigating(false);
+      }
     }
   };
 
@@ -371,6 +409,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       throw new Error("Failed to load user profile after GitHub login.");
     }
 
+    _authFlowNavigating = true;
+    setAuthFlowNavigating(true);
     setUserState(userForNav);
     setUserData(userForNav);
     toast.success(
@@ -378,7 +418,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         ? "Account created successfully with GitHub!"
         : "Login successful with GitHub!",
     );
-    await navigateAfterAuth(userForNav, router);
+    try {
+      await navigateAfterAuth(userForNav, router);
+    } finally {
+      _authFlowNavigating = false;
+      setAuthFlowNavigating(false);
+    }
   };
 
   const logout = async () => {
@@ -408,6 +453,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     user,
     loading,
     isAuthenticated: !!user,
+    authFlowNavigating,
     setUser: handleSetUser,
     login,
     signup,
