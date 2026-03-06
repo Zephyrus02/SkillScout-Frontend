@@ -20,6 +20,7 @@
  *   ├── CertificationsSection.tsx – Certification cards + CRUD modal
  *   ├── SidebarQuickLinks.tsx     – Sidebar anchor links
  *   ├── SidebarSocialLinks.tsx    – Sidebar social links + edit modal
+ *   ├── SidebarBillingUsage.tsx   – Billing, usage, invoices, upgrade
  *   └── SidebarAccountSettings.tsx – Email alerts, change password, delete
  */
 
@@ -34,6 +35,7 @@ import PublicationsSection from "./PublicationsSection";
 import CertificationsSection from "./CertificationsSection";
 import SidebarQuickLinks from "./SidebarQuickLinks";
 import SidebarSocialLinks from "./SidebarSocialLinks";
+import SidebarBillingUsage from "./SidebarBillingUsage";
 import SidebarAccountSettings from "./SidebarAccountSettings";
 
 export default function SettingsSection() {
@@ -48,6 +50,7 @@ export default function SettingsSection() {
         <div className="col-span-12 lg:col-span-3 order-last lg:order-last space-y-6">
           <SidebarQuickLinks />
           <SidebarSocialLinks />
+          <SidebarBillingUsage />
           <SidebarAccountSettings />
         </div>
 

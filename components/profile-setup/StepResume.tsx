@@ -24,6 +24,8 @@ interface StepResumeProps {
   onChange: (data: PersonalStepData) => void;
   onContinue: () => void;
   onBack: () => void;
+  /** Upload profile picture during onboarding to persist across refresh */
+  onUploadPicture?: (file: File) => Promise<{ url: string }>;
 }
 
 export default function StepResume({
@@ -31,6 +33,7 @@ export default function StepResume({
   onChange,
   onContinue,
   onBack,
+  onUploadPicture,
 }: StepResumeProps) {
   const [errors, setErrors] = useState<
     Partial<Record<keyof PersonalStepData, string>>
@@ -41,9 +44,19 @@ export default function StepResume({
     v: PersonalStepData[K],
   ) => onChange({ ...data, [k]: v });
 
-  const handlePictureChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const [uploadingPicture, setUploadingPicture] = useState(false);
+  const handlePictureChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
-    if (file) {
+    if (!file) return;
+    if (onUploadPicture) {
+      setUploadingPicture(true);
+      try {
+        const { url } = await onUploadPicture(file);
+        onChange({ ...data, profilePicture: file, profilePictureUrl: url });
+      } finally {
+        setUploadingPicture(false);
+      }
+    } else {
       const url = URL.createObjectURL(file);
       onChange({ ...data, profilePicture: file, profilePictureUrl: url });
     }
@@ -116,10 +129,17 @@ export default function StepResume({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 text-text-light dark:text-text-dark text-sm font-semibold hover:border-primary hover:text-primary transition-all"
+                  disabled={uploadingPicture}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 text-text-light dark:text-text-dark text-sm font-semibold hover:border-primary hover:text-primary transition-all disabled:opacity-60"
                 >
-                  <span className="material-icons text-[16px]">upload</span>
-                  {data.profilePictureUrl ? "Change Photo" : "Upload Photo"}
+                  <span className="material-icons text-[16px]">
+                    {uploadingPicture ? "hourglass_empty" : "upload"}
+                  </span>
+                  {uploadingPicture
+                    ? "Uploading…"
+                    : data.profilePictureUrl
+                      ? "Change Photo"
+                      : "Upload Photo"}
                 </button>
                 {data.profilePictureUrl && (
                   <button

@@ -3,60 +3,22 @@ import Head from "next/head";
 import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { PRICING_PLANS } from "@/lib/plans";
 
-/* ─── Data ──────────────────────────────────────────────────────────── */
+/* ─── Data (from shared plans + pricing-specific CTAs) ─────────────────── */
 
-const PLANS = [
-  {
-    id: "free",
-    name: "Free",
-    tagline: "Get started with AI mock interviews. No renewal.",
-    monthlyPrice: 0,
-    cta: "Get Started Free",
-    ctaHref: "/auth/signup",
-    accent: "default" as const,
-    note: "One-time · doesn't renew",
-    features: [
-      { text: "5 AI Mock Interviews", included: true },
-      { text: "Basic AI Feedback Analysis", included: true },
-      { text: "Community Access", included: true },
-      { text: "Code Editor & Whiteboard", included: false },
-    ],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    tagline: "For active job seekers needing serious prep.",
-    monthlyPrice: 2000,
-    cta: "Start 7-Day Free Trial",
-    ctaHref: "/auth/signup?plan=pro",
-    accent: "primary" as const,
-    badge: "Most Popular",
-    features: [
-      { text: "10 AI Mock Interviews per month", included: true },
-      { text: "Video & Voice Analysis", included: true },
-      { text: "AI Behavioral Modes", included: true },
-      { text: "Access to Code Editor & Whiteboard", included: true },
-      { text: "Priority Support in 3-5 business days", included: true },
-    ],
-  },
-  {
-    id: "elite",
-    name: "Elite",
-    tagline: "Everything in Pro, plus advanced tools for serious candidates.",
-    monthlyPrice: 5000,
-    cta: "Go Elite",
-    ctaHref: "/auth/signup?plan=elite",
-    accent: "purple" as const,
-    badge: "Best Value",
-    features: [
-      { text: "20 AI Mock Interviews per month", included: true },
-      { text: "Everything in Pro", included: true },
-      { text: "Custom Company Presets & Goals", included: true },
-      { text: "Priority Support within 1 day", included: true },
-    ],
-  },
-] as const;
+const PLAN_CTAS: Record<string, { cta: string; ctaHref: string }> = {
+  trial: { cta: "Start Trial", ctaHref: "/auth/signup?plan=trial" },
+  lite: { cta: "Get Lite", ctaHref: "/auth/signup?plan=lite" },
+  pro: { cta: "Start 7-Day Free Trial", ctaHref: "/auth/signup?plan=pro" },
+  elite: { cta: "Go Elite", ctaHref: "/auth/signup?plan=elite" },
+};
+
+const PLANS = PRICING_PLANS.map((p) => ({
+  ...p,
+  cta: PLAN_CTAS[p.id]?.cta ?? `Get ${p.name}`,
+  ctaHref: PLAN_CTAS[p.id]?.ctaHref ?? "/auth/signup",
+}));
 
 /* ─── Page ──────────────────────────────────────────────────────────── */
 
@@ -109,22 +71,25 @@ export default function PricingPage() {
             </div>
 
             {/* ── Pricing Cards ─────────────────────────────────── */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start mb-24">
-              {/* Free */}
-              <PlanCard plan={PLANS[0]} />
-
-              {/* Pro — featured */}
-              <div className="relative z-10 md:-mt-8">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
-                  <span className="bg-primary text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide shadow-md whitespace-nowrap">
-                    Most Popular
-                  </span>
-                </div>
-                <PlanCard plan={PLANS[1]} featured />
-              </div>
-
-              {/* Elite */}
-              <PlanCard plan={PLANS[2]} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 items-start mb-24">
+              {PLANS.map((plan) => {
+                const isPro = plan.id === "pro";
+                return (
+                  <div
+                    key={plan.id}
+                    className={isPro ? "relative z-10 lg:-mt-4" : undefined}
+                  >
+                    {isPro && (
+                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
+                        <span className="bg-primary text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide shadow-md whitespace-nowrap">
+                          Most Popular
+                        </span>
+                      </div>
+                    )}
+                    <PlanCard plan={plan as PlanForCard} featured={isPro} />
+                  </div>
+                );
+              })}
             </div>
 
             {/* ── Feature Comparison ────────────────────────────── */}
@@ -155,27 +120,28 @@ export default function PricingPage() {
                   {[
                     {
                       label: "AI Mock Interviews",
-                      values: ["5 total", "10/mo", "20/mo"],
+                      values: ["3", "5/mo", "10/mo", "20/mo"],
                     },
                     {
                       label: "Code Editor & Whiteboard",
-                      values: [false, true, true],
+                      values: [false, false, true, true],
                     },
                     {
                       label: "Video & Voice Analysis",
-                      values: [false, true, true],
+                      values: [false, false, true, true],
                     },
                     {
                       label: "AI Behavioral Modes",
-                      values: [false, true, true],
+                      values: [false, false, true, true],
                     },
                     {
                       label: "Custom Company Presets & Goals",
-                      values: [false, false, true],
+                      values: [false, false, false, true],
                     },
                     {
                       label: "Support",
                       values: [
+                        "Community",
                         "Community",
                         "3-5 business days",
                         "Within 1 day",
@@ -183,7 +149,7 @@ export default function PricingPage() {
                     },
                     {
                       label: "Plan Renewal",
-                      values: ["One-time", "Monthly", "Monthly"],
+                      values: ["14 days", "Monthly", "Monthly", "Monthly"],
                     },
                   ].map((row) => (
                     <tr
@@ -249,29 +215,24 @@ export default function PricingPage() {
 /* ─── Plan Card ──────────────────────────────────────────────────────── */
 type PlanAccent = "default" | "primary" | "purple";
 
-interface Feature {
-  text: string;
-  included: boolean;
-}
-
-interface Plan {
+interface PlanForCard {
   id: string;
   name: string;
   tagline: string;
   monthlyPrice: number;
   cta: string;
-  ctaHref: string;
+  ctaHref?: string;
   accent: PlanAccent;
   badge?: string;
   note?: string;
-  features: readonly Feature[];
+  features: readonly { text: string; included: boolean }[];
 }
 
 function PlanCard({
   plan,
   featured = false,
 }: {
-  plan: Plan;
+  plan: PlanForCard;
   featured?: boolean;
 }) {
   const isPrimary = plan.accent === "primary";
@@ -344,7 +305,7 @@ function PlanCard({
 
       {/* CTA */}
       <Link
-        href={plan.ctaHref}
+        href={plan.ctaHref ?? "/auth/signup"}
         className={`w-full py-3 px-4 rounded-xl font-bold text-sm text-center transition-all mb-8 block ${
           isPrimary
             ? "bg-primary hover:bg-primary-hover text-white shadow-lg shadow-primary/30"

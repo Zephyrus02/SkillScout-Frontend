@@ -1,64 +1,12 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { paymentsAPI } from "@/lib/api";
+import { openRazorpayCheckout } from "@/lib/razorpay";
+import { PROFILE_SETUP_PLANS } from "@/lib/plans";
 
-/* ─── Plan data (mirrored from pricing.tsx) ──────────────────────────── */
-const PLANS = [
-  {
-    id: "free",
-    name: "Free",
-    tagline: "Get started with AI mock interviews. No renewal.",
-    monthlyPrice: 0,
-    cta: "Select Free",
-    accent: "default" as const,
-    note: "One-time · doesn't renew",
-    features: [
-      { text: "5 AI Mock Interviews", included: true },
-      { text: "Basic AI Feedback Analysis", included: true },
-      { text: "Community Access", included: true },
-      { text: "Code Editor & Whiteboard", included: false },
-    ],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    tagline: "For active job seekers needing serious prep.",
-    monthlyPrice: 2000,
-    cta: "Select Pro",
-    accent: "primary" as const,
-    badge: "Most Popular",
-    features: [
-      { text: "10 AI Mock Interviews per month", included: true },
-      { text: "Video & Voice Analysis", included: true },
-      { text: "AI Behavioral Modes", included: true },
-      { text: "Access to Code Editor & Whiteboard", included: true },
-      { text: "Priority Support in 3-5 business days", included: true },
-    ],
-  },
-  {
-    id: "elite",
-    name: "Elite",
-    tagline: "Everything in Pro, plus advanced tools for serious candidates.",
-    monthlyPrice: 5000,
-    cta: "Select Elite",
-    accent: "purple" as const,
-    badge: "Best Value",
-    features: [
-      { text: "20 AI Mock Interviews per month", included: true },
-      { text: "Everything in Pro", included: true },
-      { text: "Custom Company Presets & Goals", included: true },
-      { text: "Priority Support within 1 day", included: true },
-    ],
-  },
-] as const;
-
-type PlanId = "free" | "pro" | "elite";
+type PlanId = "trial" | "lite" | "pro" | "elite";
 type PlanAccent = "default" | "primary" | "purple";
 
-interface Feature {
-  text: string;
-  included: boolean;
-}
-
-interface Plan {
+interface PlanForCard {
   id: PlanId;
   name: string;
   tagline: string;
@@ -67,8 +15,20 @@ interface Plan {
   accent: PlanAccent;
   badge?: string;
   note?: string;
-  features: readonly Feature[];
+  features: readonly { text: string; included: boolean }[];
 }
+
+const PLANS: PlanForCard[] = PROFILE_SETUP_PLANS.map((p) => ({
+  id: p.id as PlanId,
+  name: p.name,
+  tagline: p.tagline,
+  monthlyPrice: p.monthlyPrice,
+  cta: `Select ${p.name}`,
+  accent: p.accent,
+  badge: p.badge,
+  note: p.note,
+  features: p.features,
+}));
 
 /* ─── Plan Card ──────────────────────────────────────────────────────── */
 function PlanCard({
@@ -77,7 +37,7 @@ function PlanCard({
   selected,
   onSelect,
 }: {
-  plan: Plan;
+  plan: PlanForCard;
   featured?: boolean;
   selected: boolean;
   onSelect: (id: PlanId) => void;
@@ -240,12 +200,16 @@ function PlanCard({
   );
 }
 
+type PaymentStatus = "idle" | "pending" | "success" | "failed";
+
 /* ─── Step 5 Plan Select ─────────────────────────────────────────────── */
 interface Step5PlanSelectProps {
   selectedPlan: PlanId | null;
   onSelectPlan: (plan: PlanId) => void;
   onContinue: () => void;
   onBack: () => void;
+  /** Called when payment completes (paid) or free plan is activated */
+  onPaymentComplete?: (status: "completed" | "skipped") => void;
 }
 
 export type { PlanId };
@@ -255,7 +219,134 @@ export default function Step5PlanSelect({
   onSelectPlan,
   onContinue,
   onBack,
+  onPaymentComplete,
 }: Step5PlanSelectProps) {
+  const [planIdMap, setPlanIdMap] = useState<Record<string, string>>({});
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [plansError, setPlansError] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("idle");
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  // Fetch plans on mount to build slug -> planId map
+  useEffect(() => {
+    paymentsAPI
+      .getPlans()
+      .then((res) => {
+        if (res.success && res.data) {
+          const map: Record<string, string> = {};
+          for (const p of res.data) {
+            map[p.slug] = p.id;
+          }
+          setPlanIdMap(map);
+        }
+      })
+      .catch(() => {
+        setPlansError("Failed to load plans. Please refresh the page.");
+      })
+      .finally(() => {
+        setPlansLoading(false);
+      });
+  }, []);
+
+  // Reset payment status when user changes plan selection
+  useEffect(() => {
+    setPaymentStatus("idle");
+    setPaymentError(null);
+  }, [selectedPlan]);
+
+  const isFreePlan = selectedPlan === "trial";
+  const isPaidPlan =
+    selectedPlan === "lite" ||
+    selectedPlan === "pro" ||
+    selectedPlan === "elite";
+  const isPaid = paymentStatus === "success";
+  const isPending = paymentStatus === "pending";
+  const isFailed = paymentStatus === "failed";
+
+  const getButtonText = (): string => {
+    if (isFreePlan) return "Review & Finish";
+    if (isPaid) return "Review & Finish";
+    if (isFailed) return "Retry Payment";
+    return "Proceed to Payment";
+  };
+
+  const handleContinue = async () => {
+    if (!selectedPlan) return;
+
+    if (selectedPlan === "trial") {
+      setPaymentError(null);
+      setPaymentStatus("pending");
+      try {
+        await paymentsAPI.activateTrialPlan();
+        onPaymentComplete?.("skipped");
+        onContinue();
+      } catch (e) {
+        const msg =
+          e instanceof Error ? e.message : "Failed to activate trial plan.";
+        setPaymentError(msg);
+        setPaymentStatus("idle");
+      }
+      return;
+    }
+
+    if (isPaidPlan && isPaid) {
+      onContinue();
+      return;
+    }
+
+    if (isPaidPlan && !isPaid) {
+      const planId = planIdMap[selectedPlan];
+      if (!planId) {
+        setPaymentError("Plan not found. Please refresh and try again.");
+        return;
+      }
+
+      setPaymentError(null);
+      setPaymentStatus("pending");
+
+      try {
+        const orderRes = await paymentsAPI.createOrder(
+          planId,
+          "monthly",
+          "one_time",
+        );
+        if (!orderRes.success || !orderRes.data) {
+          throw new Error("Failed to create order");
+        }
+        const data = orderRes.data;
+        if (data.subscriptionType !== "one_time" || !("orderId" in data)) {
+          throw new Error("Invalid order response");
+        }
+
+        const response = await openRazorpayCheckout({
+          key: data.keyId,
+          order_id: data.orderId,
+          name: "SkillScout",
+          description: `Plan payment - ${data.amountDisplay}`,
+        });
+
+        await paymentsAPI.verifyPayment({
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_signature: response.razorpay_signature,
+        });
+
+        onPaymentComplete?.("completed");
+        setPaymentStatus("success");
+      } catch (e) {
+        const msg =
+          e instanceof Error ? e.message : "Payment failed. Please try again.";
+        setPaymentError(msg);
+        setPaymentStatus("failed");
+      }
+    }
+  };
+
+  const isButtonDisabled =
+    !selectedPlan ||
+    isPending ||
+    (isPaidPlan && (plansLoading || !planIdMap[selectedPlan] || !!plansError));
+
   return (
     <div className="space-y-8">
       {/* Subtitle */}
@@ -264,36 +355,37 @@ export default function Step5PlanSelect({
         every career stage. You can always upgrade later.
       </p>
 
-      {/* Plan cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-        {/* Free */}
-        <PlanCard
-          plan={PLANS[0]}
-          selected={selectedPlan === "free"}
-          onSelect={onSelectPlan}
-        />
-
-        {/* Pro — featured */}
-        <div className="relative z-10 md:-mt-8">
-          <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
-            <span className="bg-primary text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide shadow-md whitespace-nowrap">
-              Most Popular
-            </span>
-          </div>
-          <PlanCard
-            plan={PLANS[1]}
-            featured
-            selected={selectedPlan === "pro"}
-            onSelect={onSelectPlan}
-          />
+      {plansError && (
+        <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+          {plansError}
         </div>
+      )}
 
-        {/* Elite */}
-        <PlanCard
-          plan={PLANS[2]}
-          selected={selectedPlan === "elite"}
-          onSelect={onSelectPlan}
-        />
+      {/* Plan cards grid — Trial, Lite, Pro, Elite */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
+        {PLANS.map((plan) => {
+          const isPro = plan.id === "pro";
+          return (
+            <div
+              key={plan.id}
+              className={isPro ? "relative z-10 lg:-mt-4" : undefined}
+            >
+              {isPro && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
+                  <span className="bg-primary text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide shadow-md whitespace-nowrap">
+                    Most Popular
+                  </span>
+                </div>
+              )}
+              <PlanCard
+                plan={plan}
+                featured={isPro}
+                selected={selectedPlan === plan.id}
+                onSelect={onSelectPlan}
+              />
+            </div>
+          );
+        })}
       </div>
 
       {/* Nav */}
@@ -303,22 +395,39 @@ export default function Step5PlanSelect({
             Please select a plan to continue.
           </p>
         )}
+        {paymentError && (
+          <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300">
+            {paymentError}
+          </div>
+        )}
         <div className="flex items-center justify-between pt-2">
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-1 text-subtext-light dark:text-subtext-dark hover:text-text-light dark:hover:text-text-dark font-medium px-4 py-2 rounded-lg transition-colors text-sm"
+            disabled={isPending}
+            className="flex items-center gap-1 text-subtext-light dark:text-subtext-dark hover:text-text-light dark:hover:text-text-dark font-medium px-4 py-2 rounded-lg transition-colors text-sm disabled:opacity-40"
           >
             <span className="material-icons text-sm">arrow_back</span> Back
           </button>
           <button
             type="button"
-            onClick={onContinue}
-            disabled={!selectedPlan}
+            onClick={handleContinue}
+            disabled={isButtonDisabled}
             className="bg-primary hover:bg-primary-hover text-white px-10 py-4 rounded-xl font-bold shadow-lg shadow-blue-500/25 flex items-center gap-2 transition-all active:scale-95 text-base disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100"
           >
-            <span className="material-icons">arrow_forward</span>
-            Review &amp; Finish
+            {isPending ? (
+              <>
+                <span className="material-icons animate-spin text-xl">
+                  refresh
+                </span>
+                Processing…
+              </>
+            ) : (
+              <>
+                <span className="material-icons">arrow_forward</span>
+                {getButtonText()}
+              </>
+            )}
           </button>
         </div>
       </div>

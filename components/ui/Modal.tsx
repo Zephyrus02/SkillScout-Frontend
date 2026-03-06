@@ -4,7 +4,7 @@ interface ModalProps {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
-  maxWidth?: "sm" | "md" | "lg";
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
 }
 
 export default function Modal({
@@ -17,12 +17,15 @@ export default function Modal({
     sm: "max-w-sm",
     md: "max-w-lg",
     lg: "max-w-2xl",
-  }[maxWidth];
+    xl: "max-w-4xl",
+    "2xl": "max-w-5xl",
+    "3xl": "max-w-6xl",
+  }[maxWidth ?? "md"];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 min-h-screen min-h-[100dvh] bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
       <div

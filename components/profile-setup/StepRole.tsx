@@ -49,6 +49,8 @@ type CertEntry = {
 
 export interface ExperienceStepData {
   resumeFile: File | null;
+  resumeUrl?: string | null;
+  resumeFileName?: string | null;
   profileHeadline: string;
   education: EduEntry[];
   employment: EmpEntry[];
@@ -67,6 +69,8 @@ interface StepRoleProps {
   onChange: (d: ExperienceStepData) => void;
   onContinue: () => void;
   onBack: () => void;
+  /** Upload resume during onboarding to persist across refresh */
+  onUploadResume?: (file: File) => Promise<{ url: string; fileName: string }>;
 }
 
 // ── Shared micro-styles ───────────────────────────────────────────────────────
@@ -171,6 +175,7 @@ export default function StepRole({
   onChange,
   onContinue,
   onBack,
+  onUploadResume,
 }: StepRoleProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [dragging, setDragging] = useState(false);
@@ -226,8 +231,25 @@ export default function StepRole({
     v: ExperienceStepData[K],
   ) => onChange({ ...data, [k]: v });
 
-  const handleFile = (f?: File) => {
-    if (f) set("resumeFile", f);
+  const [uploadingResume, setUploadingResume] = useState(false);
+  const handleFile = async (f?: File) => {
+    if (!f) return;
+    if (onUploadResume) {
+      setUploadingResume(true);
+      try {
+        const { url, fileName } = await onUploadResume(f);
+        onChange({
+          ...data,
+          resumeFile: f,
+          resumeUrl: url,
+          resumeFileName: fileName,
+        });
+      } finally {
+        setUploadingResume(false);
+      }
+    } else {
+      set("resumeFile", f);
+    }
   };
 
   // ── Savers ──────────────────────────────────────────────────────────────────
@@ -298,7 +320,8 @@ export default function StepRole({
   // ── Validation ───────────────────────────────────────────────────────────────
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!data.resumeFile) e.resume = "Please upload your resume.";
+    if (!data.resumeFile && !data.resumeUrl)
+      e.resume = "Please upload your resume.";
     if (!data.profileHeadline.trim())
       e.profileHeadline = "Profile headline is required.";
     if (data.education.length === 0)
@@ -323,7 +346,7 @@ export default function StepRole({
           className={`rounded-xl p-6 border-2 border-dashed text-center cursor-pointer transition-colors ${
             dragging
               ? "border-primary bg-blue-50 dark:bg-blue-900/20"
-              : data.resumeFile
+              : data.resumeFile || data.resumeUrl
                 ? "border-green-400 bg-green-50 dark:bg-green-900/10"
                 : "border-gray-300 dark:border-gray-600 hover:border-primary bg-slate-50 dark:bg-gray-800/50"
           }`}
@@ -349,9 +372,13 @@ export default function StepRole({
           <span className="material-icons text-primary text-3xl mb-2 block">
             cloud_upload
           </span>
-          {data.resumeFile ? (
+          {uploadingResume ? (
+            <p className="text-sm font-medium text-primary">Uploading…</p>
+          ) : data.resumeFile || data.resumeUrl ? (
             <p className="text-sm font-medium text-green-700 dark:text-green-400">
-              {data.resumeFile.name}
+              {data.resumeFile?.name ??
+                data.resumeFileName ??
+                "Resume uploaded"}
             </p>
           ) : (
             <>

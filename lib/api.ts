@@ -342,6 +342,210 @@ export interface FullProfile {
   updatedAt: string;
 }
 
+// ── Payments API ───────────────────────────────────────────────────────────
+
+export interface Plan {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  amountMonthly: number;
+  amountAnnual: number;
+  currency: string;
+  rateLimitTier: string;
+  sortOrder: number;
+}
+
+export const paymentsAPI = {
+  /** GET /api/payments/plans — list active plans (public) */
+  getPlans: async () => {
+    const res = await apiClient.get("/payments/plans");
+    return res.data as { success: boolean; data: Plan[] };
+  },
+
+  /** POST /api/payments/create-order — create Razorpay order (one-time) or subscription */
+  createOrder: async (
+    planId: string,
+    billingInterval: "monthly" | "annual",
+    subscriptionType: "one_time" | "recurring",
+  ) => {
+    const res = await apiClient.post("/payments/create-order", {
+      planId,
+      billingInterval,
+      subscriptionType,
+    });
+    return res.data as {
+      success: boolean;
+      data:
+        | {
+            orderId: string;
+            keyId: string;
+            currency: string;
+            amountDisplay: string;
+            subscriptionType: "one_time";
+          }
+        | {
+            subscriptionId: string;
+            keyId: string;
+            currency: string;
+            amountDisplay: string;
+            subscriptionType: "recurring";
+          };
+    };
+  },
+
+  /** POST /api/payments/verify — verify Razorpay payment and grant access */
+  verifyPayment: async (params: {
+    razorpay_payment_id: string;
+    razorpay_order_id: string;
+    razorpay_signature: string;
+  }) => {
+    const res = await apiClient.post("/payments/verify", params);
+    return res.data as {
+      success: boolean;
+      data: { hasAccess: boolean; alreadyProcessed?: boolean };
+      message: string;
+    };
+  },
+
+  /** POST /api/payments/activate-free — grant access for Free/Basic plan (no payment) */
+  activateFreePlan: async (planSlug?: "free" | "basic") => {
+    const res = await apiClient.post("/payments/activate-free", {
+      planSlug,
+    });
+    return res.data as { success: boolean; message: string };
+  },
+
+  /** POST /api/payments/activate-trial — activate Trial plan (14 days, no payment) */
+  activateTrialPlan: async () => {
+    const res = await apiClient.post("/payments/activate-trial");
+    return res.data as { success: boolean; message: string };
+  },
+
+  /** GET /api/payments/subscription — current user's subscription (or null) */
+  getSubscription: async () => {
+    const res = await apiClient.get("/payments/subscription");
+    return res.data as {
+      success: boolean;
+      data: {
+        id: string;
+        planId: string;
+        plan: Plan;
+        status: string;
+        billingInterval: string;
+        currentPeriodStart: string;
+        currentPeriodEnd: string;
+        nextBillingAt: string | null;
+        cancelAtPeriodEnd: boolean;
+        cancelledAt: string | null;
+      } | null;
+    };
+  },
+
+  /** GET /api/payments/invoices — list user's invoices */
+  listInvoices: async (limit = 50, offset = 0) => {
+    const res = await apiClient.get("/payments/invoices", {
+      params: { limit, offset },
+    });
+    return res.data as {
+      success: boolean;
+      data: {
+        id: string;
+        invoiceNumber: string;
+        planName: string;
+        billingInterval: string;
+        amountCents: number;
+        currency: string;
+        discountCents: number;
+        paidAt: string;
+        createdAt: string;
+      }[];
+    };
+  },
+
+  /** POST /api/payments/subscription/cancel — cancel subscription */
+  cancelSubscription: async (cancelAtCycleEnd = true) => {
+    const res = await apiClient.post("/payments/subscription/cancel", {
+      cancelAtCycleEnd,
+    });
+    return res.data as {
+      success: boolean;
+      data: unknown;
+      message: string;
+    };
+  },
+
+  /**
+   * Fetch invoice HTML and open in new tab for print/save as PDF.
+   * Uses Bearer auth; creates blob URL for same-origin display.
+   */
+  openInvoiceInNewTab: async (invoiceId: string) => {
+    const res = await apiClient.get(`/payments/invoices/${invoiceId}/html`, {
+      responseType: "blob",
+      headers: { Accept: "text/html" },
+    });
+    const blob = new Blob([res.data as Blob], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener");
+    // Revoke after a delay to allow the new tab to load
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  },
+};
+
+// ── Onboarding API ─────────────────────────────────────────────────────────
+
+export const onboardingAPI = {
+  /** GET /api/onboarding/progress — get saved progress + hasAccess */
+  getProgress: async () => {
+    const res = await apiClient.get("/onboarding/progress");
+    return res.data as {
+      success: boolean;
+      data: {
+        currentStep: number;
+        draftData: Record<string, unknown> | null;
+        selectedPlan: string | null;
+        paymentStatus: string | null;
+        lastSavedAt: string;
+        hasAccess: boolean;
+      };
+    };
+  },
+
+  /** PATCH /api/onboarding/progress — save progress */
+  saveProgress: async (data: {
+    flowType?: "candidate" | "recruiter";
+    currentStep?: number;
+    draftData?: Record<string, unknown>;
+    selectedPlan?: string | null;
+    paymentStatus?: string | null;
+  }) => {
+    const res = await apiClient.patch("/onboarding/progress", data);
+    return res.data as { success: boolean; data: unknown };
+  },
+
+  /** DELETE /api/onboarding/progress — clear after completion */
+  clearProgress: async () => {
+    const res = await apiClient.delete("/onboarding/progress");
+    return res.data as { success: boolean; message: string };
+  },
+
+  /** POST /api/onboarding/upload-file — upload profile picture or resume during onboarding */
+  uploadFile: async (formData: FormData) => {
+    const res = await apiClient.post("/onboarding/upload-file", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data as {
+      success: boolean;
+      data: {
+        profilePictureUrl?: string;
+        profilePictureFileName?: string;
+        resumeUrl?: string;
+        resumeFileName?: string;
+      };
+    };
+  },
+};
+
 // ── Profile API ─────────────────────────────────────────────────────────────
 
 export const profileAPI = {
