@@ -403,7 +403,29 @@ export const paymentsAPI = {
     const res = await apiClient.post("/payments/verify", params);
     return res.data as {
       success: boolean;
-      data: { hasAccess: boolean; alreadyProcessed?: boolean };
+      data: {
+        hasAccess: boolean;
+        alreadyProcessed?: boolean;
+        /** Updated subscription returned from the backend to avoid a second round-trip */
+        subscription: {
+          id: string;
+          planId: string;
+          plan: Plan;
+          status: string;
+          billingInterval: string;
+          currentPeriodStart: string;
+          currentPeriodEnd: string;
+          nextBillingAt: string | null;
+          cancelAtPeriodEnd: boolean;
+          cancelledAt: string | null;
+          scheduledUpgrade: {
+            id: string;
+            plan: { id: string; name: string; slug: string };
+            billingInterval: string;
+            currentPeriodStart: string;
+          } | null;
+        } | null;
+      };
       message: string;
     };
   },
@@ -438,6 +460,13 @@ export const paymentsAPI = {
         nextBillingAt: string | null;
         cancelAtPeriodEnd: boolean;
         cancelledAt: string | null;
+        /** Pending upgrade that will activate at the end of the current period */
+        scheduledUpgrade: {
+          id: string;
+          plan: { id: string; name: string; slug: string };
+          billingInterval: string;
+          currentPeriodStart: string;
+        } | null;
       } | null;
     };
   },
@@ -488,6 +517,25 @@ export const paymentsAPI = {
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank", "noopener");
     // Revoke after a delay to allow the new tab to load
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  },
+
+  /**
+   * Download invoice as PDF. Triggers a file save in the browser.
+   */
+  downloadInvoicePdf: async (invoiceId: string, invoiceNumber?: string) => {
+    const res = await apiClient.get(`/payments/invoices/${invoiceId}/pdf`, {
+      responseType: "blob",
+      headers: { Accept: "application/pdf" },
+    });
+    const blob = new Blob([res.data as Blob], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `invoice-${invoiceNumber ?? invoiceId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   },
 };

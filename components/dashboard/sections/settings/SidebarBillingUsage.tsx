@@ -1,36 +1,18 @@
 import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import { paymentsAPI, type Plan } from "@/lib/api";
+import { interviewsApi } from "@/lib/api/interviews";
 import { openRazorpayCheckout } from "@/lib/razorpay";
 import { PAID_PLANS, type PlanDefinition } from "@/lib/plans";
 import { cardCls } from "./constants";
 
-const PLAN_ENTITLEMENTS: Record<string, { label: string; value: string }[]> = {
-  free: [
-    { label: "AI Mock Interviews", value: "5 per month" },
-    { label: "AI Feedback", value: "Basic" },
-    { label: "Community", value: "Included" },
-  ],
-  lite: [
-    { label: "AI Mock Interviews", value: "5 per month" },
-    { label: "AI Feedback", value: "Basic" },
-    { label: "Community", value: "Included" },
-  ],
-  trial: [
-    { label: "AI Mock Interviews", value: "3 total" },
-    { label: "AI Feedback", value: "Basic" },
-    { label: "Community", value: "Not included" },
-  ],
-  pro: [
-    { label: "AI Mock Interviews", value: "10 per month" },
-    { label: "Video & Voice Analysis", value: "Included" },
-    { label: "Code Editor & Whiteboard", value: "Included" },
-  ],
-  elite: [
-    { label: "AI Mock Interviews", value: "20 per month" },
-    { label: "Everything in Pro", value: "Included" },
-    { label: "Priority Support", value: "Within 1 day" },
-  ],
+/** Maximum AI interviews allowed per billing period per plan slug. */
+const PLAN_INTERVIEW_LIMIT: Record<string, number> = {
+  free: 5,
+  lite: 5,
+  trial: 3,
+  pro: 10,
+  elite: 20,
 };
 
 function formatAmount(cents: number, currency: string): string {
@@ -52,16 +34,26 @@ function UpgradePlanCard({
   disabled,
   loading,
   isCurrent,
+  showAnnual,
+  annualPriceCents,
   onUpgrade,
 }: {
   planDef: PlanDefinition;
   disabled: boolean;
   loading: boolean;
   isCurrent: boolean;
+  showAnnual: boolean;
+  annualPriceCents: number;
   onUpgrade: () => void;
 }) {
   const isPrimary = planDef.accent === "primary";
   const isPurple = planDef.accent === "purple";
+
+  // Annual: show per-month equivalent billed annually
+  const monthlyEquivFromAnnual = annualPriceCents / 100 / 12;
+  const displayPrice = showAnnual
+    ? monthlyEquivFromAnnual
+    : planDef.monthlyPrice;
 
   return (
     <div
@@ -112,12 +104,18 @@ function UpgradePlanCard({
       <div className="mb-8">
         <div className="flex items-baseline gap-1">
           <span className="text-4xl font-black text-text-light dark:text-text-dark">
-            ₹{planDef.monthlyPrice.toLocaleString("en-IN")}
+            ₹
+            {displayPrice.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
           </span>
           <span className="text-subtext-light dark:text-subtext-dark font-medium">
-            /mo
+            /mo{showAnnual ? " (billed annually)" : ""}
           </span>
         </div>
+        {showAnnual && (
+          <p className="text-xs text-green-600 dark:text-green-400 mt-1 font-medium">
+            ₹{(annualPriceCents / 100).toLocaleString("en-IN")} / year
+          </p>
+        )}
       </div>
 
       <button
@@ -179,6 +177,12 @@ export default function SidebarBillingUsage() {
     currentPeriodStart?: string;
     currentPeriodEnd: string;
     cancelAtPeriodEnd: boolean;
+    scheduledUpgrade: {
+      id: string;
+      plan: { id: string; name: string; slug: string };
+      billingInterval: string;
+      currentPeriodStart: string;
+    } | null;
   } | null>(null);
   const [invoices, setInvoices] = useState<
     {
@@ -197,16 +201,23 @@ export default function SidebarBillingUsage() {
   const [upgradePlanId, setUpgradePlanId] = useState<string | null>(null);
   const [upgradePending, setUpgradePending] = useState(false);
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
+  const [upgradeInterval, setUpgradeInterval] = useState<"monthly" | "annual">(
+    "monthly",
+  );
+  const [upgradeSuccess, setUpgradeSuccess] = useState<string | null>(null);
   const [cancelPending, setCancelPending] = useState(false);
+  const [interviewsUsed, setInterviewsUsed] = useState<number | null>(null);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [subRes, invRes, plansRes] = await Promise.all([
+      const [subRes, invRes, plansRes, interviewsRes] = await Promise.all([
         paymentsAPI.getSubscription(),
         paymentsAPI.listInvoices(20, 0),
         paymentsAPI.getPlans(),
+        interviewsApi.getAll(1, 100),
       ]);
+      let periodStart: string | undefined;
       if (subRes.success && subRes.data) {
         setSubscription({
           plan: subRes.data.plan,
@@ -215,7 +226,9 @@ export default function SidebarBillingUsage() {
           currentPeriodStart: subRes.data.currentPeriodStart,
           currentPeriodEnd: subRes.data.currentPeriodEnd,
           cancelAtPeriodEnd: subRes.data.cancelAtPeriodEnd,
+          scheduledUpgrade: subRes.data.scheduledUpgrade ?? null,
         });
+        periodStart = subRes.data.currentPeriodStart;
       } else {
         setSubscription(null);
       }
@@ -237,10 +250,25 @@ export default function SidebarBillingUsage() {
       } else {
         setPlans([]);
       }
+      if (interviewsRes && interviewsRes.data) {
+        const interviews = interviewsRes.data;
+        if (periodStart) {
+          const periodStartMs = new Date(periodStart).getTime();
+          const count = interviews.filter(
+            (iv) => new Date(iv.createdAt).getTime() >= periodStartMs,
+          ).length;
+          setInterviewsUsed(count);
+        } else {
+          setInterviewsUsed(interviews.length);
+        }
+      } else {
+        setInterviewsUsed(0);
+      }
     } catch {
       setSubscription(null);
       setInvoices([]);
       setPlans([]);
+      setInterviewsUsed(0);
     } finally {
       setLoading(false);
     }
@@ -251,10 +279,7 @@ export default function SidebarBillingUsage() {
   }, []);
 
   const planSlug = subscription?.plan?.slug ?? "lite";
-  const entitlements =
-    PLAN_ENTITLEMENTS[planSlug] ??
-    PLAN_ENTITLEMENTS.lite ??
-    PLAN_ENTITLEMENTS.free;
+  const interviewLimit = PLAN_INTERVIEW_LIMIT[planSlug] ?? 5;
   const isPaid =
     planSlug === "lite" || planSlug === "pro" || planSlug === "elite";
   const slugToPlanId = Object.fromEntries(plans.map((p) => [p.slug, p.id]));
@@ -268,7 +293,7 @@ export default function SidebarBillingUsage() {
     try {
       const orderRes = await paymentsAPI.createOrder(
         planId,
-        "monthly",
+        upgradeInterval,
         "one_time",
       );
       if (!orderRes.success || !orderRes.data) {
@@ -284,13 +309,40 @@ export default function SidebarBillingUsage() {
         name: "SkillScout",
         description: `Plan payment - ${data.amountDisplay}`,
       });
-      await paymentsAPI.verifyPayment({
+      const verifyRes = await paymentsAPI.verifyPayment({
         razorpay_payment_id: response.razorpay_payment_id,
         razorpay_order_id: response.razorpay_order_id,
         razorpay_signature: response.razorpay_signature,
       });
+
+      // Use the subscription returned by verifyPayment to update state immediately
+      const updatedSub = verifyRes.data?.subscription;
+      if (updatedSub) {
+        setSubscription({
+          plan: updatedSub.plan,
+          status: updatedSub.status,
+          billingInterval: updatedSub.billingInterval,
+          currentPeriodStart: updatedSub.currentPeriodStart,
+          currentPeriodEnd: updatedSub.currentPeriodEnd,
+          cancelAtPeriodEnd: updatedSub.cancelAtPeriodEnd,
+          scheduledUpgrade: updatedSub.scheduledUpgrade ?? null,
+        });
+        const upgradedPlanName =
+          updatedSub.scheduledUpgrade?.plan?.name ?? updatedSub.plan?.name;
+        const startDate = updatedSub.scheduledUpgrade
+          ? formatDate(updatedSub.scheduledUpgrade.currentPeriodStart)
+          : formatDate(updatedSub.currentPeriodStart);
+        setUpgradeSuccess(
+          updatedSub.scheduledUpgrade
+            ? `Plan upgraded to ${upgradedPlanName}. New plan starts on ${startDate}.`
+            : `Plan upgraded to ${upgradedPlanName}. Access is now active.`,
+        );
+      }
+
       setUpgradeModalOpen(false);
-      await loadData();
+      // Reload invoices to reflect the new invoice
+      const invRes = await paymentsAPI.listInvoices(20, 0);
+      if (invRes.success && invRes.data) setInvoices(invRes.data);
     } catch (e) {
       setUpgradeError(
         e instanceof Error ? e.message : "Payment failed. Please try again.",
@@ -321,6 +373,14 @@ export default function SidebarBillingUsage() {
     }
   };
 
+  const handleDownloadInvoice = async (id: string, invoiceNumber: string) => {
+    try {
+      await paymentsAPI.downloadInvoicePdf(id, invoiceNumber);
+    } catch {
+      // Could add toast
+    }
+  };
+
   if (loading) {
     return (
       <div className={cardCls}>
@@ -340,6 +400,21 @@ export default function SidebarBillingUsage() {
   return (
     <>
       <div className={cardCls}>
+        {/* Success banner for plan upgrade */}
+        {upgradeSuccess && (
+          <div className="mb-4 flex items-start gap-2 text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 rounded-xl px-3 py-2.5 border border-green-200 dark:border-green-800">
+            <span className="material-icons text-base shrink-0 mt-0.5">
+              check_circle
+            </span>
+            <span className="flex-1">{upgradeSuccess}</span>
+            <button
+              onClick={() => setUpgradeSuccess(null)}
+              className="shrink-0 text-green-500 hover:text-green-700 dark:hover:text-green-200"
+            >
+              <span className="material-icons text-base">close</span>
+            </button>
+          </div>
+        )}
         <div className="flex items-center gap-2 mb-4">
           <span className="material-icons text-gray-900 dark:text-white">
             receipt_long
@@ -374,6 +449,19 @@ export default function SidebarBillingUsage() {
                   <span className="inline-block mt-1 text-xs font-medium text-amber-600 dark:text-amber-400">
                     Cancelling at period end
                   </span>
+                )}
+                {subscription.scheduledUpgrade && (
+                  <div className="mt-2 flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg px-2.5 py-1.5">
+                    <span className="material-icons text-sm">schedule</span>
+                    <span>
+                      Upgrading to{" "}
+                      <strong>{subscription.scheduledUpgrade.plan.name}</strong>{" "}
+                      on{" "}
+                      {formatDate(
+                        subscription.scheduledUpgrade.currentPeriodStart,
+                      )}
+                    </span>
+                  </div>
                 )}
                 {/* Reverse progress bar: days left until subscription end */}
                 {subscription.status === "ACTIVE" &&
@@ -416,22 +504,51 @@ export default function SidebarBillingUsage() {
             )}
           </div>
 
-          {/* Usage */}
+          {/* AI Interview Usage */}
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
-              Plan Includes
+              AI Interview Usage
             </p>
-            <ul className="space-y-1">
-              {entitlements.map(({ label, value }) => (
-                <li
-                  key={label}
-                  className="flex justify-between text-xs text-gray-600 dark:text-gray-300"
-                >
-                  <span>{label}</span>
-                  <span className="font-medium">{value}</span>
-                </li>
-              ))}
-            </ul>
+            <div className="space-y-2">
+              <div className="flex justify-between items-baseline">
+                <span className="text-xs text-gray-600 dark:text-gray-300">
+                  {planSlug === "trial"
+                    ? "Interviews used"
+                    : "Interviews this period"}
+                </span>
+                <span className="text-xs font-semibold text-gray-900 dark:text-white">
+                  {interviewsUsed ?? "—"}
+                  <span className="font-normal text-gray-500 dark:text-gray-400">
+                    {" "}
+                    / {interviewLimit}
+                  </span>
+                </span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    interviewsUsed !== null && interviewsUsed >= interviewLimit
+                      ? "bg-red-500"
+                      : interviewsUsed !== null &&
+                          interviewsUsed >= interviewLimit * 0.8
+                        ? "bg-amber-500"
+                        : "bg-primary"
+                  }`}
+                  style={{
+                    width: `${
+                      interviewsUsed !== null
+                        ? Math.min(100, (interviewsUsed / interviewLimit) * 100)
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                {interviewsUsed !== null && interviewsUsed >= interviewLimit
+                  ? "Limit reached — upgrade to continue"
+                  : `${interviewLimit - (interviewsUsed ?? 0)} remaining`}
+              </p>
+            </div>
           </div>
 
           {/* Upgrade */}
@@ -481,12 +598,25 @@ export default function SidebarBillingUsage() {
                           {formatAmount(inv.amountCents, inv.currency)}
                         </p>
                       </div>
-                      <button
-                        onClick={() => handleViewInvoice(inv.id)}
-                        className="text-blue-600 hover:underline text-xs font-medium"
-                      >
-                        View
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleViewInvoice(inv.id)}
+                          className="text-blue-600 hover:underline text-xs font-medium"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDownloadInvoice(inv.id, inv.invoiceNumber)
+                          }
+                          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                          title="Download PDF"
+                        >
+                          <span className="material-icons text-sm">
+                            download
+                          </span>
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -518,9 +648,39 @@ export default function SidebarBillingUsage() {
         <Modal
           title="Upgrade Plan"
           maxWidth="3xl"
-          onClose={() => !upgradePending && setUpgradeModalOpen(false)}
+          onClose={() => {
+            if (!upgradePending) {
+              setUpgradeModalOpen(false);
+              setUpgradeError(null);
+              setUpgradeInterval("monthly");
+            }
+          }}
         >
           <div className="space-y-6">
+            {/* Billing interval toggle */}
+            <div className="flex justify-center">
+              <div className="inline-flex rounded-xl border border-gray-200 dark:border-gray-700 p-1 bg-gray-50 dark:bg-gray-800/50">
+                {(["monthly", "annual"] as const).map((interval) => (
+                  <button
+                    key={interval}
+                    type="button"
+                    onClick={() => setUpgradeInterval(interval)}
+                    className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      upgradeInterval === interval
+                        ? "bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white"
+                        : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                    }`}
+                  >
+                    {interval === "monthly" ? "Monthly" : "Annual"}
+                    {interval === "annual" && (
+                      <span className="ml-2 text-xs text-green-600 dark:text-green-400 font-bold">
+                        Save ~20%
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
             {upgradeError && (
               <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
                 {upgradeError}
@@ -548,6 +708,8 @@ export default function SidebarBillingUsage() {
                     disabled={upgradePending || isCurrent}
                     loading={isLoading}
                     isCurrent={isCurrent}
+                    showAnnual={upgradeInterval === "annual"}
+                    annualPriceCents={apiPlan.amountAnnual}
                     onUpgrade={() => handleUpgrade(apiPlan.slug)}
                   />
                 );
