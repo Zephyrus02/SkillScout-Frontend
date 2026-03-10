@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
+import dynamic from "next/dynamic";
 import {
   useMediaPipeProctoring,
   getWarningMessage,
@@ -9,9 +10,63 @@ import {
   MalpracticeWarningToast,
   type ActiveWarning,
 } from "@/components/ui/MalpracticeWarningToast";
+import {
+  interviewSessionsApi,
+  type VideoSignalItem,
+} from "@/lib/api/interviews";
+
+const LiveKitRoom = dynamic(
+  () => import("@livekit/components-react").then((m) => m.LiveKitRoom),
+  { ssr: false },
+);
+
+const SESSION_STORAGE_KEY = "skillscout_interview_session";
+const VIDEO_SIGNALS_INTERVAL_MS = 10_000;
 
 export default function InterviewRoom() {
   const router = useRouter();
+  const sessionId = (router.query.sessionId as string) ?? null;
+  const [token, setToken] = useState<string | null>(null);
+  const [livekitUrl, setLivekitUrl] = useState<string | null>(null);
+  const [connectError, setConnectError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    let cancelled = false;
+    const stored =
+      typeof window !== "undefined"
+        ? sessionStorage.getItem(SESSION_STORAGE_KEY)
+        : null;
+    if (stored) {
+      try {
+        const { token: t, livekitUrl: u } = JSON.parse(stored);
+        if (t && u) {
+          setToken(t);
+          setLivekitUrl(u);
+          return;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    interviewSessionsApi
+      .joinSession(sessionId)
+      .then((res) => {
+        if (cancelled || !res.success || !res.data) return;
+        setToken(res.data.token);
+        setLivekitUrl(res.data.livekitUrl);
+      })
+      .catch((err) => {
+        if (!cancelled)
+          setConnectError(
+            err instanceof Error ? err.message : "Failed to join",
+          );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId]);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -78,12 +133,60 @@ export default function InterviewRoom() {
   // ── End session ──────────────────────────────────────────
   const endSession = useCallback(() => {
     stopCamera();
-    router.push("/dashboard/practice");
+    try {
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+    router.push("/dashboard/analysis");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   // ── Proctoring (MediaPipe) ─────────────────────────────────
-  const proctoring = useMediaPipeProctoring(videoRef, true);
+  const proctoring = useMediaPipeProctoring(videoRef, !!sessionId && !!token);
+
+  // ── Video signals: batch every 10s and POST ─────────────────
+  const signalsBatchRef = useRef<VideoSignalItem[]>([]);
+  useEffect(() => {
+    if (!sessionId || !token) return;
+    const interval = setInterval(() => {
+      if (signalsBatchRef.current.length === 0) return;
+      const batch = [...signalsBatchRef.current];
+      signalsBatchRef.current = [];
+      interviewSessionsApi
+        .postVideoSignals(sessionId, { signals: batch })
+        .catch(() => {});
+    }, VIDEO_SIGNALS_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [sessionId, token]);
+  // Sample at ~1 fps and push to batch (use proctoring state)
+  useEffect(() => {
+    if (!sessionId || !token || !proctoring.isReady) return;
+    const t = setInterval(() => {
+      const faceVisiblePct = proctoring.faceCount >= 1 ? 100 : 0;
+      const avgGazeScore = proctoring.isLookingSideways ? 0.3 : 0.9;
+      signalsBatchRef.current.push({
+        windowStart: new Date().toISOString(),
+        faceVisiblePct,
+        avgGazeScore,
+        avgHeadPitch: null,
+        lookingDownPct: null,
+        avgEyeBlink: null,
+        avgBrowFurrow: null,
+        avgMouthSmile: null,
+        avgJawOpen: null,
+        shoulderAlign: null,
+        forwardLean: null,
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [
+    sessionId,
+    token,
+    proctoring.isReady,
+    proctoring.faceCount,
+    proctoring.isLookingSideways,
+  ]);
 
   // Fire a warning toast on each violation (with cooldown).
   // Warnings 1–3 show a toast. The 4th violation terminates immediately.
@@ -130,7 +233,49 @@ export default function InterviewRoom() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startCamera]);
 
-  return (
+  if (!sessionId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <p className="text-slate-600 mb-4">No interview session.</p>
+          <button
+            type="button"
+            onClick={() => router.push("/dashboard/practice")}
+            className="text-blue-600 hover:underline"
+          >
+            Go to Practice Arena
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (connectError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{connectError}</p>
+          <button
+            type="button"
+            onClick={() => router.push("/dashboard/practice")}
+            className="text-blue-600 hover:underline"
+          >
+            Back to Practice
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!token || !livekitUrl) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <p className="text-slate-600">Connecting to interview room…</p>
+      </div>
+    );
+  }
+
+  const roomContent = (
     <>
       {/* ── Malpractice warning overlay (fixed, above all content) ── */}
       <MalpracticeWarningToast
@@ -622,5 +767,28 @@ export default function InterviewRoom() {
         <div className="fixed inset-0 pointer-events-none z-[-1] opacity-30 bg-gradient-to-b from-blue-50/50 via-transparent to-transparent" />
       </div>
     </>
+  );
+
+  return (
+    <LiveKitRoom
+      token={token}
+      serverUrl={livekitUrl}
+      connect
+      audio
+      video={false}
+      onDisconnected={() => {
+        try {
+          sessionStorage.removeItem(SESSION_STORAGE_KEY);
+        } catch {
+          // ignore
+        }
+        router.push("/dashboard/analysis");
+      }}
+      onError={(e) => {
+        setConnectError((e as Error)?.message ?? "Connection error");
+      }}
+    >
+      {roomContent}
+    </LiveKitRoom>
   );
 }

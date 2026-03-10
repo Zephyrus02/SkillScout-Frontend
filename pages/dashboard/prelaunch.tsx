@@ -1,6 +1,8 @@
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
+import { interviewSessionsApi } from "@/lib/api/interviews";
 import {
   useMediaPipeProctoring,
   getViolationLabel,
@@ -23,7 +25,72 @@ import type {
    – Speaker test with /pl_test.wav
 ───────────────────────────────────────────────────────────────── */
 
+const SESSION_STORAGE_KEY = "skillscout_interview_session";
+
+function StartInterviewButton({
+  allOk,
+  onStarted,
+}: {
+  allOk: boolean;
+  onStarted: (sessionId: string, token: string, livekitUrl: string) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleClick = async () => {
+    if (!allOk || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await interviewSessionsApi.createSession({
+        jobRole: "Software Engineer",
+        jobDescription: "Mock technical interview",
+        experienceLevel: "mid-level",
+      });
+      if (!res.success || !res.data?.token || !res.data?.livekitUrl) {
+        throw new Error("Invalid response from server");
+      }
+      onStarted(
+        res.data.sessionId ?? res.data.id,
+        res.data.token,
+        res.data.livekitUrl,
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to start session");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={!allOk || loading}
+        className={`w-full font-semibold py-3.5 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
+          allOk && !loading
+            ? "bg-blue-500 hover:bg-blue-600 text-white shadow-blue-500/20 hover:-translate-y-0.5 active:translate-y-0"
+            : "bg-slate-200 text-slate-400 cursor-not-allowed pointer-events-none"
+        }`}
+        aria-disabled={!allOk || loading}
+      >
+        {loading ? (
+          "Starting…"
+        ) : (
+          <>
+            Enter Interview Room
+            <span className="material-icons text-lg">arrow_forward</span>
+          </>
+        )}
+      </button>
+      {error && <p className="text-xs text-red-600 text-center">{error}</p>}
+    </div>
+  );
+}
+
 export default function PrelaunchPage() {
+  const router = useRouter();
   // ── Camera ───────────────────────────────────────────────
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraStatus, setCameraStatus] = useState<CheckStatus>("checking");
@@ -571,18 +638,22 @@ export default function PrelaunchPage() {
                 </div>
               )}
 
-              <Link
-                href="/dashboard/interview"
-                className={`w-full font-semibold py-3.5 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
-                  allOk
-                    ? "bg-blue-500 hover:bg-blue-600 text-white shadow-blue-500/20 hover:-translate-y-0.5 active:translate-y-0"
-                    : "bg-slate-200 text-slate-400 cursor-not-allowed pointer-events-none"
-                }`}
-                aria-disabled={!allOk}
-              >
-                Enter Interview Room
-                <span className="material-icons text-lg">arrow_forward</span>
-              </Link>
+              <StartInterviewButton
+                allOk={allOk}
+                onStarted={(sessionId, token, livekitUrl) => {
+                  try {
+                    sessionStorage.setItem(
+                      SESSION_STORAGE_KEY,
+                      JSON.stringify({ sessionId, token, livekitUrl }),
+                    );
+                  } catch {
+                    // ignore
+                  }
+                  router.push(
+                    `/dashboard/interview?sessionId=${encodeURIComponent(sessionId)}`,
+                  );
+                }}
+              />
               <p className="text-center text-[10px] text-slate-400 mt-3">
                 By joining, you agree to record this session for analysis.
               </p>
