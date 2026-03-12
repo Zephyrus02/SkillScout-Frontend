@@ -1,0 +1,31 @@
+{
+  "ignore": {
+    "rules": [
+      "react-hooks-js/todo",
+      "react-hooks-js/refs",
+      "react-hooks-js/set-state-in-effect",
+      "react-doctor/no-derived-state-effect",
+      "react-doctor/no-cascading-set-state",
+      "react-doctor/nextjs-no-img-element",
+      "react-doctor/prefer-useReducer",
+      "react-doctor/no-array-index-as-key",
+      "jsx-a11y/label-has-associated-control",
+      "react-doctor/use-lazy-motion",
+      "react-doctor/no-prevent-default",
+      "jsx-a11y/click-events-have-key-events",
+      "jsx-a11y/no-static-element-interactions",
+      "jsx-a11y/anchor-is-valid",
+      "react-doctor/no-giant-component",
+      "react-doctor/nextjs-no-client-side-redirect",
+      "react-doctor/nextjs-no-font-link",
+      "react-doctor/no-effect-event-handler",
+      "react-doctor/prefer-dynamic-import",
+      "react-doctor/rerender-functional-setstate",
+      "react-doctor/no-render-in-render",
+      "react-doctor/rerender-memo-with-default-value",
+      "knip/files",
+      "knip/exports",
+      "knip/types"
+    ]
+  }
+}
