@@ -3,12 +3,75 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { getBlogBySlug, getRelatedBlogs } from "@/lib/blogs";
+import { getBlogBySlug, getRelatedBlogs, BlogSection } from "@/lib/blogs";
+import { useReadAloud } from "@/hooks/useReadAloud";
+import { useMemo } from "react";
 
 export default function BlogDetailBySlugPage() {
   const router = useRouter();
-  const blog = getBlogBySlug(router.query.slug);
-  const related = getRelatedBlogs(blog.slug, 3);
+  const blog = getBlogBySlug(router.query.slug as string);
+  const related = blog ? getRelatedBlogs(blog.slug, 3) : [];
+
+  const { blocks, indices } = useMemo(() => {
+    if (!blog) return { blocks: [], indices: null };
+    const b: string[] = [];
+    let idx = 0;
+
+    b.push(blog.title);
+    const title = idx++;
+
+    b.push(blog.content.intro);
+    const intro = idx++;
+
+    const sections = blog.content.sections.map((s: BlogSection) => {
+      b.push(s.heading);
+      const heading = idx++;
+
+      const paragraphs = s.paragraphs.map((p: string) => {
+        b.push(p);
+        return idx++;
+      });
+
+      const bullets = (s.bullets || []).map((bu: string) => {
+        b.push(bu);
+        return idx++;
+      });
+
+      return { heading, paragraphs, bullets };
+    });
+
+    b.push("Final Takeaway");
+    const finalHeading = idx++;
+
+    b.push(blog.content.conclusion);
+    const conclusion = idx++;
+
+    return {
+      blocks: b,
+      indices: { title, intro, sections, finalHeading, conclusion },
+    };
+  }, [blog]);
+
+  const { isPlaying, isPaused, currentBlockIndex, highlight, toggle } =
+    useReadAloud(blocks);
+
+  const RenderText = ({ text, index }: { text: string; index: number }) => {
+    if (index !== currentBlockIndex || !highlight) return <>{text}</>;
+    return (
+      <span className="transition-all duration-200">
+        {text.slice(0, highlight.start)}
+        <mark
+          className="bg-primary/20 dark:bg-primary/30 text-inherit rounded-sm px-[2px] bg-transparent"
+          style={{ backgroundColor: "rgba(56, 189, 248, 0.25)" }}
+        >
+          {text.slice(highlight.start, highlight.end)}
+        </mark>
+        {text.slice(highlight.end)}
+      </span>
+    );
+  };
+
+  if (!blog || !indices) return null;
 
   return (
     <>
@@ -37,9 +100,22 @@ export default function BlogDetailBySlugPage() {
               </nav>
 
               <header className="mb-8">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-text-light dark:text-text-dark leading-tight">
-                  {blog.title}
-                </h1>
+                <div className="flex items-start justify-between gap-4">
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-text-light dark:text-text-dark leading-tight flex-1">
+                    <RenderText text={blog.title} index={indices.title} />
+                  </h1>
+                  <button
+                    onClick={toggle}
+                    className="flex items-center justify-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-subtext-light dark:text-subtext-dark hover:text-primary dark:hover:text-primary flex-shrink-0 mt-2"
+                    title={
+                      isPlaying && !isPaused ? "Pause Reading" : "Read Aloud"
+                    }
+                  >
+                    <span className="material-icons text-2xl">
+                      {isPlaying && !isPaused ? "pause_circle" : "volume_up"}
+                    </span>
+                  </button>
+                </div>
                 <div className="flex flex-wrap items-center gap-3 mt-5 text-sm text-subtext-light dark:text-subtext-dark">
                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
                     {blog.category}
@@ -60,38 +136,71 @@ export default function BlogDetailBySlugPage() {
                 />
               </div>
               <div className="space-y-7 text-subtext-light dark:text-subtext-dark leading-relaxed">
-                <p className="text-lg">{blog.content.intro}</p>
+                <p className="text-lg">
+                  <RenderText text={blog.content.intro} index={indices.intro} />
+                </p>
 
-                {blog.content.sections.map((section) => (
-                  <section key={section.heading}>
-                    <h2 className="text-2xl font-bold text-text-light dark:text-text-dark mb-3">
-                      {section.heading}
-                    </h2>
-                    <div className="space-y-3">
-                      {section.paragraphs.map((paragraph, index) => (
-                        <p key={index}>{paragraph}</p>
-                      ))}
-                    </div>
-                    {section.bullets && section.bullets.length > 0 && (
-                      <ul className="mt-4 space-y-2 list-disc pl-5">
-                        {section.bullets.map((item) => (
-                          <li key={item}>{item}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </section>
-                ))}
+                {blog.content.sections.map(
+                  (section: BlogSection, sIdx: number) => {
+                    const sIndices = indices.sections[sIdx];
+                    if (!sIndices) return null;
+                    return (
+                      <section key={section.heading}>
+                        <h2 className="text-2xl font-bold text-text-light dark:text-text-dark mb-3">
+                          <RenderText
+                            text={section.heading}
+                            index={sIndices.heading}
+                          />
+                        </h2>
+                        <div className="space-y-3">
+                          {section.paragraphs.map(
+                            (paragraph: string, pIdx: number) => (
+                              <p key={pIdx}>
+                                <RenderText
+                                  text={paragraph}
+                                  index={sIndices.paragraphs[pIdx]}
+                                />
+                              </p>
+                            ),
+                          )}
+                        </div>
+                        {section.bullets && section.bullets.length > 0 && (
+                          <ul className="mt-4 space-y-2 list-disc pl-5">
+                            {section.bullets.map(
+                              (item: string, bIdx: number) => (
+                                <li key={item}>
+                                  <RenderText
+                                    text={item}
+                                    index={sIndices.bullets[bIdx]}
+                                  />
+                                </li>
+                              ),
+                            )}
+                          </ul>
+                        )}
+                      </section>
+                    );
+                  },
+                )}
 
                 <section>
                   <h2 className="text-2xl font-bold text-text-light dark:text-text-dark mb-3">
-                    Final Takeaway
+                    <RenderText
+                      text="Final Takeaway"
+                      index={indices.finalHeading}
+                    />
                   </h2>
-                  <p>{blog.content.conclusion}</p>
+                  <p>
+                    <RenderText
+                      text={blog.content.conclusion}
+                      index={indices.conclusion}
+                    />
+                  </p>
                 </section>
               </div>
 
               <div className="mt-10 flex flex-wrap gap-2">
-                {blog.tags.map((tag) => (
+                {blog.tags.map((tag: string) => (
                   <span
                     key={tag}
                     className="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-subtext-light dark:text-subtext-dark text-sm"
@@ -108,7 +217,7 @@ export default function BlogDetailBySlugPage() {
                   Related Articles
                 </h3>
                 <div className="space-y-4">
-                  {related.map((item) => (
+                  {related.map((item: import("@/lib/blogs").BlogPost) => (
                     <Link
                       key={item.slug}
                       href={`/resources/blog/${item.slug}`}
