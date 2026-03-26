@@ -16,6 +16,7 @@ interface LegalLayoutProps {
   lastUpdated: string;
   tocItems: TocItem[];
   children: React.ReactNode;
+  canonicalPath?: string;
 }
 
 export default function LegalLayout({
@@ -26,6 +27,7 @@ export default function LegalLayout({
   lastUpdated,
   tocItems,
   children,
+  canonicalPath,
 }: LegalLayoutProps) {
   const [activeSection, setActiveSection] = useState<string>(
     tocItems[0]?.id ?? "",
@@ -56,9 +58,15 @@ export default function LegalLayout({
       <Head>
         <title>{pageTitle} — SkillScout</title>
         <meta name="description" content={description} />
+        {canonicalPath && (
+          <link
+            rel="canonical"
+            href={`https://www.skillscout.dev${canonicalPath}`}
+          />
+        )}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          href="https://fonts.googleapis.com/icon?family=Material+Icons&display=optional"
         />
       </Head>
 
@@ -69,7 +77,7 @@ export default function LegalLayout({
           className="flex items-center"
         >
           <Image
-            src="/brandimg.png"
+            src="/brandimg.svg"
             alt="SkillScout"
             width={160}
             height={32}

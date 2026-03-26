@@ -1,0 +1,24 @@
+# SkillScout
+
+> SkillScout is an AI-powered mock interview preparation platform for software engineers.
+> It provides real-time code analysis, system design practice, voice-mode mock interviews,
+> and personalized feedback benchmarked against hiring standards at top tech companies.
+
+## Core Features
+
+- Mock Interview: Full end-to-end simulated technical interviews with AI interviewer
+- Real-time Code Analysis: Live feedback on code quality during practice
+- System Design Canvas: Interactive whiteboard for system design interview practice
+- Voice Mode: Spoken interview simulation for behavioral and verbal practice
+- Instant Feedback: Post-session scoring and improvement recommendations
+- Benchmarking: Performance tracking against target company hiring bars
+
+## Content Resources
+
+- [Blog](https://www.skillscout.dev/resources): Interview preparation articles and guides
+- [Pricing](https://www.skillscout.dev/pricing): Trial (free), Lite (₹1000/mo), Pro (₹2000/mo), Elite (₹5000/mo)
+- [About](https://www.skillscout.dev/about): Company mission and team
+
+## Company
+
+SkillScout Inc. Pune, Maharashtra, India. support@skillscout.dev

@@ -87,6 +87,34 @@ export default function BlogDetailBySlugPage({ blog }: Props) {
           rel="canonical"
           href={`https://www.skillscout.dev/resources/blog/${blog.slug}`}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Article",
+              headline: blog.title,
+              description: blog.excerpt,
+              datePublished: blog.publishedAt,
+              dateModified: blog.publishedAt,
+              author: {
+                "@type": "Organization",
+                name: blog.author.name,
+                url:
+                  blog.author.url ?? "https://www.skillscout.dev/about",
+              },
+              publisher: {
+                "@id": "https://www.skillscout.dev/#organization",
+              },
+              image: blog.image.url,
+              url: `https://www.skillscout.dev/resources/blog/${blog.slug}`,
+              mainEntityOfPage: {
+                "@type": "WebPage",
+                "@id": `https://www.skillscout.dev/resources/blog/${blog.slug}`,
+              },
+            }),
+          }}
+        />
       </Head>
 
       <div className="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans min-h-screen flex flex-col transition-colors duration-300">

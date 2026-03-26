@@ -68,6 +68,7 @@ export default function ResourcesPage() {
           name="description"
           content="AI interview tips, system design guides, coding patterns, and FAQs to help you land your next tech role."
         />
+        <link rel="canonical" href="https://www.skillscout.dev/resources" />
       </Head>
 
       <div className="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans min-h-screen flex flex-col transition-colors duration-300">

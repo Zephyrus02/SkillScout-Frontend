@@ -29,6 +29,7 @@ export default function TermsOfServicePage() {
       effectiveDate="March 1, 2025"
       lastUpdated="March 1, 2026"
       tocItems={TOC}
+      canonicalPath="/legal/terms-of-service"
     >
       <Section id="introduction" number={1} title="Introduction">
         <p>

@@ -52,7 +52,7 @@ const VALUES = [
 const TEAM = [
   {
     name: "Aneesh Raskar",
-    role: "Co-Founder & CEO",
+    role: "Founder & CEO",
     bio: "Software engineer with a passion for democratising interview prep across India.",
     img: "/aneesh.png",
   },
@@ -76,6 +76,7 @@ export default function AboutPage() {
           name="description"
           content="Learn about SkillScout's mission to empower engineers with AI-driven mock interviews, unbiased feedback, and personalised growth paths."
         />
+        <link rel="canonical" href="https://www.skillscout.dev/about" />
       </Head>
 
       <div className="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans min-h-screen flex flex-col transition-colors duration-300">
@@ -322,8 +323,9 @@ export default function AboutPage() {
                     Ready to land your dream role?
                   </h2>
                   <p className="mx-auto mt-4 max-w-xl text-blue-100 text-lg">
-                    Join over 50,000 engineers who use SkillScout to practise
-                    smarter and interview with confidence.
+                    Be a part of the growing community of engineers who use
+                    SkillScout to practise smarter and interview with
+                    confidence.
                   </p>
                   <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
                     <Link

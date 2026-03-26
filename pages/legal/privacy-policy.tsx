@@ -29,6 +29,7 @@ export default function PrivacyPolicyPage() {
       effectiveDate="March 1, 2025"
       lastUpdated="March 1, 2026"
       tocItems={TOC}
+      canonicalPath="/legal/privacy-policy"
     >
       <Section id="introduction" number={1} title="Introduction">
         <p>

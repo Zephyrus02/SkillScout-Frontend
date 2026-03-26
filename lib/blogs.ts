@@ -13,6 +13,7 @@ export interface BlogPost {
   excerpt: string;
   category: string;
   date: string;
+  publishedAt: string; // ISO 8601 date string for Article schema
   readTime: string;
   tags: string[];
   featured: boolean;
@@ -24,6 +25,9 @@ export interface BlogPost {
   author: {
     name: string;
     role: string;
+    bio?: string;
+    url?: string;
+    credentials?: string;
   };
   content: {
     intro: string;

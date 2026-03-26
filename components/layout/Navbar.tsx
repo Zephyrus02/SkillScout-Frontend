@@ -68,12 +68,13 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <Image
-              src="/brandimg.png"
+              src="/brandimg.svg"
               alt="SkillScout"
               width={160}
               height={32}
               className="h-8 w-auto"
               priority
+              sizes="160px"
             />
           </Link>
 

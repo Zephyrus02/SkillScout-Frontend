@@ -27,6 +27,7 @@ export default function ShippingPolicyPage() {
       effectiveDate="March 1, 2025"
       lastUpdated="March 1, 2026"
       tocItems={TOC}
+      canonicalPath="/legal/shipping-policy"
     >
       <Section id="overview" number={1} title="Overview">
         <p>

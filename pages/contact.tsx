@@ -102,6 +102,7 @@ export default function ContactPage() {
           name="description"
           content="Have questions about SkillScout? Reach out to our team and we'll get back to you shortly."
         />
+        <link rel="canonical" href="https://www.skillscout.dev/contact" />
       </Head>
 
       <div className="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans min-h-screen flex flex-col transition-colors duration-300">

@@ -31,6 +31,7 @@ export default function PricingPage() {
           name="description"
           content="Choose the SkillScout plan that fits your career stage. Start free, or go Pro and Elite for AI mock interviews and advanced interview prep."
         />
+        <link rel="canonical" href="https://www.skillscout.dev/pricing" />
       </Head>
 
       <div className="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans min-h-screen flex flex-col transition-colors duration-300">
