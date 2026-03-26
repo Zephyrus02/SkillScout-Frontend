@@ -6,6 +6,8 @@ export default function GoalsPage() {
   return (
     <>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Goals & Progress – SkillScout</title>
       </Head>
       <DashboardLayout>

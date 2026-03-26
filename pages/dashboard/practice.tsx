@@ -6,6 +6,8 @@ export default function PracticePage() {
   return (
     <>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Practice Arena – SkillScout</title>
       </Head>
       <DashboardLayout>

@@ -6,6 +6,8 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Forgot Password – SkillScout</title>
         <meta
           name="description"

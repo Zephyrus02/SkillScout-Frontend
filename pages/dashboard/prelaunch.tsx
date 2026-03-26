@@ -404,6 +404,8 @@ export default function PrelaunchPage() {
   return (
     <>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>System Readiness Check – SkillScout</title>
       </Head>
 

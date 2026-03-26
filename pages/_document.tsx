@@ -24,6 +24,21 @@ export default function Document() {
         <link rel="icon" href="/favicon/favicon-32x32.png" type="image/png" sizes="32x32" />
         <link rel="apple-touch-icon" href="/favicon/apple-touch-icon.png" />
         <link rel="manifest" href="/favicon/site.webmanifest" />
+
+        {/* Open Graph — site-wide defaults (individual pages override og:title / og:description) */}
+        <meta property="og:title" content="SkillScout — AI Mock Interview Practice" />
+        <meta property="og:description" content="Cut interview prep from 5 weeks to 5 days with AI-powered mock sessions." />
+        <meta property="og:image" content="https://www.skillscout.dev/og-image.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="SkillScout" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://www.skillscout.dev/og-image.png" />
+        <meta name="twitter:title" content="SkillScout — AI Mock Interview Practice" />
+        <meta name="twitter:description" content="Cut interview prep from 5 weeks to 5 days with AI-powered mock sessions." />
       </Head>
       <body className="antialiased">
         <Main />
@@ -32,3 +47,4 @@ export default function Document() {
     </Html>
   );
 }
+

@@ -29,6 +29,8 @@ export default function LoginPage() {
   return (
     <>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Sign In – SkillScout</title>
         <meta
           name="description"

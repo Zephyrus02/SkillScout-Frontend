@@ -6,6 +6,8 @@ export default function WeakAreasPage() {
   return (
     <>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Weak Areas – SkillScout</title>
       </Head>
       <DashboardLayout>

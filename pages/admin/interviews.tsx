@@ -168,6 +168,8 @@ export default function AdminInterviewsPage() {
   return (
     <ProtectedRoute>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Admin Interview Sessions – SkillScout</title>
       </Head>
 

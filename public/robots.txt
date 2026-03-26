@@ -1,0 +1,24 @@
+User-agent: *
+
+# Block authenticated/private application routes
+Disallow: /dashboard/
+Disallow: /dashboard
+Disallow: /profile-setup/
+Disallow: /profile-setup
+Disallow: /auth/
+Disallow: /auth
+
+# Block admin panel
+Disallow: /admin/
+Disallow: /admin
+
+# Block API routes
+Disallow: /api/
+
+# Block Next.js internals
+Disallow: /_next/
+
+# Allow all public pages
+Allow: /
+
+Sitemap: https://www.skillscout.dev/sitemap.xml

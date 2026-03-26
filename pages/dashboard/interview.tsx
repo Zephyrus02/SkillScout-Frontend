@@ -284,6 +284,8 @@ export default function InterviewRoom() {
       />
 
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>AI Live Interview Room – SkillScout</title>
         <style>{`
           @keyframes breathe {

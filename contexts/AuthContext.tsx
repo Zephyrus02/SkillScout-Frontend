@@ -44,6 +44,11 @@ type UserWithRoles = User & {
   roles?: string[] | string;
 };
 
+interface ProfileStatus {
+  hasCompletedProfile?: boolean;
+  isComplete?: boolean;
+}
+
 /**
  * Module-level flag set while login/googleAuth/githubCallbackAuth is actively
  * navigating.  The login page reads this to avoid firing its own redirect when
@@ -107,10 +112,9 @@ async function navigateAfterAuth(
     const profileStatus = await profileAPI.checkProfileStatus();
     // Support both the legacy `hasCompletedProfile` key and the current
     // `isComplete` key returned by the backend /api/profile/status endpoint.
+    const profileData = profileStatus.data as ProfileStatus;
     const completedProfile =
-      (profileStatus.data as any)?.hasCompletedProfile ??
-      (profileStatus.data as any)?.isComplete ??
-      false;
+      profileData?.hasCompletedProfile ?? profileData?.isComplete ?? false;
     if (!completedProfile) {
       await router.replace("/profile-setup");
       return;

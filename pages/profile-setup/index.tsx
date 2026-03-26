@@ -422,6 +422,8 @@ export default function ProfileSetupPage() {
   return (
     <>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Profile Setup | SkillScout</title>
         <meta
           name="description"

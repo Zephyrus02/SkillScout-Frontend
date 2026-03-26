@@ -11,6 +11,8 @@ export default function AnalysisPage() {
   return (
     <DashboardLayout>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Interview Analysis Result \u2013 SkillScout</title>
         <style>{`
           .progress-ring__circle {

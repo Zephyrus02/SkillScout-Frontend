@@ -30,6 +30,8 @@ export default function AdminRevenuePage() {
   return (
     <ProtectedRoute>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Revenue & Billing – SkillScout Admin</title>
       </Head>
 

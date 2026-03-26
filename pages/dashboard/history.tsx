@@ -6,6 +6,8 @@ export default function HistoryPage() {
   return (
     <>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Session History – SkillScout</title>
       </Head>
       <DashboardLayout>

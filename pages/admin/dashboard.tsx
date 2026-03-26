@@ -116,6 +116,8 @@ export default function AdminDashboardPage() {
   return (
     <ProtectedRoute>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Admin Dashboard – SkillScout</title>
       </Head>
 

@@ -21,6 +21,8 @@ export default function SignUpPage() {
   return (
     <>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Sign Up – SkillScout</title>
         <meta
           name="description"

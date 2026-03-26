@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Core marketing pages -->
+  <url>
+    <loc>https://www.skillscout.dev/</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+  <url>
+    <loc>https://www.skillscout.dev/pricing</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+  <url>
+    <loc>https://www.skillscout.dev/about</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+  <url>
+    <loc>https://www.skillscout.dev/contact</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+
+  <!-- Resources hub -->
+  <url>
+    <loc>https://www.skillscout.dev/resources</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+
+  <!-- Blog posts -->
+  <url>
+    <loc>https://www.skillscout.dev/resources/blog/mastering-system-design-interview-ai-assistants</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+  <url>
+    <loc>https://www.skillscout.dev/resources/blog/behavioral-interview-story-frameworks</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+  <url>
+    <loc>https://www.skillscout.dev/resources/blog/dsa-pattern-practice-plan</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+  <url>
+    <loc>https://www.skillscout.dev/resources/blog/sql-interview-analytics-essentials</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+  <url>
+    <loc>https://www.skillscout.dev/resources/blog/resume-that-clears-tech-screens</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+  <url>
+    <loc>https://www.skillscout.dev/resources/blog/salary-negotiation-playbook-engineers</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+  <url>
+    <loc>https://www.skillscout.dev/resources/blog/recruiter-screen-15-minute-plan</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+  <url>
+    <loc>https://www.skillscout.dev/resources/blog/remote-interview-setup-checklist</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+  <url>
+    <loc>https://www.skillscout.dev/resources/blog/questions-to-ask-interviewer</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+  <url>
+    <loc>https://www.skillscout.dev/resources/blog/machine-learning-interview-prep-roadmap</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+
+  <!-- Legal pages (indexable, commonly linked from footer) -->
+  <url>
+    <loc>https://www.skillscout.dev/legal/privacy-policy</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+  <url>
+    <loc>https://www.skillscout.dev/legal/terms-of-service</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+  <url>
+    <loc>https://www.skillscout.dev/legal/refund-policy</loc>
+    <lastmod>2026-03-26</lastmod>
+  </url>
+
+</urlset>

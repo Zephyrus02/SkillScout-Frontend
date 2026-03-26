@@ -6,6 +6,8 @@ export default function UserDashboard() {
   return (
     <>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Dashboard – SkillScout</title>
       </Head>
       <DashboardLayout>

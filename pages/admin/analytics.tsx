@@ -122,6 +122,8 @@ export default function AdminAnalyticsPage() {
   return (
     <ProtectedRoute>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Admin Platform Analytics – SkillScout</title>
       </Head>
 

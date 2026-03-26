@@ -1,19 +1,26 @@
 import Head from "next/head";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { GetStaticPaths, GetStaticProps } from "next";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { getBlogBySlug, getRelatedBlogs, BlogSection } from "@/lib/blogs";
+import {
+  getAllBlogs,
+  getBlogBySlug,
+  getRelatedBlogs,
+  BlogPost,
+  BlogSection,
+} from "@/lib/blogs";
 import { useReadAloud } from "@/hooks/useReadAloud";
 import { useMemo } from "react";
 
-export default function BlogDetailBySlugPage() {
-  const router = useRouter();
-  const blog = getBlogBySlug(router.query.slug as string);
-  const related = blog ? getRelatedBlogs(blog.slug, 3) : [];
+interface Props {
+  blog: BlogPost;
+}
+
+export default function BlogDetailBySlugPage({ blog }: Props) {
+  const related = getRelatedBlogs(blog.slug, 3);
 
   const { blocks, indices } = useMemo(() => {
-    if (!blog) return { blocks: [], indices: null };
     const b: string[] = [];
     let idx = 0;
 
@@ -71,13 +78,15 @@ export default function BlogDetailBySlugPage() {
     );
   };
 
-  if (!blog || !indices) return null;
-
   return (
     <>
       <Head>
         <title>{`${blog.title} | SkillScout`}</title>
         <meta name="description" content={blog.excerpt} />
+        <link
+          rel="canonical"
+          href={`https://www.skillscout.dev/resources/blog/${blog.slug}`}
+        />
       </Head>
 
       <div className="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans min-h-screen flex flex-col transition-colors duration-300">
@@ -217,7 +226,7 @@ export default function BlogDetailBySlugPage() {
                   Related Articles
                 </h3>
                 <div className="space-y-4">
-                  {related.map((item: import("@/lib/blogs").BlogPost) => (
+                  {related.map((item: BlogPost) => (
                     <Link
                       key={item.slug}
                       href={`/resources/blog/${item.slug}`}
@@ -249,3 +258,17 @@ export default function BlogDetailBySlugPage() {
     </>
   );
 }
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const blogs = getAllBlogs();
+  return {
+    paths: blogs.map((b) => ({ params: { slug: b.slug } })),
+    fallback: false,
+  };
+};
+
+export const getStaticProps: GetStaticProps<Props> = async ({ params }) => {
+  const blog = getAllBlogs().find((b) => b.slug === params?.slug);
+  if (!blog) return { notFound: true };
+  return { props: { blog } };
+};

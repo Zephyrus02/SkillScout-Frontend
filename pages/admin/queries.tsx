@@ -84,6 +84,8 @@ export default function AdminQueriesPage() {
   return (
     <ProtectedRoute>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Admin Support Queries – SkillScout</title>
       </Head>
 

@@ -65,6 +65,8 @@ export default function AdminUsersPage() {
   return (
     <ProtectedRoute>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>Admin User Management – SkillScout</title>
       </Head>
 

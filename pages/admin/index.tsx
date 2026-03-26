@@ -1,3 +1,4 @@
+import Head from "next/head";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -10,8 +11,13 @@ export default function AdminIndex() {
   }, [router]);
 
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-white dark:bg-background-dark" />
-    </ProtectedRoute>
+    <>
+      <Head>
+        <meta name="robots" content="noindex, nofollow" />
+      </Head>
+      <ProtectedRoute>
+        <div className="min-h-screen bg-white dark:bg-background-dark" />
+      </ProtectedRoute>
+    </>
   );
 }

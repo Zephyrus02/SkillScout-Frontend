@@ -85,6 +85,8 @@ export default function VerifyEmailPage() {
   return (
     <>
       <Head>
+        <meta name="robots" content="noindex, nofollow" />
+
         <title>
           {isVerified
             ? "Email Verified – SkillScout"
