@@ -206,7 +206,7 @@ export default function VerifyEmailPage() {
                     Verify Your Email
                   </h2>
                   <p className="text-slate-500 dark:text-slate-400 text-base">
-                    We've sent a verification link to{" "}
+                    We&apos;ve sent a verification link to{" "}
                     {email ? (
                       <span className="font-semibold text-slate-700 dark:text-slate-200">
                         {email}
@@ -258,8 +258,8 @@ export default function VerifyEmailPage() {
                     info
                   </span>
                   <p className="text-sm text-amber-700 dark:text-amber-300">
-                    Can't find the email? Check your spam or junk folder. The
-                    link expires in{" "}
+                    Can&apos;t find the email? Check your spam or junk folder.
+                    The link expires in{" "}
                     <span className="font-semibold">24 hours</span>.
                   </p>
                 </div>

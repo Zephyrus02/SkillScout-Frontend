@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Lock, Mail, X } from "lucide-react";
 import type { UserTableRow } from "./data";
 import { PLAN_STYLES } from "./data";
@@ -13,15 +13,23 @@ export default function UserDetailPanel({
   user,
   onClose,
 }: UserDetailPanelProps) {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
     <AnimatePresence>
       {user ? (
         <motion.aside
           key="user-profile-sidebar"
-          initial={{ x: 420, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 420, opacity: 0 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
+          initial={
+            prefersReducedMotion ? { opacity: 1 } : { x: 420, opacity: 0 }
+          }
+          animate={prefersReducedMotion ? { opacity: 1 } : { x: 0, opacity: 1 }}
+          exit={prefersReducedMotion ? { opacity: 1 } : { x: 420, opacity: 0 }}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0 }
+              : { duration: 0.25, ease: "easeOut" }
+          }
           className="fixed right-0 top-0 z-50 hidden h-screen w-[400px] overflow-y-auto border-l border-slate-100 bg-white shadow-2xl dark:border-slate-800 dark:bg-surface-dark xl:block"
         >
           <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-surface-dark">

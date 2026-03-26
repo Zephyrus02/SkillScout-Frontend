@@ -24,7 +24,7 @@ export interface BlogPost {
   };
   author: {
     name: string;
-    role: string;
+    role?: string;
     bio?: string;
     url?: string;
     credentials?: string;

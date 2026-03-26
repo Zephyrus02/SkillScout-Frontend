@@ -387,13 +387,21 @@ export default function PrelaunchPage() {
 
   // ── Speaker test ─────────────────────────────────────────
   const playSound = () => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio("/pl_test.wav");
-    }
-    audioRef.current.currentTime = 0;
-    audioRef.current.play();
+    const ensureAudio = () => {
+      if (audioRef.current) return audioRef.current;
+      // Prefer smaller Opus; keep WAV fallback for compatibility.
+      audioRef.current = new Audio("/pl_test.opus");
+      audioRef.current.onerror = () => {
+        audioRef.current = new Audio("/pl_test.wav");
+      };
+      return audioRef.current;
+    };
+
+    const audio = ensureAudio();
+    audio.currentTime = 0;
+    void audio.play();
     setSpeakerState("playing");
-    audioRef.current.onended = () => {
+    audio.onended = () => {
       // Keep showing "playing" state – user decides audible / replay
     };
   };

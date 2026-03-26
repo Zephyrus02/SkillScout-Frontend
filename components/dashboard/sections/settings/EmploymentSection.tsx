@@ -37,8 +37,12 @@ export default function EmploymentSection() {
           endDate: e.endDate ?? "",
           current: e.current ?? false,
           desc: e.desc ?? "",
-          salary: (e as any).salary ?? "",
-          noticePeriod: (e as any).noticePeriod ?? "",
+          salary:
+            (e as unknown as { salary?: string | null }).salary?.toString() ??
+            "",
+          noticePeriod:
+            (e as unknown as { noticePeriod?: string | null }).noticePeriod ??
+            "",
         })),
       );
     }

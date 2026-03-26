@@ -594,6 +594,26 @@ export const onboardingAPI = {
   },
 };
 
+// ── Contact API ──────────────────────────────────────────────────────────────
+
+export const contactAPI = {
+  /** POST /api/contact — public contact form submission (rate-limited) */
+  submit: async (data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    subject: string;
+    message: string;
+  }) => {
+    const res = await apiClient.post("/contact", data);
+    return res.data as {
+      success: boolean;
+      message: string;
+      data?: unknown;
+    };
+  },
+};
+
 // ── Profile API ─────────────────────────────────────────────────────────────
 
 export const profileAPI = {

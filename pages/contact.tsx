@@ -3,6 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { contactAPI } from "@/lib/api";
 
 const SUBJECTS = [
   "General Inquiry",
@@ -77,6 +78,7 @@ export default function ContactPage() {
     message: "",
   });
   const [status, setStatus] = useState<FormStatus>("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   function handleChange(
     e: React.ChangeEvent<
@@ -89,9 +91,29 @@ export default function ContactPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("submitting");
-    // Simulate async submission — wire up to real API when ready
-    await new Promise((r) => setTimeout(r, 1200));
-    setStatus("success");
+    setErrorMessage(null);
+    try {
+      const res = await contactAPI.submit({
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        subject: form.subject,
+        message: form.message,
+      });
+      if (!res.success) {
+        setStatus("error");
+        setErrorMessage(res.message || "Failed to send message");
+        return;
+      }
+      setStatus("success");
+    } catch (err: unknown) {
+      const msg =
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message?: unknown }).message)
+          : "Failed to send message";
+      setStatus("error");
+      setErrorMessage(msg);
+    }
   }
 
   return (
@@ -162,6 +184,11 @@ export default function ContactPage() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+                  {status === "error" && errorMessage ? (
+                    <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-800 dark:text-red-200">
+                      {errorMessage}
+                    </div>
+                  ) : null}
                   {/* Name row */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <label className="flex flex-col gap-1.5">

@@ -42,12 +42,6 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        {/* Material Icons — non-blocking (display=optional) */}
-        <link
-          href="https://fonts.googleapis.com/icon?family=Material+Icons&display=optional"
-          rel="stylesheet"
-        />
-
         {/* Favicons */}
         <link rel="icon" href="/favicon/favicon.ico" sizes="any" />
         <link
@@ -117,4 +111,3 @@ export default function Document() {
     </Html>
   );
 }
-

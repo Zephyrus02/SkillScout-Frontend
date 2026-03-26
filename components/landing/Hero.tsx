@@ -47,12 +47,16 @@ export default function Hero() {
             Start Mock Interview
             <span className="material-icons text-sm ml-2">arrow_forward</span>
           </Link>
-          <button className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 text-text-light dark:text-text-dark px-8 py-3.5 rounded-lg font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center">
+          <Link
+            href="/resources"
+            className="bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 text-text-light dark:text-text-dark px-8 py-3.5 rounded-lg font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center"
+            aria-label="Explore interview prep resources"
+          >
             <span className="material-icons text-sm mr-2 text-primary">
               play_circle
             </span>
-            Watch How it Works
-          </button>
+            Explore Resources
+          </Link>
         </div>
 
         {/* Company logos */}

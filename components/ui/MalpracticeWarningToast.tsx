@@ -35,11 +35,15 @@ export function MalpracticeWarningToast({ warning, onDismiss }: Props) {
   const startRef = useRef<number>(0);
   const rafRef = useRef<number>(0);
   const callbackRef = useRef(onDismiss);
-  callbackRef.current = onDismiss;
+
+  useEffect(() => {
+    callbackRef.current = onDismiss;
+  }, [onDismiss]);
 
   useEffect(() => {
     if (!warning) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProgress(100);
     startRef.current = performance.now();
 

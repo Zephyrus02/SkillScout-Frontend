@@ -30,6 +30,9 @@ export default function KeySkillsSection() {
 
   useEffect(() => {
     if (apiProfile?.skills) {
+      // This is an intentional sync-from-server effect (not derived state).
+      // We only run it when the server snapshot changes.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSkills(apiProfile.skills);
     }
   }, [apiProfile]);

@@ -1,3 +1,6 @@
+import Image from "next/image";
+import { Icon } from "@/components/ui/Icon";
+
 export default function SpeedDemo() {
   return (
     <section className="py-24 bg-white dark:bg-surface-dark border-t border-gray-100 dark:border-gray-800">
@@ -48,24 +51,25 @@ export default function SpeedDemo() {
                 {/* Video Analysis */}
                 <div className="bg-white dark:bg-surface-dark p-6 rounded-lg border border-gray-200 dark:border-gray-700/50">
                   <div className="flex items-center mb-4">
-                    <span className="material-icons text-blue-500 mr-2">
-                      videocam
-                    </span>
+                    <Icon
+                      name="videocam"
+                      className="mr-2 size-5 text-blue-500"
+                    />
                     <h4 className="font-semibold text-text-light dark:text-text-dark">
                       Video Analysis
                     </h4>
                   </div>
                   <div className="relative w-full aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center mb-4 overflow-hidden group">
-                    <div
-                      className="absolute inset-0 bg-cover bg-center opacity-80"
-                      style={{
-                        backgroundImage: `url("https://lh3.googleusercontent.com/aida-public/AB6AXuAl_KyRCB6X0LixZQnCkheNgINCzHzL1tKa7JS8CqjMftMGvtDBpcshfdC1-d2rH9aJuKWJPGD3xoQfTq4fdwlv9EB__jrcbnV8Ea0atisDAaq0YDXOeoF4i52ih7OI1QuC_1Bt1J3QPpizid4qG1pyv31dwig-XqYajfH9lh7cp6btrXxeBFDEENhz24HyCKVmwcoDwfpvF4uyzz1GVl81WWxDuug4917n6K15a2rDN1fZtNTemi7THOq0yDmuYV1zXgiFWsVsvKzZ")`,
-                      }}
+                    <Image
+                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuAl_KyRCB6X0LixZQnCkheNgINCzHzL1tKa7JS8CqjMftMGvtDBpcshfdC1-d2rH9aJuKWJPGD3xoQfTq4fdwlv9EB__jrcbnV8Ea0atisDAaq0YDXOeoF4i52ih7OI1QuC_1Bt1J3QPpizid4qG1pyv31dwig-XqYajfH9lh7cp6btrXxeBFDEENhz24HyCKVmwcoDwfpvF4uyzz1GVl81WWxDuug4917n6K15a2rDN1fZtNTemi7THOq0yDmuYV1zXgiFWsVsvKzZ"
+                      alt="Interview video analysis preview"
+                      fill
+                      sizes="(min-width: 768px) 480px, 100vw"
+                      className="object-cover opacity-80"
+                      priority={false}
                     />
                     <button className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg z-10 group-hover:scale-110 transition-transform">
-                      <span className="material-icons text-primary">
-                        play_arrow
-                      </span>
+                      <Icon name="play_arrow" className="size-6 text-primary" />
                     </button>
                   </div>
                   <p className="text-xs text-subtext-light dark:text-subtext-dark">

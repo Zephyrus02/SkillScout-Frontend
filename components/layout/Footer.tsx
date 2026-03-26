@@ -3,14 +3,14 @@ import Image from "next/image";
 
 const FOOTER_LINKS: Record<string, Array<{ label: string; href: string }>> = {
   Platform: [
-    { label: "Mock Interviews", href: "#" },
-    { label: "Resume Review", href: "#" },
-    { label: "Behavioral Prep", href: "#" },
+    { label: "Mock Interviews", href: "/auth/signup" },
+    { label: "Resume Review", href: "/auth/signup" },
+    { label: "Behavioral Prep", href: "/auth/signup" },
     { label: "Pricing", href: "/pricing" },
   ],
   Company: [
     { label: "About Us", href: "/about" },
-    { label: "Careers", href: "#" },
+    { label: "Careers", href: "/auth/signup" },
     { label: "Contact", href: "/contact" },
   ],
   Resources: [

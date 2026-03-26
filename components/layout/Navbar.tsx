@@ -92,7 +92,7 @@ export default function Navbar() {
           </div>
 
           {/* Desktop right side */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4 min-w-[200px] justify-end">
             {isAuthenticated && user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -170,13 +170,13 @@ export default function Navbar() {
           </div>
 
           {/* Mobile right side */}
-          <div className="flex md:hidden items-center space-x-2">
+          <div className="flex md:hidden items-center space-x-2 min-w-[120px] justify-end">
             {isAuthenticated && user ? (
               <>
                 <div className="relative" ref={mobileDropdownRef}>
                   <button
                     onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                    className="flex items-center"
+                    className="flex h-12 w-12 items-center justify-center"
                     aria-label="User menu"
                   >
                     {user.image ? (
@@ -231,7 +231,7 @@ export default function Navbar() {
                   )}
                 </div>
                 <button
-                  className="p-2 rounded-full text-subtext-light dark:text-subtext-dark hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="h-12 w-12 rounded-full text-subtext-light dark:text-subtext-dark hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
                   onClick={() => setMenuOpen(!menuOpen)}
                   aria-label="Toggle menu"
                 >
@@ -244,12 +244,12 @@ export default function Navbar() {
               <>
                 <Link
                   href="/auth/signup"
-                  className="bg-primary hover:bg-primary-hover text-white text-xs font-medium px-3 py-1.5 rounded-full transition-all shadow-lg shadow-blue-500/30 whitespace-nowrap"
+                  className="bg-primary hover:bg-primary-hover text-white text-sm font-semibold h-12 px-4 rounded-full transition-all shadow-lg shadow-blue-500/30 whitespace-nowrap inline-flex items-center"
                 >
                   Start Mock Interview
                 </Link>
                 <button
-                  className="p-2 rounded-full text-subtext-light dark:text-subtext-dark hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="h-12 w-12 rounded-full text-subtext-light dark:text-subtext-dark hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
                   onClick={() => setMenuOpen(!menuOpen)}
                   aria-label="Toggle menu"
                 >

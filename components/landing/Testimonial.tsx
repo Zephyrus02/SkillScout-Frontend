@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function Testimonial() {
   return (
     <section className="py-20 bg-background-light dark:bg-background-dark overflow-hidden">
@@ -7,11 +9,12 @@ export default function Testimonial() {
         </span>
         <div className="relative z-10 bg-surface-light dark:bg-surface-dark p-10 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 text-center md:text-left flex flex-col md:flex-row gap-8 items-center">
           <div className="flex-shrink-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               alt="Sarah Jenkins"
-              className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-md"
+              className="rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-md"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLa22rHM7cclHoZk_PxKE1qScMOis9maQCMwegf0iKkChTLkFbLiu3yqmObrBzdmqZdwkxbwidg5B895Rfwg_NDGTRzrepjj9c6z8tfS6Q9WyGfh4gyR7M9UetsuLHF677JW70zbHZEXoyJni_Zi5JZwZ5glGKtfiqkUvXGkViS7ayL6LTaZl8zLvOKTRlZneu1pQby3m6yetjMzgmFtgwVsW_r8nTtBgkSBF7MqcZrSr2ammmcTJMDoJQI8XQDVVZDaR8jriReDrR"
+              width={96}
+              height={96}
             />
           </div>
           <div>

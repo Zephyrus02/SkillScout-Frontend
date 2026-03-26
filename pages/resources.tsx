@@ -4,6 +4,7 @@ import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { getAllBlogs, getBlogTopics, getFeaturedBlog } from "@/lib/blogs";
+import { Icon } from "@/components/ui/Icon";
 import {
   ArticleCard,
   ArticleListItem,
@@ -108,9 +109,11 @@ export default function ResourcesPage() {
                       <p className="font-semibold text-text-light dark:text-text-dark">
                         {FEATURED.author.name}
                       </p>
-                      <p className="text-subtext-light dark:text-subtext-dark">
-                        {FEATURED.author.role}
-                      </p>
+                      {FEATURED.author.role ? (
+                        <p className="text-subtext-light dark:text-subtext-dark">
+                          {FEATURED.author.role}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                   <Link
@@ -118,9 +121,7 @@ export default function ResourcesPage() {
                     className="ml-auto flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors"
                   >
                     Read Article
-                    <span className="material-icons text-lg">
-                      arrow_forward
-                    </span>
+                    <Icon name="arrow_forward" className="size-4" />
                   </Link>
                 </div>
               </div>
@@ -146,23 +147,24 @@ export default function ResourcesPage() {
                     className={`p-2 rounded-lg transition-colors ${view === "grid" ? "bg-primary/10 text-primary" : "hover:bg-gray-100 dark:hover:bg-gray-800 text-subtext-light dark:text-subtext-dark"}`}
                     aria-label="Grid view"
                   >
-                    <span className="material-icons">grid_view</span>
+                    <Icon name="grid_view" className="size-5" />
                   </button>
                   <button
                     onClick={() => setView("list")}
                     className={`p-2 rounded-lg transition-colors ${view === "list" ? "bg-primary/10 text-primary" : "hover:bg-gray-100 dark:hover:bg-gray-800 text-subtext-light dark:text-subtext-dark"}`}
                     aria-label="List view"
                   >
-                    <span className="material-icons">view_list</span>
+                    <Icon name="view_list" className="size-5" />
                   </button>
                 </div>
               </div>
 
               {paged.length === 0 ? (
                 <div className="py-20 text-center">
-                  <span className="material-icons text-4xl text-subtext-light dark:text-subtext-dark">
-                    search_off
-                  </span>
+                  <Icon
+                    name="search_off"
+                    className="mx-auto size-10 text-subtext-light dark:text-subtext-dark"
+                  />
                   <p className="mt-3 text-subtext-light dark:text-subtext-dark">
                     No articles match your search.
                   </p>
@@ -202,9 +204,7 @@ export default function ResourcesPage() {
                       disabled={page === 1}
                       className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-subtext-light dark:text-subtext-dark hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 transition-colors"
                     >
-                      <span className="material-icons text-sm">
-                        chevron_left
-                      </span>
+                      <Icon name="chevron_left" className="size-4" />
                     </button>
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                       (n) => (
@@ -224,9 +224,7 @@ export default function ResourcesPage() {
                       disabled={page === totalPages}
                       className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-subtext-light dark:text-subtext-dark hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 transition-colors"
                     >
-                      <span className="material-icons text-sm">
-                        chevron_right
-                      </span>
+                      <Icon name="chevron_right" className="size-4" />
                     </button>
                   </nav>
                 </div>
