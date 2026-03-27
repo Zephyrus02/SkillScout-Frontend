@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import {
   BarChart3,
   CreditCard,
@@ -74,11 +73,9 @@ export default function AdminSidebar({
   userName,
 }: AdminSidebarProps) {
   const { logout } = useAuth();
-  const router = useRouter();
 
   const handleLogout = async () => {
     await logout();
-    router.push("/auth/signin");
   };
 
   return (

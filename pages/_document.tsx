@@ -59,6 +59,12 @@ export default function Document() {
         <link rel="apple-touch-icon" href="/favicon/apple-touch-icon.png" />
         <link rel="manifest" href="/favicon/site.webmanifest" />
 
+        {/* Material Icons (used across marketing + dashboard UI) */}
+        <link
+          href="https://fonts.googleapis.com/icon?family=Material+Icons&display=optional"
+          rel="stylesheet"
+        />
+
         {/* Open Graph — site-wide defaults (individual pages override og:title / og:description) */}
         <meta
           property="og:title"

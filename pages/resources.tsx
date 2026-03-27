@@ -4,7 +4,6 @@ import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { getAllBlogs, getBlogTopics, getFeaturedBlog } from "@/lib/blogs";
-import { Icon } from "@/components/ui/Icon";
 import {
   ArticleCard,
   ArticleListItem,
@@ -121,7 +120,9 @@ export default function ResourcesPage() {
                     className="ml-auto flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-hover transition-colors"
                   >
                     Read Article
-                    <Icon name="arrow_forward" className="size-4" />
+                    <span className="material-icons text-base">
+                      arrow_forward
+                    </span>
                   </Link>
                 </div>
               </div>
@@ -147,24 +148,23 @@ export default function ResourcesPage() {
                     className={`p-2 rounded-lg transition-colors ${view === "grid" ? "bg-primary/10 text-primary" : "hover:bg-gray-100 dark:hover:bg-gray-800 text-subtext-light dark:text-subtext-dark"}`}
                     aria-label="Grid view"
                   >
-                    <Icon name="grid_view" className="size-5" />
+                    <span className="material-icons text-xl">grid_view</span>
                   </button>
                   <button
                     onClick={() => setView("list")}
                     className={`p-2 rounded-lg transition-colors ${view === "list" ? "bg-primary/10 text-primary" : "hover:bg-gray-100 dark:hover:bg-gray-800 text-subtext-light dark:text-subtext-dark"}`}
                     aria-label="List view"
                   >
-                    <Icon name="view_list" className="size-5" />
+                    <span className="material-icons text-xl">view_list</span>
                   </button>
                 </div>
               </div>
 
               {paged.length === 0 ? (
                 <div className="py-20 text-center">
-                  <Icon
-                    name="search_off"
-                    className="mx-auto size-10 text-subtext-light dark:text-subtext-dark"
-                  />
+                  <span className="material-icons text-4xl mx-auto text-subtext-light dark:text-subtext-dark">
+                    search_off
+                  </span>
                   <p className="mt-3 text-subtext-light dark:text-subtext-dark">
                     No articles match your search.
                   </p>
@@ -204,7 +204,9 @@ export default function ResourcesPage() {
                       disabled={page === 1}
                       className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-subtext-light dark:text-subtext-dark hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 transition-colors"
                     >
-                      <Icon name="chevron_left" className="size-4" />
+                      <span className="material-icons text-base">
+                        chevron_left
+                      </span>
                     </button>
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                       (n) => (
@@ -224,7 +226,9 @@ export default function ResourcesPage() {
                       disabled={page === totalPages}
                       className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-subtext-light dark:text-subtext-dark hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 transition-colors"
                     >
-                      <Icon name="chevron_right" className="size-4" />
+                      <span className="material-icons text-base">
+                        chevron_right
+                      </span>
                     </button>
                   </nav>
                 </div>

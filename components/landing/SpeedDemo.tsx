@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Icon } from "@/components/ui/Icon";
 
 export default function SpeedDemo() {
   return (
@@ -51,10 +50,9 @@ export default function SpeedDemo() {
                 {/* Video Analysis */}
                 <div className="bg-white dark:bg-surface-dark p-6 rounded-lg border border-gray-200 dark:border-gray-700/50">
                   <div className="flex items-center mb-4">
-                    <Icon
-                      name="videocam"
-                      className="mr-2 size-5 text-blue-500"
-                    />
+                    <span className="material-icons text-blue-500 mr-2 text-xl">
+                      videocam
+                    </span>
                     <h4 className="font-semibold text-text-light dark:text-text-dark">
                       Video Analysis
                     </h4>
@@ -69,7 +67,9 @@ export default function SpeedDemo() {
                       priority={false}
                     />
                     <button className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg z-10 group-hover:scale-110 transition-transform">
-                      <Icon name="play_arrow" className="size-6 text-primary" />
+                      <span className="material-icons text-primary text-2xl">
+                        play_arrow
+                      </span>
                     </button>
                   </div>
                   <p className="text-xs text-subtext-light dark:text-subtext-dark">
