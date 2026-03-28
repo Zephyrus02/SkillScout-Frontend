@@ -26,26 +26,32 @@ import type {
 ───────────────────────────────────────────────────────────────── */
 
 const SESSION_STORAGE_KEY = "skillscout_interview_session";
-const SKIP_LIVEKIT_DEMO = process.env.NEXT_PUBLIC_SKIP_LIVEKIT_DEMO === "true";
+
+/** LiveKit session API + token flow. Off by default — prelaunch opens static room UI only. */
+const LIVEKIT_INTERVIEW_API_ENABLED =
+  process.env.NEXT_PUBLIC_ENABLE_LIVEKIT_INTERVIEW === "true";
 
 function StartInterviewButton({
   allOk,
   onStarted,
-  skipLiveKitDemo,
-  onSkipLiveKit,
+  useLiveKitSessionApi,
+  onEnterStaticRoom,
 }: {
   allOk: boolean;
   onStarted: (sessionId: string, token: string, livekitUrl: string) => void;
-  skipLiveKitDemo?: boolean;
-  onSkipLiveKit?: () => void;
+  useLiveKitSessionApi?: boolean;
+  onEnterStaticRoom?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /** LiveKit API path must pass all readiness checks; static room can always enter. */
+  const mayEnter = useLiveKitSessionApi ? allOk : true;
+
   const handleClick = async () => {
-    if (!allOk || loading) return;
-    if (skipLiveKitDemo) {
-      onSkipLiveKit?.();
+    if (!mayEnter || loading) return;
+    if (!useLiveKitSessionApi) {
+      onEnterStaticRoom?.();
       return;
     }
     setLoading(true);
@@ -76,13 +82,13 @@ function StartInterviewButton({
       <button
         type="button"
         onClick={handleClick}
-        disabled={!allOk || loading}
+        disabled={!mayEnter || loading}
         className={`w-full font-semibold py-3.5 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
-          allOk && !loading
+          mayEnter && !loading
             ? "bg-blue-500 hover:bg-blue-600 text-white shadow-blue-500/20 hover:-translate-y-0.5 active:translate-y-0"
             : "bg-slate-200 text-slate-400 cursor-not-allowed pointer-events-none"
         }`}
-        aria-disabled={!allOk || loading}
+        aria-disabled={!mayEnter || loading}
       >
         {loading ? (
           "Starting…"
@@ -178,28 +184,35 @@ export default function PrelaunchPage() {
   const animFrameRef = useRef<number>(0);
 
   // ── Device compatibility ─────────────────────────────────
-  // Computed once from UA — lazy init avoids a synchronous setState in an effect.
-  const [deviceStatus] = useState<CheckStatus>(() => {
-    if (typeof window === "undefined") return "checking";
-    const ua = navigator.userAgent;
-    const isMobile =
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-    const isTablet = /iPad|Android(?!.*Mobile)/i.test(ua);
-    if (isMobile && !isTablet) return "error";
-    if (isTablet) return "error";
-    return "ok";
-  });
-  const [deviceLabel] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    const ua = navigator.userAgent;
-    const isMobile =
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-    const isTablet = /iPad|Android(?!.*Mobile)/i.test(ua);
-    if (isMobile && !isTablet)
-      return "Mobile device detected – desktop required";
-    if (isTablet) return "Tablet detected – desktop required";
-    return "Desktop / Laptop detected";
-  });
+  // Same initial state on server + client (hydration-safe); UA read in useEffect.
+  const [deviceStatus, setDeviceStatus] = useState<CheckStatus>("checking");
+  const [deviceLabel, setDeviceLabel] = useState<string>("");
+
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      const ua = navigator.userAgent;
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          ua,
+        );
+      const isTablet = /iPad|Android(?!.*Mobile)/i.test(ua);
+      if (isMobile && !isTablet) {
+        setDeviceStatus("error");
+        setDeviceLabel("Mobile device detected – desktop required");
+      } else if (isTablet) {
+        setDeviceStatus("error");
+        setDeviceLabel("Tablet detected – desktop required");
+      } else {
+        setDeviceStatus("ok");
+        setDeviceLabel("Desktop / Laptop detected");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // ── Speaker ──────────────────────────────────────────────
 
@@ -538,7 +551,9 @@ export default function PrelaunchPage() {
                 badge={
                   deviceStatus === "ok"
                     ? { label: "Desktop", color: "emerald" }
-                    : { label: "Incompatible", color: "red" }
+                    : deviceStatus === "error"
+                      ? { label: "Incompatible", color: "red" }
+                      : { label: "Checking…", color: "slate" }
                 }
                 borderBottom
               >
@@ -732,8 +747,8 @@ export default function PrelaunchPage() {
 
               <StartInterviewButton
                 allOk={allOk}
-                skipLiveKitDemo={SKIP_LIVEKIT_DEMO}
-                onSkipLiveKit={() =>
+                useLiveKitSessionApi={LIVEKIT_INTERVIEW_API_ENABLED}
+                onEnterStaticRoom={() =>
                   router.push("/dashboard/interview?skipLiveKit=true")
                 }
                 onStarted={(sessionId, token, livekitUrl) => {

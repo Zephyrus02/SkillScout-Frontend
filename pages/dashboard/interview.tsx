@@ -23,10 +23,15 @@ const LiveKitRoom = dynamic(
 const SESSION_STORAGE_KEY = "skillscout_interview_session";
 const VIDEO_SIGNALS_INTERVAL_MS = 10_000;
 
+function firstQueryParam(v: string | string[] | undefined): string | undefined {
+  if (v === undefined) return undefined;
+  return Array.isArray(v) ? v[0] : v;
+}
+
 export default function InterviewRoom() {
   const router = useRouter();
-  const sessionId = (router.query.sessionId as string) ?? null;
-  const skipLiveKit = (router.query.skipLiveKit as string) === "true";
+  const sessionId = firstQueryParam(router.query.sessionId) ?? null;
+  const skipLiveKit = firstQueryParam(router.query.skipLiveKit) === "true";
   const [token, setToken] = useState<string | null>(null);
   const [livekitUrl, setLivekitUrl] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
@@ -249,6 +254,14 @@ export default function InterviewRoom() {
       stopCamera();
     };
   }, [shouldAcquireLocalMedia]);
+
+  if (!router.isReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <p className="text-slate-600">Loading…</p>
+      </div>
+    );
+  }
 
   if (!sessionId && !skipLiveKit) {
     return (
