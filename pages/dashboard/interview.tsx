@@ -155,8 +155,8 @@ export default function InterviewRoom() {
   /** Only open camera/mic when actually in the interview room UI (not empty / error / connecting). */
   const shouldAcquireLocalMedia = Boolean(
     (sessionId || skipLiveKit) &&
-      !connectError &&
-      (skipLiveKit || (!!token && !!livekitUrl)),
+    !connectError &&
+    (skipLiveKit || (!!token && !!livekitUrl)),
   );
 
   // ── Proctoring (MediaPipe) ─────────────────────────────────
