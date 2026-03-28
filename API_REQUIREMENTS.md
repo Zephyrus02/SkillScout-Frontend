@@ -178,7 +178,7 @@ This is the home dashboard. Currently renders an empty-state UI with hardcoded `
 ```json
 {
   "type": "technical | behavioral",
-  "focusArea": "General Coding | System Design | Data Structures | Soft Skills",
+  "difficultyLevel": 1 | 2 | 3,
   "durationMinutes": 15 | 30 | 45
 }
 ```

@@ -21,6 +21,11 @@ const LiveKitRoom = dynamic(
   { ssr: false },
 );
 
+const InterviewAudioOutputAura = dynamic(
+  () => import("@/components/interview/InterviewAudioOutputAura"),
+  { ssr: false },
+);
+
 const SESSION_STORAGE_KEY = "skillscout_interview_session";
 const VIDEO_SIGNALS_INTERVAL_MS = 10_000;
 
@@ -338,33 +343,6 @@ export default function InterviewRoom() {
 
         <title>AI Live Interview Room – SkillScout</title>
         <style>{`
-          @keyframes breathe {
-            0%, 100% { transform: scale(1); opacity: 0.8; }
-            50%       { transform: scale(1.05); opacity: 1; }
-          }
-          @keyframes wave {
-            0%, 100% { height: 10px; }
-            50%       { height: 24px; }
-          }
-          @keyframes pulse-slow {
-            0%, 100% { opacity: 1; }
-            50%       { opacity: 0.5; }
-          }
-          .animate-orb-breathe { animation: breathe 3s ease-in-out infinite; }
-          .animate-pulse-slow  { animation: pulse-slow 4s cubic-bezier(0.4,0,0.6,1) infinite; }
-          .orb-glow {
-            box-shadow: 0 0 60px 20px rgba(59, 130, 246, 0.3);
-          }
-          .bar {
-            width: 6px;
-            background: linear-gradient(to top, #3B82F6, #60A5FA);
-            border-radius: 9999px;
-            animation: wave 1s ease-in-out infinite;
-          }
-          .bar:nth-child(2) { animation-delay: 0.1s; }
-          .bar:nth-child(3) { animation-delay: 0.2s; }
-          .bar:nth-child(4) { animation-delay: 0.3s; }
-          .bar:nth-child(5) { animation-delay: 0.4s; }
           .custom-scrollbar::-webkit-scrollbar       { width: 6px; }
           .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
           .custom-scrollbar::-webkit-scrollbar-thumb {
@@ -524,30 +502,7 @@ export default function InterviewRoom() {
                   </span>
                 </div>
 
-                {/* Orb + waveform */}
-                <div className="relative z-10 flex flex-col items-center justify-center scale-90">
-                  <div className="w-56 h-56 relative flex items-center justify-center">
-                    <div className="absolute inset-0 bg-blue-400/20 rounded-full blur-3xl animate-pulse-slow" />
-                    <div className="absolute inset-4 bg-indigo-400/20 rounded-full blur-2xl animate-pulse" />
-                    <div className="w-28 h-28 rounded-full bg-linear-to-tr from-blue-500 to-indigo-600 shadow-lg orb-glow animate-orb-breathe flex items-center justify-center relative">
-                      <div className="w-24 h-24 rounded-full bg-linear-to-bl from-blue-400 to-indigo-500 opacity-90 blur-sm absolute" />
-                      <div className="w-full h-full rounded-full border border-white/20 absolute" />
-                    </div>
-                  </div>
-
-                  {/* Waveform bars */}
-                  <div className="mt-4 h-8 flex items-center justify-center gap-1">
-                    <div className="bar" style={{ height: 10 }} />
-                    <div className="bar" style={{ height: 16 }} />
-                    <div className="bar" style={{ height: 24 }} />
-                    <div className="bar" style={{ height: 12 }} />
-                    <div className="bar" style={{ height: 20 }} />
-                  </div>
-
-                  <p className="mt-2 text-slate-400 text-xs font-medium">
-                    AI Speaking...
-                  </p>
-                </div>
+                <InterviewAudioOutputAura demo={skipLiveKit} />
               </div>
             </div>
 

@@ -3,7 +3,8 @@
  *
  * Wrap any page that requires authentication.
  * - While auth state is resolving: shows a full-screen spinner.
- * - Once resolved with no user: immediately redirects to /auth/login.
+ * - Once resolved with no user: redirects to /auth/login (unless `loggingOut`,
+ *   in which case AuthContext is sending the user to `/`).
  * - Once resolved with a valid user: renders children.
  *
  * The guard uses `router.isReady` to avoid firing before Next.js has
@@ -20,15 +21,15 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, loggingOut } = useAuth();
   const router = useRouter();
 
-  const shouldRedirect = !loading && !isAuthenticated;
+  const unauthenticated = !loading && !isAuthenticated;
 
   useEffect(() => {
     if (!router.isReady) return;
-    if (shouldRedirect) {
-      // Preserve the intended destination so the user can be sent back after login
+    // During logout, AuthContext navigates to `/`; do not race with /auth/login.
+    if (unauthenticated && !loggingOut) {
       const destination = router.asPath;
       const loginUrl =
         destination && destination !== "/" && destination !== "/auth/login"
@@ -36,7 +37,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
           : "/auth/login";
       router.replace(loginUrl);
     }
-  }, [shouldRedirect, router]);
+  }, [unauthenticated, loggingOut, router]);
 
   // Show a spinner while the auth check is in progress
   if (loading) {
@@ -52,8 +53,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // Render nothing while the redirect is in-flight — prevents a content flash
-  if (shouldRedirect) {
+  // Render nothing while unauthenticated (login redirect or logout → home)
+  if (unauthenticated) {
     return null;
   }
 

@@ -16,6 +16,7 @@ import {
   clearAccessToken,
 } from "./token-storage";
 import { clearUserData } from "./user-storage";
+import { isClientLogoutInProgress } from "./client-logout";
 
 // Base URL — no trailing /api; we add /api per-route
 const BASE_URL =
@@ -120,7 +121,11 @@ apiClient.interceptors.response.use(
         _notifyRefreshSubscribers(null);
         clearAccessToken();
         clearUserData();
-        if (!isAuthPage && typeof window !== "undefined") {
+        if (
+          !isAuthPage &&
+          typeof window !== "undefined" &&
+          !isClientLogoutInProgress()
+        ) {
           window.location.href = "/auth/login";
         }
         return Promise.reject(error);

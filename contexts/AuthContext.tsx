@@ -35,6 +35,7 @@ import {
   hasUserSession,
 } from "@/lib/user-storage";
 import { clearCachedProfile } from "@/lib/profile-cache";
+import { setClientLogoutInProgress } from "@/lib/client-logout";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -84,6 +85,8 @@ interface AuthContextType {
     isNewUser?: boolean,
   ) => Promise<void>;
   logout: () => Promise<void>;
+  /** True while logout runs; prevents ProtectedRoute from racing to /auth/login */
+  loggingOut: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -175,6 +178,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [user, setUserState] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [authFlowNavigating, setAuthFlowNavigating] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // ── Load user on mount ──────────────────────────────────────────────────
 
@@ -425,17 +429,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const logout = async () => {
+    setLoggingOut(true);
+    setClientLogoutInProgress(true);
     try {
-      await authAPI.logout();
-    } catch (err) {
-      console.error("Logout error:", err);
-    } finally {
+      try {
+        await authAPI.logout();
+      } catch (err) {
+        console.error("Logout error:", err);
+      }
       clearSession();
       clearCachedProfile();
       setUserState(null);
-      // Return to the landing page (not the login page) so the user
-      // lands on a public page and can choose to sign in again.
-      await router.push("/");
+      await router.replace("/");
+    } finally {
+      setClientLogoutInProgress(false);
+      setLoggingOut(false);
     }
   };
 
@@ -452,6 +460,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     loading,
     isAuthenticated: !!user,
     authFlowNavigating,
+    loggingOut,
     setUser: handleSetUser,
     login,
     signup,

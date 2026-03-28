@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Link from "next/link";
+import { DIFFICULTY_BADGE, DIFFICULTY_LABELS } from "./practice/data";
 
 /* ─────────────────────────────────────────────────────────────
    Overview / Home  –  new-user empty state
@@ -29,19 +30,14 @@ const LOCKED_FEATURES = [
   },
 ];
 
-const FOCUS_AREAS = [
-  "General Coding",
-  "System Design",
-  "Data Structures",
-  "Soft Skills",
-];
-
 export default function OverviewSection() {
   const [interviewType, setInterviewType] = useState<
     "technical" | "behavioral"
   >("technical");
   const [duration, setDuration] = useState<15 | 30 | 45>(15);
-  const [focusArea, setFocusArea] = useState("General Coding");
+  const [difficulty, setDifficulty] = useState(3);
+  const diffLabel = DIFFICULTY_LABELS[difficulty - 1];
+  const diffBadge = DIFFICULTY_BADGE[difficulty - 1];
 
   return (
     <div>
@@ -235,6 +231,34 @@ export default function OverviewSection() {
                 </div>
               </div>
 
+              {/* Difficulty Level — matches Practice → Parameters */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Difficulty Level
+                  </label>
+                  <span
+                    className={`text-xs font-bold px-2 py-0.5 rounded ${diffBadge}`}
+                  >
+                    {diffLabel}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={1}
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"
+                />
+                <div className="flex justify-between mt-1 text-xs text-gray-400">
+                  <span>Junior</span>
+                  <span>Mid-Level</span>
+                  <span>Senior/Staff</span>
+                </div>
+              </div>
+
               {/* Duration */}
               <div>
                 <label className="block text-xs font-semibold text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-wide">
@@ -257,46 +281,12 @@ export default function OverviewSection() {
                 </div>
               </div>
 
-              {/* Focus Area */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-wide">
-                  Focus Area
-                </label>
-                <select
-                  value={focusArea}
-                  onChange={(e) => setFocusArea(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm p-3 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
-                >
-                  {FOCUS_AREAS.map((a) => (
-                    <option key={a}>{a}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Divider + AI status */}
               <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                    <span className="material-icons text-primary">
-                      smart_toy
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-900 dark:text-white">
-                      AI Interviewer Ready
-                    </p>
-                    <p className="text-[10px] text-gray-400">
-                      Estimated wait:{" "}
-                      <span className="text-green-500 font-bold">0s</span>
-                    </p>
-                  </div>
-                </div>
-
                 <Link
-                  href="/dashboard/practice"
+                  href="/dashboard/prelaunch"
                   className="w-full bg-primary hover:bg-primary-hover text-white py-4 px-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 text-sm group"
                 >
-                  Start Your First Mock Interview
+                  Quick Start Your Interview
                   <span className="material-icons text-lg group-hover:translate-x-0.5 transition-transform">
                     arrow_forward
                   </span>
