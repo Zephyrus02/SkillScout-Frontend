@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
+import { toast } from "sonner";
 import {
   useMediaPipeProctoring,
   getWarningMessage,
@@ -45,14 +46,23 @@ export default function InterviewRoom() {
         : null;
     if (stored) {
       try {
-        const { token: t, livekitUrl: u } = JSON.parse(stored);
+        const { token: t, livekitUrl: u } = JSON.parse(stored) as {
+          token?: string;
+          livekitUrl?: string;
+        };
         if (t && u) {
-          setToken(t);
-          setLivekitUrl(u);
-          return;
+          queueMicrotask(() => {
+            if (!cancelled) {
+              setToken(t);
+              setLivekitUrl(u);
+            }
+          });
+          return () => {
+            cancelled = true;
+          };
         }
       } catch {
-        // ignore
+        // ignore invalid JSON; fall through to join
       }
     }
     interviewSessionsApi
@@ -121,24 +131,36 @@ export default function InterviewRoom() {
   };
 
   // ── End session ──────────────────────────────────────────
-  const endSession = useCallback(() => {
-    stopCamera();
-    try {
-      sessionStorage.removeItem(SESSION_STORAGE_KEY);
-    } catch {
-      // ignore
-    }
-    router.push("/dashboard/analysis");
-  }, [router]);
+  const endSession = useCallback(
+    (options?: { malpractice?: boolean }) => {
+      stopCamera();
+      try {
+        sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      } catch {
+        // ignore
+      }
+      if (options?.malpractice) {
+        toast.error(
+          "Interview terminated due to malpractice. You have been returned to Practice.",
+          { duration: 8000 },
+        );
+        void router.push("/dashboard/practice");
+      } else {
+        void router.push("/dashboard/analysis");
+      }
+    },
+    [router],
+  );
 
   /** Only open camera/mic when actually in the interview room UI (not empty / error / connecting). */
-  const shouldAcquireLocalMedia =
+  const shouldAcquireLocalMedia = Boolean(
     (sessionId || skipLiveKit) &&
-    !connectError &&
-    (skipLiveKit || (!!token && !!livekitUrl));
+      !connectError &&
+      (skipLiveKit || (!!token && !!livekitUrl)),
+  );
 
   // ── Proctoring (MediaPipe) ─────────────────────────────────
-  const proctoring = useMediaPipeProctoring(videoRef, !!sessionId && !!token);
+  const proctoring = useMediaPipeProctoring(videoRef, shouldAcquireLocalMedia);
 
   // ── Video signals: batch every 10s and POST ─────────────────
   const signalsBatchRef = useRef<VideoSignalItem[]>([]);
@@ -199,7 +221,7 @@ export default function InterviewRoom() {
     // Already gave 3 warnings → this 4th violation terminates the session
     if (warningCountRef.current >= MAX_WARNINGS) {
       terminatingRef.current = true;
-      endSession();
+      endSession({ malpractice: true });
       return;
     }
 
@@ -217,8 +239,14 @@ export default function InterviewRoom() {
       warningNumber: newCount,
       totalWarnings: MAX_WARNINGS,
     });
+    // Violation type drives warning steps; omit detectedObjects (updates every tick).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [proctoring.violation, proctoring.isReady, proctoring.modelLoaded]);
+  }, [
+    proctoring.violation,
+    proctoring.isReady,
+    proctoring.modelLoaded,
+    endSession,
+  ]);
 
   // ── Boot camera / mic (gated + cancel-safe async getUserMedia) ───────────
   useEffect(() => {
@@ -395,7 +423,8 @@ export default function InterviewRoom() {
             </button>
 
             <button
-              onClick={endSession}
+              type="button"
+              onClick={() => endSession()}
               className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors flex items-center gap-2"
             >
               <span className="material-icons text-base">call_end</span>
@@ -439,7 +468,7 @@ export default function InterviewRoom() {
                   />
 
                   {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
                   {/* Bottom overlay: name + status */}
                   <div className="absolute bottom-4 left-4">
@@ -500,8 +529,8 @@ export default function InterviewRoom() {
                   <div className="w-56 h-56 relative flex items-center justify-center">
                     <div className="absolute inset-0 bg-blue-400/20 rounded-full blur-3xl animate-pulse-slow" />
                     <div className="absolute inset-4 bg-indigo-400/20 rounded-full blur-2xl animate-pulse" />
-                    <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 shadow-lg orb-glow animate-orb-breathe flex items-center justify-center relative">
-                      <div className="w-24 h-24 rounded-full bg-gradient-to-bl from-blue-400 to-indigo-500 opacity-90 blur-sm absolute" />
+                    <div className="w-28 h-28 rounded-full bg-linear-to-tr from-blue-500 to-indigo-600 shadow-lg orb-glow animate-orb-breathe flex items-center justify-center relative">
+                      <div className="w-24 h-24 rounded-full bg-linear-to-bl from-blue-400 to-indigo-500 opacity-90 blur-sm absolute" />
                       <div className="w-full h-full rounded-full border border-white/20 absolute" />
                     </div>
                   </div>
@@ -550,7 +579,7 @@ export default function InterviewRoom() {
                   {/* AI message */}
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-sm ring-2 ring-white">
+                      <div className="w-6 h-6 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-sm ring-2 ring-white">
                         <span
                           className="material-icons text-white"
                           style={{ fontSize: 10 }}
@@ -605,7 +634,7 @@ export default function InterviewRoom() {
                   {/* AI typing indicator */}
                   <div className="flex flex-col gap-2 opacity-60">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-sm">
+                      <div className="w-6 h-6 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-sm">
                         <span
                           className="material-icons text-white"
                           style={{ fontSize: 10 }}
@@ -797,7 +826,7 @@ export default function InterviewRoom() {
         </main>
 
         {/* Subtle background gradient */}
-        <div className="fixed inset-0 pointer-events-none z-[-1] opacity-30 bg-gradient-to-b from-blue-50/50 via-transparent to-transparent" />
+        <div className="fixed inset-0 pointer-events-none z-[-1] opacity-30 bg-linear-to-b from-blue-50/50 via-transparent to-transparent" />
       </div>
     </>
   );
@@ -818,8 +847,8 @@ export default function InterviewRoom() {
 
   return (
     <LiveKitRoom
-      token={token}
-      serverUrl={livekitUrl}
+      token={token!}
+      serverUrl={livekitUrl!}
       connect
       audio
       video={false}
