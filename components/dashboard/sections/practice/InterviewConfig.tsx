@@ -6,6 +6,7 @@ import {
   DURATIONS,
   PERSONAS,
 } from "./data";
+import { AmazonLogo, MetaLogo, NetflixLogo } from "./CompanyLogos";
 
 // Google logo SVG helper
 function GoogleLogo() {
@@ -130,25 +131,19 @@ export default function InterviewConfig({
             {
               id: "amazon",
               label: "Amazon",
-              icon: "shopping_bag",
-              iconCls: "text-gray-800 dark:text-white",
+              logo: <AmazonLogo />,
               border: "border-yellow-400",
             },
             {
               id: "meta",
               label: "Meta",
-              icon: "public",
-              iconCls: "text-blue-600",
+              logo: <MetaLogo />,
               border: "border-blue-600",
             },
             {
               id: "netflix",
               label: "Netflix",
-              custom: (
-                <span className="text-2xl font-bold text-red-600 tracking-tighter">
-                  N
-                </span>
-              ),
+              logo: <NetflixLogo />,
               border: "border-red-600",
             },
           ].map((c) => (

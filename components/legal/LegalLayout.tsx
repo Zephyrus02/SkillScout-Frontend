@@ -66,16 +66,13 @@ export default function LegalLayout({
         )}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/icon?family=Material+Icons&display=optional"
+          href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap"
         />
       </Head>
 
       {/* Navbar */}
       <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-surface-dark px-6 lg:px-10 py-3 shadow-sm">
-        <Link
-          href="/"
-          className="flex items-center"
-        >
+        <Link href="/" className="flex items-center">
           <Image
             src="/brandimg.svg"
             alt="SkillScout"

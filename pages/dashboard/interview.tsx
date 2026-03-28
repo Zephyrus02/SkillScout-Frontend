@@ -26,12 +26,13 @@ const VIDEO_SIGNALS_INTERVAL_MS = 10_000;
 export default function InterviewRoom() {
   const router = useRouter();
   const sessionId = (router.query.sessionId as string) ?? null;
+  const skipLiveKit = (router.query.skipLiveKit as string) === "true";
   const [token, setToken] = useState<string | null>(null);
   const [livekitUrl, setLivekitUrl] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId || skipLiveKit) return;
     let cancelled = false;
     const stored =
       typeof window !== "undefined"
@@ -65,7 +66,7 @@ export default function InterviewRoom() {
     return () => {
       cancelled = true;
     };
-  }, [sessionId]);
+  }, [sessionId, skipLiveKit]);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -99,22 +100,6 @@ export default function InterviewRoom() {
     return `${m}m ${String(s).padStart(2, "0")}s`;
   };
 
-  // ── Start webcam ────────────────────────────────────────────────────────
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: true,
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch {
-      // Camera permission denied or unavailable — fail silently
-    }
-  }, []);
-
   // ── Timer interval ──────────────────────────────────────────────────────
   useEffect(() => {
     const id = setInterval(() => setElapsed((e) => e + 1), 1000);
@@ -139,8 +124,13 @@ export default function InterviewRoom() {
       // ignore
     }
     router.push("/dashboard/analysis");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
+
+  /** Only open camera/mic when actually in the interview room UI (not empty / error / connecting). */
+  const shouldAcquireLocalMedia =
+    (sessionId || skipLiveKit) &&
+    !connectError &&
+    (skipLiveKit || (!!token && !!livekitUrl));
 
   // ── Proctoring (MediaPipe) ─────────────────────────────────
   const proctoring = useMediaPipeProctoring(videoRef, !!sessionId && !!token);
@@ -148,7 +138,7 @@ export default function InterviewRoom() {
   // ── Video signals: batch every 10s and POST ─────────────────
   const signalsBatchRef = useRef<VideoSignalItem[]>([]);
   useEffect(() => {
-    if (!sessionId || !token) return;
+    if (!sessionId || !token || skipLiveKit) return;
     const interval = setInterval(() => {
       if (signalsBatchRef.current.length === 0) return;
       const batch = [...signalsBatchRef.current];
@@ -158,10 +148,10 @@ export default function InterviewRoom() {
         .catch(() => {});
     }, VIDEO_SIGNALS_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [sessionId, token]);
+  }, [sessionId, token, skipLiveKit]);
   // Sample at ~1 fps and push to batch (use proctoring state)
   useEffect(() => {
-    if (!sessionId || !token || !proctoring.isReady) return;
+    if (!sessionId || !token || skipLiveKit || !proctoring.isReady) return;
     const t = setInterval(() => {
       const faceVisiblePct = proctoring.faceCount >= 1 ? 100 : 0;
       const avgGazeScore = proctoring.isLookingSideways ? 0.3 : 0.9;
@@ -186,6 +176,7 @@ export default function InterviewRoom() {
     proctoring.isReady,
     proctoring.faceCount,
     proctoring.isLookingSideways,
+    skipLiveKit,
   ]);
 
   // Fire a warning toast on each violation (with cooldown).
@@ -224,16 +215,42 @@ export default function InterviewRoom() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proctoring.violation, proctoring.isReady, proctoring.modelLoaded]);
 
-  // ── Boot camera ────────────────────────────────────────────────────────
+  // ── Boot camera / mic (gated + cancel-safe async getUserMedia) ───────────
   useEffect(() => {
-    startCamera();
+    if (!shouldAcquireLocalMedia) {
+      return () => {
+        stopCamera();
+      };
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: true,
+        });
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch {
+        // Camera permission denied or unavailable — fail silently
+      }
+    })();
+
     return () => {
+      cancelled = true;
       stopCamera();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startCamera]);
+  }, [shouldAcquireLocalMedia]);
 
-  if (!sessionId) {
+  if (!sessionId && !skipLiveKit) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
@@ -267,15 +284,7 @@ export default function InterviewRoom() {
     );
   }
 
-  if (!token || !livekitUrl) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <p className="text-slate-600">Connecting to interview room…</p>
-      </div>
-    );
-  }
-
-  const roomContent = (
+  const pageContent = (
     <>
       {/* ── Malpractice warning overlay (fixed, above all content) ── */}
       <MalpracticeWarningToast
@@ -383,6 +392,15 @@ export default function InterviewRoom() {
         </header>
 
         {/* ── MAIN GRID ──────────────────────────────────────────────────── */}
+        {skipLiveKit && (
+          <div className="px-6 mb-4">
+            <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs rounded-2xl p-3 text-center shadow-sm">
+              LiveKit is disabled in this demo flow, so the room is for UI
+              preview only.
+            </div>
+          </div>
+        )}
+
         <main className="flex-1 overflow-hidden p-6">
           <div className="grid grid-cols-12 gap-6 h-full">
             {/* ── LEFT COLUMN (col 1-6) ──────────────────────────────────── */}
@@ -771,6 +789,20 @@ export default function InterviewRoom() {
     </>
   );
 
+  if (!token || !livekitUrl) {
+    if (!skipLiveKit) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+          <p className="text-slate-600">Connecting to interview room…</p>
+        </div>
+      );
+    }
+  }
+
+  if (skipLiveKit) {
+    return pageContent;
+  }
+
   return (
     <LiveKitRoom
       token={token}
@@ -790,7 +822,7 @@ export default function InterviewRoom() {
         setConnectError((e as Error)?.message ?? "Connection error");
       }}
     >
-      {roomContent}
+      {pageContent}
     </LiveKitRoom>
   );
 }

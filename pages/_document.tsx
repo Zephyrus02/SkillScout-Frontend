@@ -59,9 +59,15 @@ export default function Document() {
         <link rel="apple-touch-icon" href="/favicon/apple-touch-icon.png" />
         <link rel="manifest" href="/favicon/site.webmanifest" />
 
-        {/* Material Icons (used across marketing + dashboard UI) */}
+        {/* Material Icons (marketing + dashboard); display=swap so ligatures don’t stick as fallback text */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
-          href="https://fonts.googleapis.com/icon?family=Material+Icons&display=optional"
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap"
           rel="stylesheet"
         />
 

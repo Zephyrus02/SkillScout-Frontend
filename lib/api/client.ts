@@ -1,5 +1,11 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
+const PARSED_TIMEOUT = Number(process.env.NEXT_PUBLIC_API_FETCH_TIMEOUT_MS);
+const FETCH_TIMEOUT_MS =
+  Number.isFinite(PARSED_TIMEOUT) && PARSED_TIMEOUT > 0
+    ? PARSED_TIMEOUT
+    : 45_000;
+
 async function request<T>(
   endpoint: string,
   options: RequestInit = {},
@@ -8,14 +14,35 @@ async function request<T>(
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  const response = await fetch(url, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers as Record<string, string>),
-    },
-    ...options,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers as Record<string, string>),
+      },
+      ...options,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    const aborted =
+      (typeof DOMException !== "undefined" &&
+        err instanceof DOMException &&
+        err.name === "AbortError") ||
+      (err instanceof Error && err.name === "AbortError");
+    if (aborted) {
+      throw new Error(
+        `Request timed out after ${FETCH_TIMEOUT_MS / 1000}s. Check that the API is running and NEXT_PUBLIC_API_URL is correct.`,
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     const error = await response

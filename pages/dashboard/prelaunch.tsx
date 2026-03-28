@@ -26,19 +26,28 @@ import type {
 ───────────────────────────────────────────────────────────────── */
 
 const SESSION_STORAGE_KEY = "skillscout_interview_session";
+const SKIP_LIVEKIT_DEMO = process.env.NEXT_PUBLIC_SKIP_LIVEKIT_DEMO === "true";
 
 function StartInterviewButton({
   allOk,
   onStarted,
+  skipLiveKitDemo,
+  onSkipLiveKit,
 }: {
   allOk: boolean;
   onStarted: (sessionId: string, token: string, livekitUrl: string) => void;
+  skipLiveKitDemo?: boolean;
+  onSkipLiveKit?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleClick = async () => {
     if (!allOk || loading) return;
+    if (skipLiveKitDemo) {
+      onSkipLiveKit?.();
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -99,6 +108,26 @@ export default function PrelaunchPage() {
   // ── MediaPipe face / object proctoring ───────────────────
   const proctoring = useMediaPipeProctoring(videoRef, cameraStatus !== "error");
 
+  /** Once the user has a valid clear reading on prelaunch, keep the row "Clear"
+   *  so brief movement / dropout does not flip back to error or "Looking…". */
+  const [facePrelaunchCleared, setFacePrelaunchCleared] = useState(false);
+
+  useEffect(() => {
+    if (facePrelaunchCleared) return;
+    if (proctoring.isLoading || !proctoring.isReady || !proctoring.modelLoaded)
+      return;
+    if (proctoring.violation === null && proctoring.faceCount === 1) {
+      queueMicrotask(() => setFacePrelaunchCleared(true));
+    }
+  }, [
+    facePrelaunchCleared,
+    proctoring.isLoading,
+    proctoring.isReady,
+    proctoring.modelLoaded,
+    proctoring.violation,
+    proctoring.faceCount,
+  ]);
+
   // Derive a CheckStatus for the face detection row
   let faceCheckStatus: CheckStatus;
   let faceCheckBadgeLabel: string;
@@ -113,15 +142,18 @@ export default function PrelaunchPage() {
     faceCheckBadgeLabel = "Failed";
     faceCheckDescription =
       "Face detection could not be loaded after 3 attempts. Please use Chrome or refresh the page.";
-  } else if (proctoring.faceCount === 0 || proctoring.violation === "no_face") {
-    faceCheckStatus = "checking";
-    faceCheckBadgeLabel = "Looking…";
-    faceCheckDescription = "Please position your face within the camera frame.";
-  } else if (proctoring.violation === null && proctoring.faceCount === 1) {
+  } else if (
+    facePrelaunchCleared ||
+    (proctoring.violation === null && proctoring.faceCount === 1)
+  ) {
     faceCheckStatus = "ok";
     faceCheckBadgeLabel = "Clear";
     faceCheckDescription =
       "One face detected, looking at screen, no banned objects.";
+  } else if (proctoring.faceCount === 0 || proctoring.violation === "no_face") {
+    faceCheckStatus = "checking";
+    faceCheckBadgeLabel = "Looking…";
+    faceCheckDescription = "Please position your face within the camera frame.";
   } else {
     faceCheckStatus = "error";
     faceCheckBadgeLabel = "Issue Detected";
@@ -190,14 +222,22 @@ export default function PrelaunchPage() {
 
   // ── Camera init ──────────────────────────────────────────
   useEffect(() => {
-    let stream: MediaStream;
-    const video = videoRef.current;
+    let cancelled = false;
+    let acquiredStream: MediaStream | null = null;
+    const videoEl = videoRef.current;
+
     (async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
+        const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: false,
         });
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        acquiredStream = stream;
+        const video = videoRef.current;
         if (video) {
           video.srcObject = stream;
         }
@@ -205,39 +245,64 @@ export default function PrelaunchPage() {
         setCameraLabel(track?.label || "Camera");
         setCameraStatus("ok");
       } catch {
-        setCameraStatus("error");
-        setCameraLabel("Access denied");
+        if (!cancelled) {
+          setCameraStatus("error");
+          setCameraLabel("Access denied");
+        }
       }
     })();
+
     return () => {
-      stream?.getTracks().forEach((t) => t.stop());
-      if (video) {
-        video.srcObject = null;
+      cancelled = true;
+      acquiredStream?.getTracks().forEach((t) => t.stop());
+      if (videoEl) {
+        videoEl.srcObject = null;
       }
     };
   }, []);
 
   // ── Mic init + AnalyserNode + quality sampling ───────────
   useEffect(() => {
-    let audioCtx: AudioContext;
-    let analyser: AnalyserNode;
-    let source: MediaStreamAudioSourceNode;
+    let cancelled = false;
+    let acquiredStream: MediaStream | null = null;
+    let audioCtx: AudioContext | undefined;
+    let analyser: AnalyserNode | undefined;
+    let source: MediaStreamAudioSourceNode | undefined;
     // Quality sampling constants
     const SAMPLE_WINDOW_MS = 3000; // how long to sample before judging
     const PASS_THRESHOLD = 6; // average level (0–100 scaled) to pass
     const SAMPLE_INTERVAL_MS = 80; // how often to sample within the window
     let samples: number[] = [];
     let windowStart = 0;
-    let sampleTimer: ReturnType<typeof setInterval>;
-    let countdownTimer: ReturnType<typeof setInterval>;
+    let sampleTimer: ReturnType<typeof setInterval> | undefined;
+    let countdownTimer: ReturnType<typeof setInterval> | undefined;
+    let restartTimeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    const clearQualityTimers = () => {
+      if (sampleTimer !== undefined) {
+        clearInterval(sampleTimer);
+        sampleTimer = undefined;
+      }
+      if (countdownTimer !== undefined) {
+        clearInterval(countdownTimer);
+        countdownTimer = undefined;
+      }
+      if (restartTimeoutId !== undefined) {
+        clearTimeout(restartTimeoutId);
+        restartTimeoutId = undefined;
+      }
+    };
 
     const startQualityWindow = () => {
+      if (cancelled) return;
+      clearQualityTimers();
       samples = [];
       windowStart = Date.now();
       setMicCountdown(Math.ceil(SAMPLE_WINDOW_MS / 1000));
 
       // Countdown display
       countdownTimer = setInterval(() => {
+        if (cancelled) return;
         const elapsed = Date.now() - windowStart;
         const remaining = Math.max(
           0,
@@ -248,7 +313,7 @@ export default function PrelaunchPage() {
 
       // Sample mic levels
       sampleTimer = setInterval(() => {
-        if (!analyser) return;
+        if (cancelled || !analyser) return;
         const d = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteFrequencyData(d);
         const avg = d.reduce((a, b) => a + b, 0) / d.length;
@@ -257,14 +322,14 @@ export default function PrelaunchPage() {
 
         const elapsed = Date.now() - windowStart;
         if (elapsed >= SAMPLE_WINDOW_MS) {
-          clearInterval(sampleTimer);
-          clearInterval(countdownTimer);
+          clearQualityTimers();
           const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
           if (mean >= PASS_THRESHOLD) {
-            setMicQuality("passed");
+            if (!cancelled) setMicQuality("passed");
           } else {
-            // Failed – restart window after a short pause
-            setTimeout(startQualityWindow, 500);
+            restartTimeoutId = setTimeout(() => {
+              if (!cancelled) startQualityWindow();
+            }, 500);
           }
         }
       }, SAMPLE_INTERVAL_MS);
@@ -276,21 +341,30 @@ export default function PrelaunchPage() {
           audio: true,
           video: false,
         });
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        acquiredStream = stream;
         micStreamRef.current = stream;
         const track = stream.getAudioTracks()[0];
         setMicLabel(track?.label || "Microphone");
         setMicPermission("ok");
 
-        audioCtx = new AudioContext();
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        source = audioCtx.createMediaStreamSource(stream);
-        source.connect(analyser);
+        const ctx = new AudioContext();
+        audioCtx = ctx;
+        const an = ctx.createAnalyser();
+        analyser = an;
+        an.fftSize = 256;
+        const src = ctx.createMediaStreamSource(stream);
+        source = src;
+        src.connect(an);
 
         // Continuous level display via rAF
-        const data = new Uint8Array(analyser.frequencyBinCount);
+        const data = new Uint8Array(an.frequencyBinCount);
         const tick = () => {
-          analyser.getByteFrequencyData(data);
+          if (cancelled) return;
+          an.getByteFrequencyData(data);
           const avg = data.reduce((a, b) => a + b, 0) / data.length;
           setMicLevel(Math.min(98, Math.max(2, (avg / 255) * 100 * 3.5)));
           animFrameRef.current = requestAnimationFrame(tick);
@@ -300,17 +374,25 @@ export default function PrelaunchPage() {
         // Start quality sampling window
         startQualityWindow();
       } catch {
-        setMicPermission("error");
-        setMicLabel("Access denied");
+        if (!cancelled) {
+          setMicPermission("error");
+          setMicLabel("Access denied");
+        }
       }
     })();
 
     return () => {
+      cancelled = true;
       cancelAnimationFrame(animFrameRef.current);
-      clearInterval(sampleTimer);
-      clearInterval(countdownTimer);
-      micStreamRef.current?.getTracks().forEach((t) => t.stop());
-      audioCtx?.close();
+      clearQualityTimers();
+      acquiredStream?.getTracks().forEach((t) => t.stop());
+      micStreamRef.current = null;
+      try {
+        source?.disconnect();
+      } catch {
+        /* ignore */
+      }
+      void audioCtx?.close();
     };
   }, []);
 
@@ -650,6 +732,10 @@ export default function PrelaunchPage() {
 
               <StartInterviewButton
                 allOk={allOk}
+                skipLiveKitDemo={SKIP_LIVEKIT_DEMO}
+                onSkipLiveKit={() =>
+                  router.push("/dashboard/interview?skipLiveKit=true")
+                }
                 onStarted={(sessionId, token, livekitUrl) => {
                   try {
                     sessionStorage.setItem(
