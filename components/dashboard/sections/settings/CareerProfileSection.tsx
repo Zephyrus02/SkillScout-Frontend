@@ -160,9 +160,6 @@ export default function CareerProfileSection() {
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
               Targets
             </p>
-            <span className="text-xs text-gray-300 dark:text-gray-600 italic">
-              — set in Profile Setup · Step 3
-            </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Desired Industry */}

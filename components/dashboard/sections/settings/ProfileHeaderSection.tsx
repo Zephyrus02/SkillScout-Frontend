@@ -21,10 +21,10 @@ const PROFILE_FIELDS: {
   key: keyof Omit<ProfileHeader, "avatarUrl" | "avatarInitials">;
 }[] = [
   { label: "Full Name", key: "name" },
-  { label: "Title / Position", key: "title" },
-  { label: "Location (Current)", key: "location" },
-  { label: "Current Salary (override)", key: "salary" },
-  { label: "Notice Period (override)", key: "noticePeriod" },
+  { label: "Bio", key: "title" },
+  { label: "Current Location", key: "location" },
+  { label: "Current Salary", key: "salary" },
+  { label: "Notice Period", key: "noticePeriod" },
 ];
 
 function toInitials(name: string) {
@@ -89,16 +89,23 @@ export default function ProfileHeaderSection() {
   const save = async () => {
     setSaving(true);
     setSaveError(null);
+    
+    const salaryVal = draft.salary;
+    const normalizedSalary =
+      salaryVal && !salaryVal.trim().endsWith("LPA")
+        ? `${salaryVal.trim()} LPA`
+        : salaryVal;
+
     try {
       await profileAPI.updateHeader({
         name: draft.name,
         title: draft.title,
         location: draft.location,
         experience: draft.experience,
-        salary: draft.salary,
+        salary: normalizedSalary,
         noticePeriod: draft.noticePeriod,
       });
-      setProfile({ ...draft, avatarInitials: toInitials(draft.name) });
+      setProfile({ ...draft, salary: normalizedSalary, avatarInitials: toInitials(draft.name) });
       setEditing(false);
     } catch (e: unknown) {
       const err = e as {
@@ -194,10 +201,6 @@ export default function ProfileHeaderSection() {
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
                   {profile.title}
                 </p>
-                <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                  <span className="material-icons text-sm">update</span>
-                  Profile last updated - Today
-                </p>
               </div>
               <div className="flex gap-2 flex-wrap justify-end">
                 <button
@@ -228,7 +231,7 @@ export default function ProfileHeaderSection() {
                 {
                   icon: "attach_money",
                   label: "Current Salary",
-                  value: profile.salary,
+                  value: profile.salary ? (profile.salary.endsWith("LPA") ? profile.salary : `${profile.salary} LPA`) : "",
                 },
                 {
                   icon: "calendar_month",
@@ -264,13 +267,59 @@ export default function ProfileHeaderSection() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {label}
                 </label>
-                <input
-                  className={inputCls}
-                  value={draft[key] as string}
-                  onChange={(e) =>
-                    setDraft((d) => ({ ...d, [key]: e.target.value }))
-                  }
-                />
+                {key === "salary" ? (
+                  <div className="relative">
+                    <input
+                      type="number"
+                      className={`${inputCls} pr-14`}
+                      placeholder="e.g. 12"
+                      value={(draft[key] as string).replace(/\s*LPA$/i, "")}
+                      onChange={(e) =>
+                        setDraft((d) => ({ ...d, [key]: e.target.value }))
+                      }
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium pointer-events-none">
+                      LPA
+                    </span>
+                  </div>
+                ) : key === "noticePeriod" ? (
+                  <select
+                    className={`${inputCls} appearance-none`}
+                    value={draft[key] as string}
+                    onChange={(e) =>
+                      setDraft((d) => ({ ...d, [key]: e.target.value }))
+                    }
+                  >
+                    <option value="">Select notice period…</option>
+                    <option value="Available to join immediately">Available to join immediately</option>
+                    <option value="1 month">1 month</option>
+                    <option value="2 months">2 months</option>
+                    <option value="3 months">3 months</option>
+                    <option value=">3 months">&gt;3 months</option>
+                  </select>
+                ) : key === "title" ? (
+                  <div>
+                    <input
+                      className={inputCls}
+                      maxLength={100}
+                      value={draft[key] as string}
+                      onChange={(e) =>
+                        setDraft((d) => ({ ...d, [key]: e.target.value }))
+                      }
+                    />
+                    <div className="text-right text-xs text-gray-500 mt-1">
+                      {((draft[key] as string) || "").length}/100
+                    </div>
+                  </div>
+                ) : (
+                  <input
+                    className={inputCls}
+                    value={draft[key] as string}
+                    onChange={(e) =>
+                      setDraft((d) => ({ ...d, [key]: e.target.value }))
+                    }
+                  />
+                )}
               </div>
             ))}
             {saveError && (
