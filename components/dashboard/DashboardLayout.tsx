@@ -14,6 +14,12 @@ const NAV_ITEMS = [
     extraPaths: [] as string[],
   },
   {
+    label: "Practice",
+    href: "/dashboard/practice",
+    icon: "fitness_center",
+    exact: false,
+  },
+  {
     label: "Goals & Milestones",
     href: "/dashboard/goals",
     icon: "flag",
@@ -21,23 +27,17 @@ const NAV_ITEMS = [
     extraPaths: [] as string[],
   },
   {
+    label: "Analytics",
+    href: "/dashboard/weak-areas",
+    icon: "analytics",
+    exact: false,
+  },
+  {
     label: "My Interviews",
     href: "/dashboard/history",
     icon: "videocam",
     exact: false,
     extraPaths: ["/dashboard/analysis"],
-  },
-  {
-    label: "Practice",
-    href: "/dashboard/practice",
-    icon: "fitness_center",
-    exact: false,
-  },
-  {
-    label: "Analytics",
-    href: "/dashboard/weak-areas",
-    icon: "analytics",
-    exact: false,
   },
   {
     label: "Settings",

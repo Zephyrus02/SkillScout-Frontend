@@ -4,7 +4,7 @@ import GoalCard from "./GoalCard";
 import ReadinessGate from "./ReadinessGate";
 import WeeklyTarget from "./WeeklyTarget";
 import MilestonesList from "./MilestonesList";
-import SchedulePanel from "./SchedulePanel";
+import RoadmapPanel from "./RoadmapPanel";
 
 export default function GoalsSectionContent() {
   return (
@@ -37,7 +37,7 @@ export default function GoalsSectionContent() {
         <ReadinessGate />
         <WeeklyTarget />
         <MilestonesList />
-        <SchedulePanel />
+        <RoadmapPanel />
       </div>
     </div>
   );

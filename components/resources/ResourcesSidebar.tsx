@@ -58,9 +58,9 @@ export default function ResourcesSidebar({
           </div>
           <h3 className="text-xl font-bold mb-2">Crack the Interview</h3>
           <p className="text-violet-100 text-sm mb-4 leading-relaxed">
-            Join 50,000+ engineers and placement-focused college students
-            receiving weekly system design tips and coding patterns directly to
-            their inbox.
+            Join fellow engineers and placement-focused college students who
+            have doubled their offer rates using SkillScout. Start your first
+            mock interview today.
           </p>
           {subscribed ? (
             <div className="flex items-center gap-2 py-3 text-sm font-semibold text-white bg-white/20 rounded-lg px-4">
