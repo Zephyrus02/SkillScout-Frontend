@@ -21,6 +21,7 @@ import Step5PlanSelect, {
 import Step5Review from "@/components/profile-setup/Step5Review";
 import { profileAPI, onboardingAPI } from "@/lib/api";
 import { getUserData } from "@/lib/user-storage";
+import { useAuth } from "@/contexts/AuthContext";
 
 const DRAFT_STORAGE_KEY = "skillscout_onboarding_draft";
 
@@ -35,6 +36,7 @@ const STEP_TITLES: Record<number, string> = {
 
 export default function ProfileSetupPage() {
   const router = useRouter();
+  const { user: authUser, loading: authLoading } = useAuth();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -168,6 +170,13 @@ export default function ProfileSetupPage() {
     setStep((s) => Math.max(s - 1, 0));
   };
 
+  // Redirect completed users away from profile-setup (auth state is the source of truth)
+  useEffect(() => {
+    if (!authLoading && authUser?.onboardingCompleted) {
+      router.replace("/dashboard");
+    }
+  }, [authUser, authLoading, router]);
+
   // Load progress on mount
   const [progressLoaded, setProgressLoaded] = useState(false);
   useEffect(() => {
@@ -177,10 +186,6 @@ export default function ProfileSetupPage() {
       .then((res) => {
         if (!cancelled && res.success && res.data) {
           const d = res.data;
-          if (d.hasAccess) {
-            router.replace("/dashboard");
-            return;
-          }
           if (d.draftData) {
             const dd = d.draftData as Record<string, unknown>;
             if (dd.personalData) {
