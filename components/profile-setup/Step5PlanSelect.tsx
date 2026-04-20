@@ -333,6 +333,7 @@ export default function Step5PlanSelect({
 
         onPaymentComplete?.("completed");
         setPaymentStatus("success");
+        onContinue();
       } catch (e) {
         const msg =
           e instanceof Error ? e.message : "Payment failed. Please try again.";
