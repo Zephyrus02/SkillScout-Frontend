@@ -906,6 +906,7 @@ export interface User {
   email: string;
   name?: string;
   image?: string;
+  avatar?: string;
   role: string;
   roles?: string[] | string;
   emailConfirmedAt: Date | null;

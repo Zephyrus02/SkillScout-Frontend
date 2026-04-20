@@ -20,6 +20,7 @@ import Step5PlanSelect, {
 } from "@/components/profile-setup/Step5PlanSelect";
 import Step5Review from "@/components/profile-setup/Step5Review";
 import { profileAPI, onboardingAPI } from "@/lib/api";
+import { getUserData } from "@/lib/user-storage";
 
 const STEP_TITLES: Record<number, string> = {
   0: "Let's start with the basics",
@@ -228,6 +229,18 @@ export default function ProfileSetupPage() {
               }));
             }
           }
+          // Back-fill profile picture from OAuth provider if not already saved
+          const cachedUser = getUserData();
+          if (cachedUser) {
+            const oauthAvatar = cachedUser.avatar || cachedUser.image || null;
+            if (oauthAvatar) {
+              setPersonalData((prev) => ({
+                ...prev,
+                profilePictureUrl: prev.profilePictureUrl || oauthAvatar,
+              }));
+            }
+          }
+
           if (d.currentStep >= 0 && d.currentStep <= 5) {
             setStep(d.currentStep);
           }
