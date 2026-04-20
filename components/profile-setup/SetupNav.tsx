@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Image from "next/image";
 
 interface SetupNavProps {
@@ -10,8 +9,8 @@ export default function SetupNav({ userName }: SetupNavProps) {
     <nav className="w-full border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-background-dark/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center">
+          {/* Logo — non-navigable during setup to prevent wizard bypass */}
+          <span className="flex items-center cursor-default select-none">
             <Image
               src="/brandimg.png"
               alt="SkillScout"
@@ -19,7 +18,7 @@ export default function SetupNav({ userName }: SetupNavProps) {
               height={32}
               className="h-8 w-auto"
             />
-          </Link>
+          </span>
 
           {/* Right side */}
           <div className="flex items-center gap-4">

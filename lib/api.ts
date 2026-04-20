@@ -917,6 +917,7 @@ export interface User {
   rawAppMetaData?: unknown;
   waitlist?: boolean;
   hasAccess?: boolean;
+  onboardingCompleted?: boolean;
   phone?: string;
   location?: string;
   isSuperAdmin?: boolean;

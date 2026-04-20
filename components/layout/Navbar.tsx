@@ -52,6 +52,16 @@ export default function Navbar() {
     }
   };
 
+  const handleDashboardClick = () => {
+    setProfileDropdownOpen(false);
+    setMenuOpen(false);
+    if (user && !user.onboardingCompleted) {
+      router.push("/profile-setup");
+    } else {
+      router.push("/dashboard");
+    }
+  };
+
   const getInitials = (name?: string) => {
     if (!name) return "U";
     const names = name.split(" ");
@@ -128,16 +138,15 @@ export default function Navbar() {
 
                     {/* Menu items */}
                     <div className="py-1">
-                      <Link
-                        href="/dashboard"
-                        className="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                        onClick={() => setProfileDropdownOpen(false)}
+                      <button
+                        onClick={handleDashboardClick}
+                        className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                       >
                         <span className="material-icons text-lg mr-3">
                           dashboard
                         </span>
                         Dashboard
-                      </Link>
+                      </button>
                       <button
                         onClick={handleLogout}
                         className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -207,16 +216,15 @@ export default function Navbar() {
 
                       {/* Menu items */}
                       <div className="py-1">
-                        <Link
-                          href="/dashboard"
-                          className="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                          onClick={() => setProfileDropdownOpen(false)}
+                        <button
+                          onClick={handleDashboardClick}
+                          className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                         >
                           <span className="material-icons text-lg mr-3">
                             dashboard
                           </span>
                           Dashboard
-                        </Link>
+                        </button>
                         <button
                           onClick={handleLogout}
                           className="flex items-center w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -280,14 +288,13 @@ export default function Navbar() {
           {/* Auth section for mobile */}
           {isAuthenticated && user ? (
             <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-800 space-y-1">
-              <Link
-                href="/dashboard"
-                className="flex items-center text-sm font-medium text-subtext-light dark:text-subtext-dark hover:text-primary dark:hover:text-primary transition-colors py-2.5 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/60"
-                onClick={() => setMenuOpen(false)}
+              <button
+                onClick={handleDashboardClick}
+                className="flex items-center w-full text-sm font-medium text-subtext-light dark:text-subtext-dark hover:text-primary dark:hover:text-primary transition-colors py-2.5 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/60"
               >
                 <span className="material-icons text-lg mr-3">dashboard</span>
                 Dashboard
-              </Link>
+              </button>
               <button
                 onClick={handleLogout}
                 className="flex items-center w-full text-sm font-medium text-subtext-light dark:text-subtext-dark hover:text-primary dark:hover:text-primary transition-colors py-2.5 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/60"

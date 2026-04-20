@@ -278,7 +278,7 @@ export default function SidebarBillingUsage() {
     loadData();
   }, []);
 
-  const planSlug = subscription?.plan?.slug ?? "lite";
+  const planSlug = subscription?.plan?.slug ?? "trial";
   const interviewLimit = PLAN_INTERVIEW_LIMIT[planSlug] ?? 5;
   const isPaid =
     planSlug === "lite" || planSlug === "pro" || planSlug === "elite";

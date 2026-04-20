@@ -22,6 +22,8 @@ import Step5Review from "@/components/profile-setup/Step5Review";
 import { profileAPI, onboardingAPI } from "@/lib/api";
 import { getUserData } from "@/lib/user-storage";
 
+const DRAFT_STORAGE_KEY = "skillscout_onboarding_draft";
+
 const STEP_TITLES: Record<number, string> = {
   0: "Let's start with the basics",
   1: "Experience, Background & Preferences",
@@ -114,6 +116,20 @@ export default function ProfileSetupPage() {
         if (updates.skillsData) {
           draftData.skillsData = updates.skillsData;
         }
+        // Persist draft locally so data survives navigation away from the wizard
+        try {
+          localStorage.setItem(
+            DRAFT_STORAGE_KEY,
+            JSON.stringify({
+              step: updates.step ?? step,
+              draftData,
+              selectedPlan: updates.selectedPlan ?? selectedPlan,
+            }),
+          );
+        } catch {
+          // localStorage unavailable — non-critical
+        }
+
         await onboardingAPI.saveProgress({
           flowType: "candidate",
           currentStep: updates.step ?? step,
@@ -247,6 +263,74 @@ export default function ProfileSetupPage() {
           if (d.selectedPlan) {
             const plan = d.selectedPlan as string;
             setSelectedPlan((plan === "free" ? "lite" : plan) as PlanId);
+          }
+
+          // If backend returned no draft data, fall back to localStorage backup
+          if (!d.draftData) {
+            try {
+              const local = localStorage.getItem(DRAFT_STORAGE_KEY);
+              if (local) {
+                const parsed = JSON.parse(local) as {
+                  step?: number;
+                  draftData?: Record<string, unknown>;
+                  selectedPlan?: string;
+                };
+                if (parsed.draftData) {
+                  const dd = parsed.draftData;
+                  if (dd.personalData) {
+                    const p = dd.personalData as Record<string, unknown>;
+                    setPersonalData((prev) => ({
+                      ...prev,
+                      fullName: (p.fullName as string) ?? prev.fullName,
+                      careerGoal: (p.careerGoal as string) ?? prev.careerGoal,
+                      profilePictureUrl: (p.profilePictureUrl as string) ?? prev.profilePictureUrl,
+                    }));
+                  }
+                  if (dd.experienceData) {
+                    const e = dd.experienceData as Record<string, unknown>;
+                    setExperienceData((prev) => ({
+                      ...prev,
+                      profileHeadline: (e.profileHeadline as string) ?? prev.profileHeadline,
+                      education: (e.education as ExperienceStepData["education"]) ?? prev.education,
+                      employment: (e.employment as ExperienceStepData["employment"]) ?? prev.employment,
+                      projects: (e.projects as ExperienceStepData["projects"]) ?? prev.projects,
+                      publications: (e.publications as ExperienceStepData["publications"]) ?? prev.publications,
+                      certifications: (e.certifications as ExperienceStepData["certifications"]) ?? prev.certifications,
+                      currentLocation: (e.currentLocation as string) ?? prev.currentLocation,
+                      preferredLocation: (e.preferredLocation as string) ?? prev.preferredLocation,
+                      preferredShift: (e.preferredShift as string) ?? prev.preferredShift,
+                      expectedSalary: (e.expectedSalary as string) ?? prev.expectedSalary,
+                      desiredWorkType: (e.desiredWorkType as string) ?? prev.desiredWorkType,
+                      resumeUrl: (e.resumeUrl as string) ?? prev.resumeUrl,
+                      resumeFileName: (e.resumeFileName as string) ?? prev.resumeFileName,
+                    }));
+                  }
+                  if (dd.jobLevelData) {
+                    const jl = dd.jobLevelData as Partial<JobLevelStepData>;
+                    setJobLevelData((prev) => ({
+                      careerLevel: jl.careerLevel ?? prev.careerLevel,
+                      targetIndustries: jl.targetIndustries ?? prev.targetIndustries,
+                      targetRoles: jl.targetRoles ?? prev.targetRoles,
+                    }));
+                  }
+                  if (dd.skillsData) {
+                    const sl = dd.skillsData as Partial<SkillsTagsData>;
+                    setSkillsData((prev) => ({
+                      techSkills: sl.techSkills ?? prev.techSkills,
+                      socialLinks: sl.socialLinks ?? prev.socialLinks,
+                    }));
+                  }
+                }
+                if (parsed.step != null && parsed.step >= 0 && parsed.step <= 5 && d.currentStep === 0) {
+                  setStep(parsed.step);
+                }
+                if (parsed.selectedPlan && !d.selectedPlan) {
+                  setSelectedPlan(parsed.selectedPlan as PlanId);
+                }
+              }
+            } catch {
+              // localStorage parse error — ignore
+            }
           }
         }
       })
@@ -416,6 +500,7 @@ export default function ProfileSetupPage() {
 
       await profileAPI.setupProfile(fd);
       await onboardingAPI.clearProgress();
+      try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch { /* ignore */ }
       router.push("/dashboard");
     } catch (e: unknown) {
       const axiosErr = e as {
