@@ -1,5 +1,6 @@
 import { apiClient } from "./client";
 import type { ApiResponse, PaginatedResponse, Interview } from "@/types";
+import type { InterviewType } from "@/lib/credits";
 
 interface CreateInterviewPayload {
   title: string;
@@ -10,8 +11,18 @@ interface SubmitAnswersPayload {
   answers: Record<string, string>;
 }
 
+export interface CreditsBalance {
+  creditsUsed: number;
+  creditsRemaining: number;
+  creditAllowance: number;
+  bonusCredits: number;
+  totalAllowance: number;
+  periodEnd: string | null;
+}
+
 /** Create a mock interview session (LiveKit voice agent). Returns token + livekitUrl for one-shot connect. */
 export interface CreateSessionPayload {
+  interviewType?: InterviewType;
   jobRole: string;
   jobDescription?: string;
   experienceLevel?: string | null;
@@ -68,6 +79,11 @@ export interface VideoSignalItem {
 }
 
 export const interviewSessionsApi = {
+  getCredits: () =>
+    apiClient.get<{ success: boolean; data: CreditsBalance }>(
+      "/api/interviews/credits",
+    ),
+
   createSession: (payload: CreateSessionPayload) =>
     apiClient.post<CreateSessionResponse>("/api/interviews", payload),
 

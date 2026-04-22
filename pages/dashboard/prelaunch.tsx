@@ -2,7 +2,9 @@ import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { interviewSessionsApi } from "@/lib/api/interviews";
+import { toast } from "sonner";
+import { interviewSessionsApi, type CreditsBalance } from "@/lib/api/interviews";
+import { INTERVIEW_TYPES, type InterviewType } from "@/lib/credits";
 import { useAntiDevTools } from "@/hooks/useAntiDevTools";
 import {
   useMediaPipeProctoring,
@@ -24,6 +26,7 @@ import type {
    – Real mic level via AnalyserNode
    – Device compatibility check (desktop vs mobile)
    – Speaker test with /pl_test.wav
+   – Interview type selection with credit check
 ───────────────────────────────────────────────────────────────── */
 
 const SESSION_STORAGE_KEY = "skillscout_interview_session";
@@ -46,22 +49,85 @@ async function requestProductionFullscreen(context: string) {
   }
 }
 
+/** Interview type selector card */
+function InterviewTypeCard({
+  typeInfo,
+  selected,
+  creditsRemaining,
+  onClick,
+}: {
+  typeInfo: (typeof INTERVIEW_TYPES)[number];
+  selected: boolean;
+  creditsRemaining: number | null;
+  onClick: () => void;
+}) {
+  const canAfford =
+    creditsRemaining === null || creditsRemaining >= typeInfo.cost;
+
+  return (
+    <button
+      type="button"
+      onClick={canAfford ? onClick : undefined}
+      className={`w-full text-left rounded-xl border-2 px-4 py-3 transition-all ${
+        selected
+          ? "border-blue-500 bg-blue-50"
+          : canAfford
+            ? "border-gray-200 hover:border-blue-300 hover:bg-slate-50 cursor-pointer"
+            : "border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed"
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {selected ? (
+            <span className="material-icons text-blue-500 text-base">
+              radio_button_checked
+            </span>
+          ) : (
+            <span className="material-icons text-gray-300 text-base">
+              radio_button_unchecked
+            </span>
+          )}
+          <div>
+            <p className="text-sm font-semibold text-slate-800">
+              {typeInfo.label}
+            </p>
+            <p className="text-xs text-slate-500">{typeInfo.description}</p>
+          </div>
+        </div>
+        <div className="text-right shrink-0 ml-3">
+          <p className="text-sm font-bold text-slate-700">
+            {typeInfo.cost}{" "}
+            <span className="text-xs font-normal text-slate-500">credits</span>
+          </p>
+          <p className="text-[10px] text-slate-400">{typeInfo.duration}</p>
+          {!canAfford && (
+            <p className="text-[10px] text-red-500 font-medium">Insufficient</p>
+          )}
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function StartInterviewButton({
   allOk,
+  canAfford,
   onStarted,
   useLiveKitSessionApi,
   onEnterStaticRoom,
+  selectedType,
 }: {
   allOk: boolean;
+  canAfford: boolean;
   onStarted: (sessionId: string, token: string, livekitUrl: string) => void;
   useLiveKitSessionApi?: boolean;
   onEnterStaticRoom?: () => void;
+  selectedType: InterviewType;
 }) {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  /** LiveKit API path must pass all readiness checks; static room can always enter. */
-  const mayEnter = useLiveKitSessionApi ? allOk : true;
+  /** LiveKit API path must pass all readiness checks AND have credits; static room can always enter. */
+  const mayEnter = useLiveKitSessionApi ? allOk && canAfford : true;
 
   const handleClick = async () => {
     if (!mayEnter || loading) return;
@@ -73,11 +139,11 @@ function StartInterviewButton({
       return;
     }
     setLoading(true);
-    setError(null);
     try {
       const res = await interviewSessionsApi.createSession({
+        interviewType: selectedType,
         jobRole: "Software Engineer",
-        jobDescription: "Mock technical interview",
+        jobDescription: "Mock interview session",
         experienceLevel: "mid-level",
       });
       if (!res.success || !res.data?.token || !res.data?.livekitUrl) {
@@ -89,41 +155,77 @@ function StartInterviewButton({
         res.data.livekitUrl,
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to start session");
+      if (
+        e instanceof Error &&
+        (e as Error & { status?: number }).status === 402
+      ) {
+        toast.error(
+          "Not enough credits. Upgrade your plan or wait for your credits to reset next month.",
+        );
+      } else if (e instanceof Error && e.message.includes("402")) {
+        toast.error(
+          "Not enough credits. Upgrade your plan or wait for your credits to reset next month.",
+        );
+      } else {
+        toast.error(e instanceof Error ? e.message : "Failed to start session");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-2">
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={!mayEnter || loading}
-        className={`w-full font-semibold py-3.5 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
-          mayEnter && !loading
-            ? "bg-blue-500 hover:bg-blue-600 text-white shadow-blue-500/20 hover:-translate-y-0.5 active:translate-y-0"
-            : "bg-slate-200 text-slate-400 cursor-not-allowed pointer-events-none"
-        }`}
-        aria-disabled={!mayEnter || loading}
-      >
-        {loading ? (
-          "Starting…"
-        ) : (
-          <>
-            Enter Interview Room
-            <span className="material-icons text-lg">arrow_forward</span>
-          </>
-        )}
-      </button>
-      {error && <p className="text-xs text-red-600 text-center">{error}</p>}
-    </div>
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={!mayEnter || loading}
+      className={`w-full font-semibold py-3.5 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
+        mayEnter && !loading
+          ? "bg-blue-500 hover:bg-blue-600 text-white shadow-blue-500/20 hover:-translate-y-0.5 active:translate-y-0"
+          : "bg-slate-200 text-slate-400 cursor-not-allowed pointer-events-none"
+      }`}
+      aria-disabled={!mayEnter || loading}
+    >
+      {loading ? (
+        "Starting…"
+      ) : (
+        <>
+          Enter Interview Room
+          <span className="material-icons text-lg">arrow_forward</span>
+        </>
+      )}
+    </button>
   );
 }
 
 export default function PrelaunchPage() {
   const router = useRouter();
+
+  // ── Interview type + credits ─────────────────────────────
+  const [selectedType, setSelectedType] = useState<InterviewType>("TECHNICAL");
+  const [creditsData, setCreditsData] = useState<CreditsBalance | null>(null);
+  const [creditsLoading, setCreditsLoading] = useState(true);
+
+  useEffect(() => {
+    interviewSessionsApi
+      .getCredits()
+      .then((res) => {
+        if (res?.success && res.data) setCreditsData(res.data);
+      })
+      .catch(() => {
+        /* non-fatal: credit check still enforced server-side */
+      })
+      .finally(() => setCreditsLoading(false));
+  }, []);
+
+  const selectedTypeInfo = INTERVIEW_TYPES.find((t) => t.type === selectedType)!;
+  const creditsRemaining = creditsData?.creditsRemaining ?? null;
+  const canAfford =
+    creditsRemaining === null || creditsRemaining >= selectedTypeInfo.cost;
+  const canAffordAny =
+    creditsRemaining === null ||
+    INTERVIEW_TYPES.some((t) => creditsRemaining >= t.cost);
+
   // ── Camera ───────────────────────────────────────────────
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraStatus, setCameraStatus] = useState<CheckStatus>("checking");
@@ -212,19 +314,15 @@ export default function PrelaunchPage() {
   const faceModelFailed = proctoring.isReady && !proctoring.modelLoaded;
 
   // ── Microphone ───────────────────────────────────────────
-  // micPermission: browser permission state
-  // micQuality: "listening" | "passed" — quality check result
   const [micPermission, setMicPermission] = useState<CheckStatus>("checking");
   const [micQuality, setMicQuality] = useState<MicQuality>("listening");
   const [micLevel, setMicLevel] = useState(0);
   const [micLabel, setMicLabel] = useState<string>("");
-  // countdown seconds remaining in current test window
   const [micCountdown, setMicCountdown] = useState(3);
   const micStreamRef = useRef<MediaStream | null>(null);
   const animFrameRef = useRef<number>(0);
 
   // ── Device compatibility ─────────────────────────────────
-  // Same initial state on server + client (hydration-safe); UA read in useEffect.
   const [deviceStatus, setDeviceStatus] = useState<CheckStatus>("checking");
   const [deviceLabel, setDeviceLabel] = useState<string>("");
 
@@ -255,7 +353,6 @@ export default function PrelaunchPage() {
   }, []);
 
   // ── Speaker ──────────────────────────────────────────────
-
   const [speakerState, setSpeakerState] = useState<SpeakerState>("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -321,10 +418,9 @@ export default function PrelaunchPage() {
     let audioCtx: AudioContext | undefined;
     let analyser: AnalyserNode | undefined;
     let source: MediaStreamAudioSourceNode | undefined;
-    // Quality sampling constants
-    const SAMPLE_WINDOW_MS = 3000; // how long to sample before judging
-    const PASS_THRESHOLD = 6; // average level (0–100 scaled) to pass
-    const SAMPLE_INTERVAL_MS = 80; // how often to sample within the window
+    const SAMPLE_WINDOW_MS = 3000;
+    const PASS_THRESHOLD = 6;
+    const SAMPLE_INTERVAL_MS = 80;
     let samples: number[] = [];
     let windowStart = 0;
     let sampleTimer: ReturnType<typeof setInterval> | undefined;
@@ -353,7 +449,6 @@ export default function PrelaunchPage() {
       windowStart = Date.now();
       setMicCountdown(Math.ceil(SAMPLE_WINDOW_MS / 1000));
 
-      // Countdown display
       countdownTimer = setInterval(() => {
         if (cancelled) return;
         const elapsed = Date.now() - windowStart;
@@ -364,7 +459,6 @@ export default function PrelaunchPage() {
         setMicCountdown(remaining);
       }, 500);
 
-      // Sample mic levels
       sampleTimer = setInterval(() => {
         if (cancelled || !analyser) return;
         const d = new Uint8Array(analyser.frequencyBinCount);
@@ -413,7 +507,6 @@ export default function PrelaunchPage() {
         source = src;
         src.connect(an);
 
-        // Continuous level display via rAF
         const data = new Uint8Array(an.frequencyBinCount);
         const tick = () => {
           if (cancelled) return;
@@ -424,7 +517,6 @@ export default function PrelaunchPage() {
         };
         tick();
 
-        // Start quality sampling window
         startQualityWindow();
       } catch {
         if (!cancelled) {
@@ -459,7 +551,6 @@ export default function PrelaunchPage() {
       }
       const pingStart = performance.now();
       try {
-        // Fetch a tiny no-cors resource to measure round-trip
         await fetch("https://www.gstatic.com/generate_204", {
           method: "HEAD",
           cache: "no-store",
@@ -499,7 +590,6 @@ export default function PrelaunchPage() {
         setInternetStatus("ok");
         setInternetLabel(label);
       } catch {
-        // fetch throws on network error even with no-cors
         setInternetStatus("error");
         setInternetLabel("Connection check failed – please check your network");
       }
@@ -524,7 +614,6 @@ export default function PrelaunchPage() {
   const playSound = () => {
     const ensureAudio = () => {
       if (audioRef.current) return audioRef.current;
-      // Prefer smaller Opus; keep WAV fallback for compatibility.
       audioRef.current = new Audio("/pl_test.opus");
       audioRef.current.onerror = () => {
         audioRef.current = new Audio("/pl_test.wav");
@@ -569,7 +658,6 @@ export default function PrelaunchPage() {
       )}
       <Head>
         <meta name="robots" content="noindex, nofollow" />
-
         <title>System Readiness Check – SkillScout</title>
       </Head>
 
@@ -585,259 +673,360 @@ export default function PrelaunchPage() {
       />
 
       <div className="min-h-screen w-full flex items-center justify-center p-4 md:p-6 lg:p-8">
-        <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-5xl overflow-hidden flex flex-col md:flex-row min-h-[580px] relative z-10">
-          {/* ── Left: Live Camera Preview ── */}
-          <CameraPreview videoRef={videoRef} cameraStatus={cameraStatus} />
-
-          {/* ── Right: System Readiness Check ── */}
-          <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center overflow-y-auto">
-            {/* Header */}
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-slate-900 mb-2">
-                System Readiness Check
-              </h1>
-              <p className="text-slate-500 text-sm leading-relaxed">
-                Before we begin your AI mock interview, we need to ensure your
-                device meets the technical requirements for a smooth session.
-              </p>
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-5xl overflow-hidden flex flex-col relative z-10">
+          {/* ── Interview Type Selector ── */}
+          <div className="p-8 md:p-10 border-b border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">
+                  Select Interview Type
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Each type consumes credits from your monthly allowance.
+                </p>
+              </div>
+              {/* Credit balance badge */}
+              {!creditsLoading && creditsData && (
+                <div
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-full ${
+                    creditsData.creditsRemaining === 0
+                      ? "bg-red-100 text-red-700"
+                      : creditsData.creditsRemaining <
+                          (INTERVIEW_TYPES[0]?.cost ?? 50)
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-emerald-100 text-emerald-700"
+                  }`}
+                >
+                  {creditsData.creditsRemaining} credits remaining
+                </div>
+              )}
             </div>
 
-            {/* Checks */}
-            <div className="space-y-5">
-              {/* ── Device Compatibility ── */}
-              <CheckRow
-                status={deviceStatus}
-                icon={deviceStatus === "ok" ? "computer" : "smartphone"}
-                title="Device Compatibility"
-                badge={
-                  deviceStatus === "ok"
-                    ? { label: "Desktop", color: "emerald" }
-                    : deviceStatus === "error"
-                      ? { label: "Incompatible", color: "red" }
-                      : { label: "Checking…", color: "slate" }
-                }
-                borderBottom
-              >
-                <p
-                  className={`text-xs mt-1 ${deviceStatus === "error" ? "text-red-500" : "text-slate-500"}`}
-                >
-                  {deviceLabel || "Checking device…"}
-                </p>
-              </CheckRow>
-
-              {/* ── Internet Connection ── */}
-              <CheckRow
-                status={internetStatus}
-                icon={internetStatus === "error" ? "wifi_off" : "wifi"}
-                title="Internet Connection"
-                badge={
-                  internetStatus === "ok"
-                    ? { label: "Connected", color: "emerald" }
-                    : internetStatus === "error"
-                      ? { label: "Issue", color: "red" }
-                      : { label: "Checking…", color: "slate" }
-                }
-                borderBottom
-              >
-                <p
-                  className={`text-xs mt-1 ${
-                    internetStatus === "error"
-                      ? "text-red-500"
-                      : "text-slate-500"
-                  }`}
-                >
-                  {internetLabel || "Measuring connection…"}
-                </p>
-              </CheckRow>
-
-              {/* ── Camera Access ── */}
-              <CheckRow
-                status={cameraStatus}
-                icon="videocam"
-                title="Camera Access"
-                badge={
-                  cameraStatus === "ok"
-                    ? { label: "Granted", color: "emerald" }
-                    : cameraStatus === "error"
-                      ? { label: "Denied", color: "red" }
-                      : { label: "Checking…", color: "slate" }
-                }
-                borderBottom
-              >
-                {cameraLabel && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="material-icons text-slate-400 text-sm">
-                      videocam
-                    </span>
-                    <span className="text-xs text-slate-600 font-medium truncate">
-                      {cameraLabel}
-                    </span>
-                  </div>
-                )}
-              </CheckRow>
-
-              {/* ── Face Detection (MediaPipe) ── */}
-              <CheckRow
-                status={faceCheckStatus}
-                icon={
-                  faceCheckStatus === "ok"
-                    ? "face"
-                    : faceCheckStatus === "error"
-                      ? "no_accounts"
-                      : "face_retouching_natural"
-                }
-                title="Face Detection"
-                badge={
-                  faceCheckStatus === "ok"
-                    ? { label: faceCheckBadgeLabel, color: "emerald" }
-                    : faceCheckStatus === "error"
-                      ? { label: faceCheckBadgeLabel, color: "red" }
-                      : { label: faceCheckBadgeLabel, color: "blue" }
-                }
-                borderBottom
-                spinnerIcon={faceCheckStatus === "checking"}
-              >
-                <p
-                  className={`text-xs mt-1 ${
-                    faceCheckStatus === "error"
-                      ? "text-red-500 font-medium"
-                      : "text-slate-500"
-                  }`}
-                >
-                  {faceCheckDescription}
-                </p>
-                {/* Model failed to load – show retry button */}
-                {faceModelFailed && (
-                  <button
-                    onClick={proctoring.retry}
-                    className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition-colors"
-                  >
-                    <span className="material-icons text-sm">refresh</span>
-                    Retry Loading Models
-                  </button>
-                )}
-                {/* Detection violation hint */}
-                {faceCheckStatus === "error" && !faceModelFailed && (
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Ensure only you are visible, you are looking at the screen,
-                    and no phones or books are in view.
+            {/* No credits at all — blocking error */}
+            {!creditsLoading && creditsData && !canAffordAny && (
+              <div className="mb-4 flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                <span className="material-icons text-red-500 text-lg shrink-0 mt-0.5">
+                  error
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-red-700">
+                    Not enough credits
                   </p>
-                )}
-              </CheckRow>
-
-              {/* ── Microphone ── */}
-              <CheckRow
-                status={
-                  micPermission === "error"
-                    ? "error"
-                    : micQuality === "passed"
-                      ? "ok"
-                      : "checking"
-                }
-                icon={micPermission === "error" ? "mic_off" : "mic"}
-                title="Microphone Check"
-                badge={
-                  micPermission === "error"
-                    ? { label: "Denied", color: "red" }
-                    : micQuality === "passed"
-                      ? { label: "Good", color: "emerald" }
-                      : { label: `Listening… ${micCountdown}s`, color: "blue" }
-                }
-                borderBottom
-                spinnerIcon={micPermission === "ok" && micQuality !== "passed"}
-              >
-                {micPermission === "ok" && (
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all duration-100 ${
-                          micQuality === "passed"
-                            ? "bg-emerald-500"
-                            : "bg-gradient-to-r from-blue-400 to-blue-500"
-                        }`}
-                        style={{ width: `${micLevel}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-slate-400 w-8 text-right">
-                      {micLevel < 15 ? "Low" : micLevel < 55 ? "Fair" : "Good"}
-                    </span>
-                  </div>
-                )}
-                {micLabel && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="material-icons text-slate-400 text-sm">
-                      mic
-                    </span>
-                    <span className="text-xs text-slate-600 font-medium truncate">
-                      {micLabel}
-                    </span>
-                  </div>
-                )}
-              </CheckRow>
-
-              {/* ── Speaker Test ── */}
-              <SpeakerCheck
-                speakerState={speakerState}
-                onPlay={playSound}
-                onMarkAudible={markAudible}
-                onReplay={replaySound}
-              />
-            </div>
-
-            {/* Footer */}
-            <div className="mt-6 pt-6 border-t border-gray-100">
-              {allOk ? (
-                <div className="flex items-center gap-2 mb-4 bg-emerald-50/70 border border-emerald-100 p-3 rounded-lg">
-                  <span className="material-icons text-emerald-500 text-lg">
-                    check_circle
-                  </span>
-                  <p className="text-xs text-emerald-800 font-medium">
-                    System compatibility verified. You are ready to join.
+                  <p className="text-xs text-red-600 mt-0.5">
+                    You have {creditsData.creditsRemaining} credits remaining.
+                    Credits reset each billing period.
                   </p>
                 </div>
-              ) : (
-                <div className="flex items-center gap-2 mb-4 bg-amber-50 border border-amber-100 p-3 rounded-lg">
-                  <span className="material-icons text-amber-500 text-lg">
-                    pending
+                <Link
+                  href="/dashboard/settings"
+                  className="shrink-0 text-xs font-semibold text-blue-600 hover:underline"
+                >
+                  Upgrade Plan
+                </Link>
+              </div>
+            )}
+
+            {/* Insufficient for selected type (but can afford others) */}
+            {!creditsLoading &&
+              creditsData &&
+              canAffordAny &&
+              !canAfford && (
+                <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5">
+                  <span className="material-icons text-amber-500 text-base">
+                    warning
                   </span>
-                  <p className="text-xs text-amber-800 font-medium">
-                    Complete all checks above before joining.
+                  <p className="text-xs text-amber-700">
+                    Not enough credits for{" "}
+                    <strong>{selectedTypeInfo.label}</strong>. Choose a cheaper
+                    option or{" "}
+                    <Link
+                      href="/dashboard/settings"
+                      className="underline font-semibold"
+                    >
+                      upgrade your plan
+                    </Link>
+                    .
                   </p>
                 </div>
               )}
 
-              <StartInterviewButton
-                allOk={allOk}
-                useLiveKitSessionApi={LIVEKIT_INTERVIEW_API_ENABLED}
-                onEnterStaticRoom={() =>
-                  router.push("/dashboard/interview?skipLiveKit=true")
-                }
-                onStarted={(sessionId, token, livekitUrl) => {
-                  try {
-                    sessionStorage.setItem(
-                      SESSION_STORAGE_KEY,
-                      JSON.stringify({ sessionId, token, livekitUrl }),
-                    );
-                  } catch {
-                    // ignore
-                  }
-                  router.push(
-                    `/dashboard/interview?sessionId=${encodeURIComponent(sessionId)}`,
-                  );
-                }}
-              />
-              <p className="text-center text-[10px] text-slate-400 mt-3">
-                By joining, you agree to record this session for analysis.
-              </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {INTERVIEW_TYPES.map((typeInfo) => (
+                <InterviewTypeCard
+                  key={typeInfo.type}
+                  typeInfo={typeInfo}
+                  selected={selectedType === typeInfo.type}
+                  creditsRemaining={creditsRemaining}
+                  onClick={() => setSelectedType(typeInfo.type)}
+                />
+              ))}
+            </div>
+          </div>
 
-              <div className="mt-4 text-center">
-                <Link
-                  href="/dashboard/practice"
-                  className="text-xs text-slate-400 hover:text-blue-600 transition-colors inline-flex items-center gap-1"
+          {/* ── System Checks + Camera ── */}
+          <div className="flex flex-col md:flex-row min-h-[580px]">
+            {/* ── Left: Live Camera Preview ── */}
+            <CameraPreview videoRef={videoRef} cameraStatus={cameraStatus} />
+
+            {/* ── Right: System Readiness Check ── */}
+            <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center overflow-y-auto">
+              {/* Header */}
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-slate-900 mb-2">
+                  System Readiness Check
+                </h1>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  Before we begin your AI mock interview, we need to ensure your
+                  device meets the technical requirements for a smooth session.
+                </p>
+              </div>
+
+              {/* Checks */}
+              <div className="space-y-5">
+                {/* ── Device Compatibility ── */}
+                <CheckRow
+                  status={deviceStatus}
+                  icon={deviceStatus === "ok" ? "computer" : "smartphone"}
+                  title="Device Compatibility"
+                  badge={
+                    deviceStatus === "ok"
+                      ? { label: "Desktop", color: "emerald" }
+                      : deviceStatus === "error"
+                        ? { label: "Incompatible", color: "red" }
+                        : { label: "Checking…", color: "slate" }
+                  }
+                  borderBottom
                 >
-                  <span className="material-icons text-sm">chevron_left</span>
-                  Back to Practice Arena
-                </Link>
+                  <p
+                    className={`text-xs mt-1 ${deviceStatus === "error" ? "text-red-500" : "text-slate-500"}`}
+                  >
+                    {deviceLabel || "Checking device…"}
+                  </p>
+                </CheckRow>
+
+                {/* ── Internet Connection ── */}
+                <CheckRow
+                  status={internetStatus}
+                  icon={internetStatus === "error" ? "wifi_off" : "wifi"}
+                  title="Internet Connection"
+                  badge={
+                    internetStatus === "ok"
+                      ? { label: "Connected", color: "emerald" }
+                      : internetStatus === "error"
+                        ? { label: "Issue", color: "red" }
+                        : { label: "Checking…", color: "slate" }
+                  }
+                  borderBottom
+                >
+                  <p
+                    className={`text-xs mt-1 ${
+                      internetStatus === "error"
+                        ? "text-red-500"
+                        : "text-slate-500"
+                    }`}
+                  >
+                    {internetLabel || "Measuring connection…"}
+                  </p>
+                </CheckRow>
+
+                {/* ── Camera Access ── */}
+                <CheckRow
+                  status={cameraStatus}
+                  icon="videocam"
+                  title="Camera Access"
+                  badge={
+                    cameraStatus === "ok"
+                      ? { label: "Granted", color: "emerald" }
+                      : cameraStatus === "error"
+                        ? { label: "Denied", color: "red" }
+                        : { label: "Checking…", color: "slate" }
+                  }
+                  borderBottom
+                >
+                  {cameraLabel && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="material-icons text-slate-400 text-sm">
+                        videocam
+                      </span>
+                      <span className="text-xs text-slate-600 font-medium truncate">
+                        {cameraLabel}
+                      </span>
+                    </div>
+                  )}
+                </CheckRow>
+
+                {/* ── Face Detection (MediaPipe) ── */}
+                <CheckRow
+                  status={faceCheckStatus}
+                  icon={
+                    faceCheckStatus === "ok"
+                      ? "face"
+                      : faceCheckStatus === "error"
+                        ? "no_accounts"
+                        : "face_retouching_natural"
+                  }
+                  title="Face Detection"
+                  badge={
+                    faceCheckStatus === "ok"
+                      ? { label: faceCheckBadgeLabel, color: "emerald" }
+                      : faceCheckStatus === "error"
+                        ? { label: faceCheckBadgeLabel, color: "red" }
+                        : { label: faceCheckBadgeLabel, color: "blue" }
+                  }
+                  borderBottom
+                  spinnerIcon={faceCheckStatus === "checking"}
+                >
+                  <p
+                    className={`text-xs mt-1 ${
+                      faceCheckStatus === "error"
+                        ? "text-red-500 font-medium"
+                        : "text-slate-500"
+                    }`}
+                  >
+                    {faceCheckDescription}
+                  </p>
+                  {faceModelFailed && (
+                    <button
+                      onClick={proctoring.retry}
+                      className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      <span className="material-icons text-sm">refresh</span>
+                      Retry Loading Models
+                    </button>
+                  )}
+                  {faceCheckStatus === "error" && !faceModelFailed && (
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Ensure only you are visible, you are looking at the
+                      screen, and no phones or books are in view.
+                    </p>
+                  )}
+                </CheckRow>
+
+                {/* ── Microphone ── */}
+                <CheckRow
+                  status={
+                    micPermission === "error"
+                      ? "error"
+                      : micQuality === "passed"
+                        ? "ok"
+                        : "checking"
+                  }
+                  icon={micPermission === "error" ? "mic_off" : "mic"}
+                  title="Microphone Check"
+                  badge={
+                    micPermission === "error"
+                      ? { label: "Denied", color: "red" }
+                      : micQuality === "passed"
+                        ? { label: "Good", color: "emerald" }
+                        : { label: `Listening… ${micCountdown}s`, color: "blue" }
+                  }
+                  borderBottom
+                  spinnerIcon={micPermission === "ok" && micQuality !== "passed"}
+                >
+                  {micPermission === "ok" && (
+                    <div className="flex items-center gap-2 mt-3">
+                      <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all duration-100 ${
+                            micQuality === "passed"
+                              ? "bg-emerald-500"
+                              : "bg-gradient-to-r from-blue-400 to-blue-500"
+                          }`}
+                          style={{ width: `${micLevel}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-slate-400 w-8 text-right">
+                        {micLevel < 15 ? "Low" : micLevel < 55 ? "Fair" : "Good"}
+                      </span>
+                    </div>
+                  )}
+                  {micLabel && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="material-icons text-slate-400 text-sm">
+                        mic
+                      </span>
+                      <span className="text-xs text-slate-600 font-medium truncate">
+                        {micLabel}
+                      </span>
+                    </div>
+                  )}
+                </CheckRow>
+
+                {/* ── Speaker Test ── */}
+                <SpeakerCheck
+                  speakerState={speakerState}
+                  onPlay={playSound}
+                  onMarkAudible={markAudible}
+                  onReplay={replaySound}
+                />
+              </div>
+
+              {/* Footer */}
+              <div className="mt-6 pt-6 border-t border-gray-100">
+                {allOk && canAfford ? (
+                  <div className="flex items-center gap-2 mb-4 bg-emerald-50/70 border border-emerald-100 p-3 rounded-lg">
+                    <span className="material-icons text-emerald-500 text-lg">
+                      check_circle
+                    </span>
+                    <p className="text-xs text-emerald-800 font-medium">
+                      System compatibility verified. You are ready to join.
+                    </p>
+                  </div>
+                ) : !canAfford && !creditsLoading ? (
+                  <div className="flex items-center gap-2 mb-4 bg-red-50 border border-red-100 p-3 rounded-lg">
+                    <span className="material-icons text-red-500 text-lg">
+                      credit_card_off
+                    </span>
+                    <p className="text-xs text-red-800 font-medium">
+                      Not enough credits for this interview type.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 mb-4 bg-amber-50 border border-amber-100 p-3 rounded-lg">
+                    <span className="material-icons text-amber-500 text-lg">
+                      pending
+                    </span>
+                    <p className="text-xs text-amber-800 font-medium">
+                      Complete all checks above before joining.
+                    </p>
+                  </div>
+                )}
+
+                <StartInterviewButton
+                  allOk={allOk}
+                  canAfford={canAfford}
+                  selectedType={selectedType}
+                  useLiveKitSessionApi={LIVEKIT_INTERVIEW_API_ENABLED}
+                  onEnterStaticRoom={() =>
+                    router.push("/dashboard/interview?skipLiveKit=true")
+                  }
+                  onStarted={(sessionId, token, livekitUrl) => {
+                    try {
+                      sessionStorage.setItem(
+                        SESSION_STORAGE_KEY,
+                        JSON.stringify({ sessionId, token, livekitUrl }),
+                      );
+                    } catch {
+                      // ignore
+                    }
+                    router.push(
+                      `/dashboard/interview?sessionId=${encodeURIComponent(sessionId)}`,
+                    );
+                  }}
+                />
+                <p className="text-center text-[10px] text-slate-400 mt-3">
+                  By joining, you agree to record this session for analysis.
+                </p>
+
+                <div className="mt-4 text-center">
+                  <Link
+                    href="/dashboard/practice"
+                    className="text-xs text-slate-400 hover:text-blue-600 transition-colors inline-flex items-center gap-1"
+                  >
+                    <span className="material-icons text-sm">chevron_left</span>
+                    Back to Practice Arena
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

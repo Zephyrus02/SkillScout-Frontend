@@ -1,19 +1,10 @@
 import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import { paymentsAPI, type Plan } from "@/lib/api";
-import { interviewsApi } from "@/lib/api/interviews";
+import { interviewSessionsApi, type CreditsBalance } from "@/lib/api/interviews";
 import { openRazorpayCheckout } from "@/lib/razorpay";
 import { PAID_PLANS, type PlanDefinition } from "@/lib/plans";
 import { cardCls } from "./constants";
-
-/** Maximum AI interviews allowed per billing period per plan slug. */
-const PLAN_INTERVIEW_LIMIT: Record<string, number> = {
-  free: 5,
-  lite: 5,
-  trial: 3,
-  pro: 10,
-  elite: 20,
-};
 
 function formatAmount(cents: number, currency: string): string {
   const value = (cents / 100).toFixed(2);
@@ -206,18 +197,17 @@ export default function SidebarBillingUsage() {
   );
   const [upgradeSuccess, setUpgradeSuccess] = useState<string | null>(null);
   const [cancelPending, setCancelPending] = useState(false);
-  const [interviewsUsed, setInterviewsUsed] = useState<number | null>(null);
+  const [credits, setCredits] = useState<CreditsBalance | null>(null);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [subRes, invRes, plansRes, interviewsRes] = await Promise.all([
+      const [subRes, invRes, plansRes, creditsRes] = await Promise.all([
         paymentsAPI.getSubscription(),
         paymentsAPI.listInvoices(20, 0),
         paymentsAPI.getPlans(),
-        interviewsApi.getAll(1, 100),
+        interviewSessionsApi.getCredits(),
       ]);
-      let periodStart: string | undefined;
       if (subRes.success && subRes.data) {
         setSubscription({
           plan: subRes.data.plan,
@@ -228,7 +218,6 @@ export default function SidebarBillingUsage() {
           cancelAtPeriodEnd: subRes.data.cancelAtPeriodEnd,
           scheduledUpgrade: subRes.data.scheduledUpgrade ?? null,
         });
-        periodStart = subRes.data.currentPeriodStart;
       } else {
         setSubscription(null);
       }
@@ -250,25 +239,16 @@ export default function SidebarBillingUsage() {
       } else {
         setPlans([]);
       }
-      if (interviewsRes && interviewsRes.data) {
-        const interviews = interviewsRes.data;
-        if (periodStart) {
-          const periodStartMs = new Date(periodStart).getTime();
-          const count = interviews.filter(
-            (iv) => new Date(iv.createdAt).getTime() >= periodStartMs,
-          ).length;
-          setInterviewsUsed(count);
-        } else {
-          setInterviewsUsed(interviews.length);
-        }
+      if (creditsRes?.success && creditsRes.data) {
+        setCredits(creditsRes.data);
       } else {
-        setInterviewsUsed(0);
+        setCredits(null);
       }
     } catch {
       setSubscription(null);
       setInvoices([]);
       setPlans([]);
-      setInterviewsUsed(0);
+      setCredits(null);
     } finally {
       setLoading(false);
     }
@@ -279,7 +259,6 @@ export default function SidebarBillingUsage() {
   }, []);
 
   const planSlug = subscription?.plan?.slug ?? "trial";
-  const interviewLimit = PLAN_INTERVIEW_LIMIT[planSlug] ?? 5;
   const isPaid =
     planSlug === "lite" || planSlug === "pro" || planSlug === "elite";
   const slugToPlanId = Object.fromEntries(plans.map((p) => [p.slug, p.id]));
@@ -504,51 +483,52 @@ export default function SidebarBillingUsage() {
             )}
           </div>
 
-          {/* AI Interview Usage */}
+          {/* Credit Usage */}
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
-              AI Interview Usage
+              Credits Used This Period
             </p>
-            <div className="space-y-2">
-              <div className="flex justify-between items-baseline">
-                <span className="text-xs text-gray-600 dark:text-gray-300">
-                  {planSlug === "trial"
-                    ? "Interviews used"
-                    : "Interviews this period"}
-                </span>
-                <span className="text-xs font-semibold text-gray-900 dark:text-white">
-                  {interviewsUsed ?? "—"}
-                  <span className="font-normal text-gray-500 dark:text-gray-400">
-                    {" "}
-                    / {interviewLimit}
+            {credits ? (
+              <div className="space-y-2">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-xs text-gray-600 dark:text-gray-300">
+                    {planSlug === "trial" ? "Credits used" : "Credits this period"}
                   </span>
-                </span>
+                  <span className="text-xs font-semibold text-gray-900 dark:text-white">
+                    {credits.creditsUsed}
+                    <span className="font-normal text-gray-500 dark:text-gray-400">
+                      {" "}/ {credits.totalAllowance}
+                    </span>
+                  </span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      credits.creditsUsed >= credits.totalAllowance
+                        ? "bg-red-500"
+                        : credits.creditsUsed >= credits.totalAllowance * 0.8
+                          ? "bg-amber-500"
+                          : "bg-primary"
+                    }`}
+                    style={{
+                      width: `${Math.min(100, credits.totalAllowance > 0 ? (credits.creditsUsed / credits.totalAllowance) * 100 : 0)}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  {credits.creditsRemaining === 0
+                    ? "No credits remaining — upgrade to continue"
+                    : `${credits.creditsRemaining} credits remaining`}
+                </p>
+                {credits.bonusCredits > 0 && (
+                  <p className="text-xs text-green-600 dark:text-green-400">
+                    Includes {credits.bonusCredits} bonus credits
+                  </p>
+                )}
               </div>
-              <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-300 ${
-                    interviewsUsed !== null && interviewsUsed >= interviewLimit
-                      ? "bg-red-500"
-                      : interviewsUsed !== null &&
-                          interviewsUsed >= interviewLimit * 0.8
-                        ? "bg-amber-500"
-                        : "bg-primary"
-                  }`}
-                  style={{
-                    width: `${
-                      interviewsUsed !== null
-                        ? Math.min(100, (interviewsUsed / interviewLimit) * 100)
-                        : 0
-                    }%`,
-                  }}
-                />
-              </div>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                {interviewsUsed !== null && interviewsUsed >= interviewLimit
-                  ? "Limit reached — upgrade to continue"
-                  : `${interviewLimit - (interviewsUsed ?? 0)} remaining`}
-              </p>
-            </div>
+            ) : (
+              <p className="text-xs text-gray-400 dark:text-gray-500">—</p>
+            )}
           </div>
 
           {/* Upgrade */}

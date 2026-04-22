@@ -120,8 +120,8 @@ export default function PricingPage() {
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                   {[
                     {
-                      label: "AI Mock Interviews",
-                      values: ["3", "5/mo", "10/mo", "20/mo"],
+                      label: "Credits",
+                      values: ["300", "500/mo", "800/mo", "1,100/mo"],
                     },
                     {
                       label: "Code Editor & Whiteboard",

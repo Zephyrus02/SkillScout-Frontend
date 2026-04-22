@@ -18,6 +18,8 @@ export interface PlanDefinition {
   accent: PlanAccent;
   badge?: string;
   note?: string;
+  creditAllowance: number;
+  bonusCredits: number;
   features: readonly PlanFeature[];
   /** Trial only: validity in days */
   validityDays?: number;
@@ -32,8 +34,10 @@ export const PLAN_DEFINITIONS: Record<string, PlanDefinition> = {
     accent: "default",
     note: "14 days · no renewal",
     validityDays: 14,
+    creditAllowance: 300,
+    bonusCredits: 0,
     features: [
-      { text: "3 AI Mock Interviews", included: true },
+      { text: "300 credits (14-day trial)", included: true },
       { text: "Basic AI Feedback Analysis", included: true },
       { text: "Community Access", included: false },
       { text: "Code Editor & Whiteboard", included: false },
@@ -45,8 +49,10 @@ export const PLAN_DEFINITIONS: Record<string, PlanDefinition> = {
     tagline: "A lite version to get started with AI mock interviews.",
     monthlyPrice: 1000,
     accent: "default",
+    creditAllowance: 500,
+    bonusCredits: 0,
     features: [
-      { text: "5 AI Mock Interviews per month", included: true },
+      { text: "500 credits per month", included: true },
       { text: "Basic AI Feedback Analysis", included: true },
       { text: "Community Access", included: true },
       { text: "Code Editor & Whiteboard", included: false },
@@ -59,8 +65,10 @@ export const PLAN_DEFINITIONS: Record<string, PlanDefinition> = {
     monthlyPrice: 2000,
     accent: "primary",
     badge: "Most Popular",
+    creditAllowance: 750,
+    bonusCredits: 50,
     features: [
-      { text: "10 AI Mock Interviews per month", included: true },
+      { text: "750 + 50 bonus credits per month", included: true },
       { text: "Video & Voice Analysis", included: true },
       { text: "AI Behavioral Modes", included: true },
       { text: "Access to Code Editor & Whiteboard", included: true },
@@ -74,8 +82,10 @@ export const PLAN_DEFINITIONS: Record<string, PlanDefinition> = {
     monthlyPrice: 5000,
     accent: "purple",
     badge: "Best Value",
+    creditAllowance: 1000,
+    bonusCredits: 100,
     features: [
-      { text: "20 AI Mock Interviews per month", included: true },
+      { text: "1000 + 100 bonus credits per month", included: true },
       { text: "Everything in Pro", included: true },
       { text: "Custom Company Presets & Goals", included: true },
       { text: "Priority Support within 1 day", included: true },
