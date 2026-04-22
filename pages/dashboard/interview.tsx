@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { useMediaPipeProctoring } from "@/hooks/useMediaPipeProctoring";
 import { useEnvironmentProctoring } from "@/hooks/useEnvironmentProctoring";
+import { useAntiDevTools } from "@/hooks/useAntiDevTools";
 import { useMalpracticeWarnings } from "@/hooks/useMalpracticeWarnings";
 import { MalpracticeWarningToast } from "@/components/ui/MalpracticeWarningToast";
 import {
@@ -190,6 +191,7 @@ export default function InterviewRoom() {
   );
 
   // ── Proctoring (MediaPipe & Env) ─────────────────────────
+  useAntiDevTools(true);
   const proctoring = useMediaPipeProctoring(videoRef, shouldAcquireLocalMedia);
   const envProctoring = useEnvironmentProctoring(shouldAcquireLocalMedia);
 

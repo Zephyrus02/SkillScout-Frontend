@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { interviewSessionsApi } from "@/lib/api/interviews";
+import { useAntiDevTools } from "@/hooks/useAntiDevTools";
 import {
   useMediaPipeProctoring,
   getViolationLabel,
@@ -127,6 +128,8 @@ export default function PrelaunchPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraStatus, setCameraStatus] = useState<CheckStatus>("checking");
   const [cameraLabel, setCameraLabel] = useState<string>("");
+
+  useAntiDevTools(true);
 
   // ── MediaPipe face / object proctoring ───────────────────
   const proctoring = useMediaPipeProctoring(videoRef, cameraStatus !== "error");
