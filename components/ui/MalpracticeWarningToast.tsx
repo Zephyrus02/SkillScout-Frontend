@@ -8,14 +8,14 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import type { ViolationType } from "@/hooks/useMediaPipeProctoring";
+import type { CombinedViolationType } from "@/hooks/useMediaPipeProctoring";
 
 // ── Public interface ─────────────────────────────────────────────────────────
 
 export interface ActiveWarning {
   /** Unique key so React re-mounts the component on each new warning */
   id: number;
-  type: ViolationType;
+  type: CombinedViolationType;
   message: string;
   warningNumber: number;
   totalWarnings: number;
@@ -132,15 +132,6 @@ export function MalpracticeWarningToast({ warning, onDismiss }: Props) {
                 </p>
               )}
             </div>
-
-            {/* Dismiss button */}
-            <button
-              onClick={onDismiss}
-              aria-label="Dismiss warning"
-              className="shrink-0 text-white/60 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
-            >
-              <span className="material-icons text-base">close</span>
-            </button>
           </div>
 
           {/* Shrinking progress bar */}

@@ -3,14 +3,10 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
-import {
-  useMediaPipeProctoring,
-  getWarningMessage,
-} from "@/hooks/useMediaPipeProctoring";
-import {
-  MalpracticeWarningToast,
-  type ActiveWarning,
-} from "@/components/ui/MalpracticeWarningToast";
+import { useMediaPipeProctoring } from "@/hooks/useMediaPipeProctoring";
+import { useEnvironmentProctoring } from "@/hooks/useEnvironmentProctoring";
+import { useMalpracticeWarnings } from "@/hooks/useMalpracticeWarnings";
+import { MalpracticeWarningToast } from "@/components/ui/MalpracticeWarningToast";
 import {
   interviewSessionsApi,
   type VideoSignalItem,
@@ -41,6 +37,42 @@ export default function InterviewRoom() {
   const [token, setToken] = useState<string | null>(null);
   const [livekitUrl, setLivekitUrl] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
+
+  const [needsFullscreen, setNeedsFullscreen] = useState(false);
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_APP_ENV !== "production") return;
+    if (!document.fullscreenElement) {
+      setNeedsFullscreen(true);
+    }
+  }, []);
+
+  // Exit fullscreen on any navigation away from the interview room.
+  // Intentionally NOT in the fullscreen check's cleanup — React Strict Mode
+  // runs cleanup immediately on mount, which would exit fullscreen on arrival.
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_APP_ENV !== "production") return;
+    const exitFs = () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    };
+    router.events.on("routeChangeStart", exitFs);
+    return () => router.events.off("routeChangeStart", exitFs);
+  }, [router.events]);
+
+  const handleEnterFullscreen = useCallback(() => {
+    document.documentElement.requestFullscreen().then(() => {
+      setNeedsFullscreen(false);
+    }).catch((err) => {
+      console.warn("Interview fullscreen request failed:", err);
+      toast.info(
+        "Fullscreen mode unavailable. Interview will continue in windowed mode.",
+        { duration: 5000 },
+      );
+      setNeedsFullscreen(false);
+    });
+  }, []);
 
   useEffect(() => {
     if (!sessionId || skipLiveKit) return;
@@ -96,16 +128,6 @@ export default function InterviewRoom() {
 
   // ── Malpractice / proctoring state ──────────────────────────────────────
   // 3 visible warnings; 4th violation → immediate termination
-  const MAX_WARNINGS = 3;
-  const WARNING_COOLDOWN_MS = 11_000; // slightly > 10 s so the toast finishes
-
-  const [activeWarning, setActiveWarning] = useState<ActiveWarning | null>(
-    null,
-  );
-  const warningCountRef = useRef(0);
-  const [warningCountDisplay, setWarningCountDisplay] = useState(0);
-  const lastWarningAtRef = useRef<number>(0);
-  const terminatingRef = useRef(false);
 
   // ── Format elapsed seconds → "14m 02s" / "00:14" style ─────────────────
   const formatTime = (secs: number) => {
@@ -139,6 +161,9 @@ export default function InterviewRoom() {
   const endSession = useCallback(
     (options?: { malpractice?: boolean }) => {
       stopCamera();
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
       try {
         sessionStorage.removeItem(SESSION_STORAGE_KEY);
       } catch {
@@ -164,8 +189,9 @@ export default function InterviewRoom() {
     (skipLiveKit || (!!token && !!livekitUrl)),
   );
 
-  // ── Proctoring (MediaPipe) ─────────────────────────────────
+  // ── Proctoring (MediaPipe & Env) ─────────────────────────
   const proctoring = useMediaPipeProctoring(videoRef, shouldAcquireLocalMedia);
+  const envProctoring = useEnvironmentProctoring(shouldAcquireLocalMedia);
 
   // ── Video signals: batch every 10s and POST ─────────────────
   const signalsBatchRef = useRef<VideoSignalItem[]>([]);
@@ -213,45 +239,22 @@ export default function InterviewRoom() {
 
   // Fire a warning toast on each violation (with cooldown).
   // Warnings 1–3 show a toast. The 4th violation terminates immediately.
-  useEffect(() => {
-    if (!proctoring.isReady || !proctoring.modelLoaded) return;
-    if (proctoring.violation === null) return;
-    if (terminatingRef.current) return;
+  const combinedViolation =
+    envProctoring.violation ||
+    (proctoring.isReady && proctoring.modelLoaded
+      ? proctoring.violation
+      : null);
 
-    const now = Date.now();
-    if (now - lastWarningAtRef.current < WARNING_COOLDOWN_MS) return;
-
-    lastWarningAtRef.current = now;
-
-    // Already gave 3 warnings → this 4th violation terminates the session
-    if (warningCountRef.current >= MAX_WARNINGS) {
-      terminatingRef.current = true;
-      endSession({ malpractice: true });
-      return;
-    }
-
-    const newCount = warningCountRef.current + 1;
-    warningCountRef.current = newCount;
-    setWarningCountDisplay(newCount);
-
-    setActiveWarning({
-      id: now,
-      type: proctoring.violation,
-      message: getWarningMessage(
-        proctoring.violation,
-        proctoring.detectedObjects,
-      ),
-      warningNumber: newCount,
-      totalWarnings: MAX_WARNINGS,
-    });
-    // Violation type drives warning steps; omit detectedObjects (updates every tick).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    proctoring.violation,
-    proctoring.isReady,
-    proctoring.modelLoaded,
-    endSession,
-  ]);
+  const {
+    activeWarning,
+    warningCountDisplay,
+    clearWarning,
+    maxWarnings: MAX_WARNINGS,
+  } = useMalpracticeWarnings({
+    violation: combinedViolation,
+    detectedObjects: proctoring.detectedObjects,
+    onTerminate: () => endSession({ malpractice: true }),
+  });
 
   // ── Boot camera / mic (gated + cancel-safe async getUserMedia) ───────────
   useEffect(() => {
@@ -335,8 +338,33 @@ export default function InterviewRoom() {
       {/* ── Malpractice warning overlay (fixed, above all content) ── */}
       <MalpracticeWarningToast
         warning={activeWarning}
-        onDismiss={() => setActiveWarning(null)}
+        onDismiss={() => {
+          clearWarning();
+          envProctoring.clearViolation();
+        }}
       />
+
+      {/* ── Fullscreen entry overlay ── */}
+      {needsFullscreen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/95 flex items-center justify-center">
+          <div className="text-center text-white px-8">
+            <span className="material-icons text-5xl mb-4 block text-blue-400">
+              fullscreen
+            </span>
+            <h2 className="text-xl font-semibold mb-2">Fullscreen Required</h2>
+            <p className="text-slate-300 mb-6 text-sm">
+              This interview must be conducted in fullscreen mode to continue.
+            </p>
+            <button
+              type="button"
+              onClick={handleEnterFullscreen}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+            >
+              Enter Fullscreen
+            </button>
+          </div>
+        </div>
+      )}
 
       <Head>
         <meta name="robots" content="noindex, nofollow" />

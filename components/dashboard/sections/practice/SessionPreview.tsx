@@ -55,7 +55,14 @@ export default function SessionPreview({ duration }: Props) {
 
       {/* Launch button */}
       <button
-        onClick={() => router.push("/dashboard/prelaunch")}
+        onClick={() => {
+          if (process.env.NEXT_PUBLIC_APP_ENV === "production") {
+            document.documentElement.requestFullscreen?.().catch((err) => {
+              console.warn("Fullscreen request failed:", err);
+            });
+          }
+          router.push("/dashboard/prelaunch");
+        }}
         className="w-full py-3 rounded-xl bg-primary text-white font-bold text-base hover:bg-primary/90 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md shadow-primary/30"
       >
         <span className="material-icons">play_arrow</span>

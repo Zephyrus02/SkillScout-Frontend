@@ -37,6 +37,9 @@ export type ViolationType =
   | "book_detected"
   | null;
 
+import type { EnvViolationType } from "./useEnvironmentProctoring";
+export type CombinedViolationType = ViolationType | EnvViolationType;
+
 export interface ProctoringResult {
   /** True while the WASM models are still downloading / initialising */
   isLoading: boolean;
@@ -290,7 +293,7 @@ export function useMediaPipeProctoring(
 
 // ── Helpers (exported for use in pages) ─────────────────────────────────────
 
-export function getViolationLabel(violation: ViolationType): string {
+export function getViolationLabel(violation: CombinedViolationType): string {
   switch (violation) {
     case "multiple_faces":
       return "Multiple faces detected";
@@ -302,13 +305,17 @@ export function getViolationLabel(violation: ViolationType): string {
       return "Mobile phone detected";
     case "book_detected":
       return "Reference material (book) detected";
+    case "tab_switch":
+      return "Tab or window switch detected";
+    case "left_fullscreen":
+      return "Exited full screen mode";
     default:
       return "Checking…";
   }
 }
 
 export function getWarningMessage(
-  violation: ViolationType,
+  violation: CombinedViolationType,
   objects: string[],
 ): string {
   switch (violation) {
@@ -322,6 +329,10 @@ export function getWarningMessage(
       return `A mobile phone has been detected in your camera feed (${objects.join(", ")}). Please remove all devices from view.`;
     case "book_detected":
       return `Reference material has been detected in your camera feed (${objects.join(", ")}). Please remove all books and notes from view.`;
+    case "tab_switch":
+      return "You have switched tabs or windows. This is considered malpractice. Please remain on the interview screen.";
+    case "left_fullscreen":
+      return "You have exited full screen mode. This is considered malpractice. Please remain in full screen for the duration of the interview.";
     default:
       return "Suspicious activity has been detected in your camera feed.";
   }

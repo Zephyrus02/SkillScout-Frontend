@@ -1,12 +1,12 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { interviewSessionsApi } from "@/lib/api/interviews";
 import {
   useMediaPipeProctoring,
   getViolationLabel,
-  type ViolationType,
+  type CombinedViolationType,
 } from "@/hooks/useMediaPipeProctoring";
 import CheckRow from "@/components/dashboard/prelaunch/CheckRow";
 import SpeakerCheck from "@/components/dashboard/prelaunch/SpeakerCheck";
@@ -31,6 +31,20 @@ const SESSION_STORAGE_KEY = "skillscout_interview_session";
 const LIVEKIT_INTERVIEW_API_ENABLED =
   process.env.NEXT_PUBLIC_ENABLE_LIVEKIT_INTERVIEW === "true";
 
+async function requestProductionFullscreen(context: string) {
+  if (process.env.NEXT_PUBLIC_APP_ENV !== "production") return;
+  try {
+    if (
+      !document.fullscreenElement &&
+      document.documentElement.requestFullscreen
+    ) {
+      await document.documentElement.requestFullscreen();
+    }
+  } catch (err) {
+    console.warn(`${context} fullscreen request failed:`, err);
+  }
+}
+
 function StartInterviewButton({
   allOk,
   onStarted,
@@ -50,6 +64,9 @@ function StartInterviewButton({
 
   const handleClick = async () => {
     if (!mayEnter || loading) return;
+
+    await requestProductionFullscreen("Prelaunch");
+
     if (!useLiveKitSessionApi) {
       onEnterStaticRoom?.();
       return;
@@ -118,6 +135,26 @@ export default function PrelaunchPage() {
    *  so brief movement / dropout does not flip back to error or "Looking…". */
   const [facePrelaunchCleared, setFacePrelaunchCleared] = useState(false);
 
+  // ── Fullscreen enforcement (no warnings — just prompt to re-enter) ────────
+  const [needsFullscreen, setNeedsFullscreen] = useState(false);
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_APP_ENV !== "production") return;
+    if (!document.fullscreenElement) setNeedsFullscreen(true);
+    const onFsChange = () => {
+      setNeedsFullscreen(!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  const handleEnterFullscreen = useCallback(() => {
+    document.documentElement.requestFullscreen().catch((err) => {
+      console.warn("Prelaunch fullscreen request failed:", err);
+      setNeedsFullscreen(false);
+    });
+  }, []);
+
   useEffect(() => {
     if (facePrelaunchCleared) return;
     if (proctoring.isLoading || !proctoring.isReady || !proctoring.modelLoaded)
@@ -164,7 +201,7 @@ export default function PrelaunchPage() {
     faceCheckStatus = "error";
     faceCheckBadgeLabel = "Issue Detected";
     faceCheckDescription = getViolationLabel(
-      proctoring.violation as ViolationType,
+      proctoring.violation as CombinedViolationType,
     );
   }
 
@@ -506,6 +543,27 @@ export default function PrelaunchPage() {
 
   return (
     <>
+      {needsFullscreen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/95 flex items-center justify-center">
+          <div className="text-center text-white px-8">
+            <span className="material-icons text-5xl mb-4 block text-blue-400">
+              fullscreen
+            </span>
+            <h2 className="text-xl font-semibold mb-2">Fullscreen Required</h2>
+            <p className="text-slate-300 mb-6 text-sm">
+              Your interview session must run in fullscreen mode. Please enter
+              fullscreen to continue.
+            </p>
+            <button
+              type="button"
+              onClick={handleEnterFullscreen}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+            >
+              Enter Fullscreen
+            </button>
+          </div>
+        </div>
+      )}
       <Head>
         <meta name="robots" content="noindex, nofollow" />
 
