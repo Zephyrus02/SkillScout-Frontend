@@ -1,4 +1,7 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+import { getAccessToken } from "../token-storage";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
 
 const PARSED_TIMEOUT = Number(process.env.NEXT_PUBLIC_API_FETCH_TIMEOUT_MS);
 const FETCH_TIMEOUT_MS =
@@ -11,8 +14,7 @@ async function request<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token = getAccessToken();
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -36,7 +38,7 @@ async function request<T>(
       (err instanceof Error && err.name === "AbortError");
     if (aborted) {
       throw new Error(
-        `Request timed out after ${FETCH_TIMEOUT_MS / 1000}s. Check that the API is running and NEXT_PUBLIC_API_URL is correct.`,
+        `Request timed out after ${FETCH_TIMEOUT_MS / 1000}s. Check that the API is running and NEXT_PUBLIC_API_BASE_URL is correct.`,
       );
     }
     throw err;
