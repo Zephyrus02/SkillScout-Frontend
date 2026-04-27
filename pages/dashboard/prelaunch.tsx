@@ -3,7 +3,10 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { interviewSessionsApi, type CreditsBalance } from "@/lib/api/interviews";
+import {
+  interviewSessionsApi,
+  type CreditsBalance,
+} from "@/lib/api/interviews";
 import { INTERVIEW_TYPES, type InterviewType } from "@/lib/credits";
 import { useAntiDevTools } from "@/hooks/useAntiDevTools";
 import {
@@ -218,7 +221,9 @@ export default function PrelaunchPage() {
       .finally(() => setCreditsLoading(false));
   }, []);
 
-  const selectedTypeInfo = INTERVIEW_TYPES.find((t) => t.type === selectedType)!;
+  const selectedTypeInfo = INTERVIEW_TYPES.find(
+    (t) => t.type === selectedType,
+  )!;
   const creditsRemaining = creditsData?.creditsRemaining ?? null;
   const canAfford =
     creditsRemaining === null || creditsRemaining >= selectedTypeInfo.cost;
@@ -245,7 +250,9 @@ export default function PrelaunchPage() {
 
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_APP_ENV !== "production") return;
-    if (!document.fullscreenElement) setNeedsFullscreen(true);
+    requestAnimationFrame(() => {
+      if (!document.fullscreenElement) setNeedsFullscreen(true);
+    });
     const onFsChange = () => {
       setNeedsFullscreen(!document.fullscreenElement);
     };
@@ -727,28 +734,25 @@ export default function PrelaunchPage() {
             )}
 
             {/* Insufficient for selected type (but can afford others) */}
-            {!creditsLoading &&
-              creditsData &&
-              canAffordAny &&
-              !canAfford && (
-                <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5">
-                  <span className="material-icons text-amber-500 text-base">
-                    warning
-                  </span>
-                  <p className="text-xs text-amber-700">
-                    Not enough credits for{" "}
-                    <strong>{selectedTypeInfo.label}</strong>. Choose a cheaper
-                    option or{" "}
-                    <Link
-                      href="/dashboard/settings"
-                      className="underline font-semibold"
-                    >
-                      upgrade your plan
-                    </Link>
-                    .
-                  </p>
-                </div>
-              )}
+            {!creditsLoading && creditsData && canAffordAny && !canAfford && (
+              <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5">
+                <span className="material-icons text-amber-500 text-base">
+                  warning
+                </span>
+                <p className="text-xs text-amber-700">
+                  Not enough credits for{" "}
+                  <strong>{selectedTypeInfo.label}</strong>. Choose a cheaper
+                  option or{" "}
+                  <Link
+                    href="/dashboard/settings"
+                    className="underline font-semibold"
+                  >
+                    upgrade your plan
+                  </Link>
+                  .
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {INTERVIEW_TYPES.map((typeInfo) => (
@@ -918,10 +922,15 @@ export default function PrelaunchPage() {
                       ? { label: "Denied", color: "red" }
                       : micQuality === "passed"
                         ? { label: "Good", color: "emerald" }
-                        : { label: `Listening… ${micCountdown}s`, color: "blue" }
+                        : {
+                            label: `Listening… ${micCountdown}s`,
+                            color: "blue",
+                          }
                   }
                   borderBottom
-                  spinnerIcon={micPermission === "ok" && micQuality !== "passed"}
+                  spinnerIcon={
+                    micPermission === "ok" && micQuality !== "passed"
+                  }
                 >
                   {micPermission === "ok" && (
                     <div className="flex items-center gap-2 mt-3">
@@ -936,7 +945,11 @@ export default function PrelaunchPage() {
                         />
                       </div>
                       <span className="text-xs text-slate-400 w-8 text-right">
-                        {micLevel < 15 ? "Low" : micLevel < 55 ? "Fair" : "Good"}
+                        {micLevel < 15
+                          ? "Low"
+                          : micLevel < 55
+                            ? "Fair"
+                            : "Good"}
                       </span>
                     </div>
                   )}

@@ -149,7 +149,7 @@ export default function EducationSection() {
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
                     <button
                       onClick={() => openEdit(e)}
-                      className="p-1 text-gray-400 hover:text-blue-600 transition rounded"
+                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 transition rounded-full hover:bg-gray-50 dark:hover:bg-gray-800"
                     >
                       <span className="material-icons text-sm">edit</span>
                     </button>
@@ -172,6 +172,7 @@ export default function EducationSection() {
         <Modal
           title={editingEdu ? "Edit Education" : "Add Education"}
           onClose={closeModal}
+          overflowVisible
         >
           <div className="space-y-4">
             <div>

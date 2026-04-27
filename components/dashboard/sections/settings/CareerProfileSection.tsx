@@ -36,6 +36,9 @@ export default function CareerProfileSection() {
   const [draft, setDraft] = useState<CareerProfile>(EMPTY_CAREER);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [careerGoalOpen, setCareerGoalOpen] = useState(false);
+  const [employmentTypeOpen, setEmploymentTypeOpen] = useState(false);
+  const [preferredShiftOpen, setPreferredShiftOpen] = useState(false);
 
   useEffect(() => {
     if (apiProfile?.career) {
@@ -58,6 +61,9 @@ export default function CareerProfileSection() {
   const openEdit = () => {
     setDraft(careerProfile);
     setSaveError(null);
+    setCareerGoalOpen(false);
+    setEmploymentTypeOpen(false);
+    setPreferredShiftOpen(false);
     setEditing(true);
   };
 
@@ -114,17 +120,15 @@ export default function CareerProfileSection() {
     <>
       <div className={cardCls}>
         <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-              Career Profile
-            </h2>
-            <button
-              onClick={openEdit}
-              className="p-1.5 text-gray-400 hover:text-blue-600 transition rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
-            >
-              <span className="material-icons text-lg">edit</span>
-            </button>
-          </div>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+            Career Profile
+          </h2>
+          <button
+            onClick={openEdit}
+            className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 transition rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            <span className="material-icons text-lg">edit</span>
+          </button>
         </div>
 
         {/* ── Career overview ─────────────────────────────────────── */}
@@ -172,14 +176,16 @@ export default function CareerProfileSection() {
                   {targetIndustries.map((ind) => (
                     <span
                       key={ind}
-                      className="px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full border border-blue-100 dark:border-blue-800/40"
+                      className="px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full border border-blue-100 dark:border-blue-800/40 capitalize"
                     >
                       {ind}
                     </span>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">—</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  —
+                </p>
               )}
             </div>
 
@@ -193,14 +199,16 @@ export default function CareerProfileSection() {
                   {targetRoles.map((role) => (
                     <span
                       key={role}
-                      className="px-2.5 py-1 text-xs font-medium bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full border border-green-100 dark:border-green-800/40"
+                      className="px-2.5 py-1 text-xs font-medium bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full border border-green-100 dark:border-green-800/40 capitalize"
                     >
                       {role}
                     </span>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">—</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  —
+                </p>
               )}
             </div>
           </div>
@@ -250,30 +258,101 @@ export default function CareerProfileSection() {
 
       {/* Edit Modal */}
       {editing && (
-        <Modal title="Edit Career Profile" onClose={() => setEditing(false)}>
+        <Modal
+          title="Edit Career Profile"
+          onClose={() => setEditing(false)}
+          overflowVisible
+        >
           <div className="space-y-4">
             {/* Primary Career Goal */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Primary Career Goal
               </label>
-              <select
-                className={`${inputCls} appearance-none`}
-                value={draft.primaryCareerGoal}
-                onChange={(e) =>
-                  setDraft((d) => ({
-                    ...d,
-                    primaryCareerGoal: e.target.value,
-                  }))
-                }
-              >
-                <option value="">Select a career goal…</option>
-                {CAREER_GOAL_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <div
+                  className={`${inputCls} flex items-center justify-between cursor-pointer`}
+                  onClick={() => setCareerGoalOpen(!careerGoalOpen)}
+                >
+                  <span
+                    className={
+                      draft.primaryCareerGoal
+                        ? "text-gray-900 dark:text-white"
+                        : "text-gray-500"
+                    }
+                  >
+                    {CAREER_GOAL_OPTIONS.find(
+                      (o) => o.value === draft.primaryCareerGoal,
+                    )?.label || "Select a career goal..."}
+                  </span>
+                  <svg
+                    className={`w-5 h-5 text-gray-400 transition-transform ${careerGoalOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+                {careerGoalOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setCareerGoalOpen(false)}
+                    />
+                    <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden">
+                      <div
+                        className="px-4 py-2 text-sm text-gray-500 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => {
+                          setDraft((d) => ({ ...d, primaryCareerGoal: "" }));
+                          setCareerGoalOpen(false);
+                        }}
+                      >
+                        Select a career goal...
+                      </div>
+                      {CAREER_GOAL_OPTIONS.map((opt) => (
+                        <div
+                          key={opt.value}
+                          className={`px-4 py-2 text-sm cursor-pointer flex items-center justify-between ${
+                            draft.primaryCareerGoal === opt.value
+                              ? "bg-blue-600 text-white font-medium"
+                              : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          }`}
+                          onClick={() => {
+                            setDraft((d) => ({
+                              ...d,
+                              primaryCareerGoal: opt.value,
+                            }));
+                            setCareerGoalOpen(false);
+                          }}
+                        >
+                          {opt.label}
+                          {draft.primaryCareerGoal === opt.value && (
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Current Job Role */}
@@ -296,21 +375,91 @@ export default function CareerProfileSection() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Desired Employment Type
               </label>
-              <select
-                className={`${inputCls} appearance-none`}
-                value={draft.desiredEmploymentType}
-                onChange={(e) =>
-                  setDraft((d) => ({
-                    ...d,
-                    desiredEmploymentType: e.target.value,
-                  }))
-                }
-              >
-                <option value="">Select type…</option>
-                <option value="onsite">Onsite</option>
-                <option value="hybrid">Hybrid</option>
-                <option value="remote">Remote</option>
-              </select>
+              <div className="relative">
+                <div
+                  className={`${inputCls} flex items-center justify-between cursor-pointer`}
+                  onClick={() => setEmploymentTypeOpen(!employmentTypeOpen)}
+                >
+                  <span
+                    className={
+                      draft.desiredEmploymentType
+                        ? "text-gray-900 dark:text-white capitalize"
+                        : "text-gray-500"
+                    }
+                  >
+                    {draft.desiredEmploymentType || "Select type..."}
+                  </span>
+                  <svg
+                    className={`w-5 h-5 text-gray-400 transition-transform ${employmentTypeOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+                {employmentTypeOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setEmploymentTypeOpen(false)}
+                    />
+                    <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden">
+                      <div
+                        className="px-4 py-2 text-sm text-gray-500 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => {
+                          setDraft((d) => ({
+                            ...d,
+                            desiredEmploymentType: "",
+                          }));
+                          setEmploymentTypeOpen(false);
+                        }}
+                      >
+                        Select type...
+                      </div>
+                      {["onsite", "hybrid", "remote"].map((opt) => (
+                        <div
+                          key={opt}
+                          className={`px-4 py-2 text-sm cursor-pointer flex items-center justify-between capitalize ${
+                            draft.desiredEmploymentType === opt
+                              ? "bg-blue-600 text-white font-medium"
+                              : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          }`}
+                          onClick={() => {
+                            setDraft((d) => ({
+                              ...d,
+                              desiredEmploymentType: opt,
+                            }));
+                            setEmploymentTypeOpen(false);
+                          }}
+                        >
+                          {opt}
+                          {draft.desiredEmploymentType === opt && (
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Preferred Shift */}
@@ -318,18 +467,88 @@ export default function CareerProfileSection() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Preferred Shift
               </label>
-              <select
-                className={`${inputCls} appearance-none`}
-                value={draft.preferredShift}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, preferredShift: e.target.value }))
-                }
-              >
-                <option value="">Select shift…</option>
-                <option value="Day">Day</option>
-                <option value="Night">Night</option>
-                <option value="Any">Any</option>
-              </select>
+              <div className="relative">
+                <div
+                  className={`${inputCls} flex items-center justify-between cursor-pointer`}
+                  onClick={() => setPreferredShiftOpen(!preferredShiftOpen)}
+                >
+                  <span
+                    className={
+                      draft.preferredShift
+                        ? "text-gray-900 dark:text-white"
+                        : "text-gray-500"
+                    }
+                  >
+                    {draft.preferredShift || "Select shift..."}
+                  </span>
+                  <svg
+                    className={`w-5 h-5 text-gray-400 transition-transform ${preferredShiftOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+                {preferredShiftOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setPreferredShiftOpen(false)}
+                    />
+                    <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden">
+                      <div
+                        className="px-4 py-2 text-sm text-gray-500 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => {
+                          setDraft((d) => ({ ...d, preferredShift: "" }));
+                          setPreferredShiftOpen(false);
+                        }}
+                      >
+                        Select shift...
+                      </div>
+                      {["Day", "Night", "Any"].map((opt) => (
+                        <div
+                          key={opt}
+                          className={`px-4 py-2 text-sm cursor-pointer flex items-center justify-between ${
+                            draft.preferredShift === opt
+                              ? "bg-blue-600 text-white font-medium"
+                              : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          }`}
+                          onClick={() => {
+                            setDraft((d) => ({
+                              ...d,
+                              preferredShift: opt,
+                            }));
+                            setPreferredShiftOpen(false);
+                          }}
+                        >
+                          {opt}
+                          {draft.preferredShift === opt && (
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Preferred Work Location */}

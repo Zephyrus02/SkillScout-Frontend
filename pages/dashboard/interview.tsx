@@ -43,9 +43,11 @@ export default function InterviewRoom() {
 
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_APP_ENV !== "production") return;
-    if (!document.fullscreenElement) {
-      setNeedsFullscreen(true);
-    }
+    requestAnimationFrame(() => {
+      if (!document.fullscreenElement) {
+        setNeedsFullscreen(true);
+      }
+    });
   }, []);
 
   // Exit fullscreen on any navigation away from the interview room.
@@ -63,16 +65,19 @@ export default function InterviewRoom() {
   }, [router.events]);
 
   const handleEnterFullscreen = useCallback(() => {
-    document.documentElement.requestFullscreen().then(() => {
-      setNeedsFullscreen(false);
-    }).catch((err) => {
-      console.warn("Interview fullscreen request failed:", err);
-      toast.info(
-        "Fullscreen mode unavailable. Interview will continue in windowed mode.",
-        { duration: 5000 },
-      );
-      setNeedsFullscreen(false);
-    });
+    document.documentElement
+      .requestFullscreen()
+      .then(() => {
+        setNeedsFullscreen(false);
+      })
+      .catch((err) => {
+        console.warn("Interview fullscreen request failed:", err);
+        toast.info(
+          "Fullscreen mode unavailable. Interview will continue in windowed mode.",
+          { duration: 5000 },
+        );
+        setNeedsFullscreen(false);
+      });
   }, []);
 
   useEffect(() => {

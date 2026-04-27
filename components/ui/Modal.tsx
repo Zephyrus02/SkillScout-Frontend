@@ -5,6 +5,7 @@ interface ModalProps {
   onClose: () => void;
   children: React.ReactNode;
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+  overflowVisible?: boolean;
 }
 
 export default function Modal({
@@ -12,6 +13,7 @@ export default function Modal({
   onClose,
   children,
   maxWidth = "md",
+  overflowVisible = false,
 }: ModalProps) {
   const maxWidthCls = {
     sm: "max-w-sm",
@@ -29,7 +31,7 @@ export default function Modal({
         onClick={onClose}
       />
       <div
-        className={`relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full ${maxWidthCls} p-6 z-10 max-h-[90vh] overflow-y-auto`}
+        className={`relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full ${maxWidthCls} p-6 z-10 max-h-[90vh] ${overflowVisible ? "overflow-visible" : "overflow-y-auto"}`}
       >
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">

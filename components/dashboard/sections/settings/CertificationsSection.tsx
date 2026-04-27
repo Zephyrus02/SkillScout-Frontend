@@ -165,7 +165,7 @@ export default function CertificationsSection() {
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
                   <button
                     onClick={() => openEdit(cert)}
-                    className="p-1 text-gray-400 hover:text-blue-600 transition rounded"
+                    className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 transition rounded-full hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
                     <span className="material-icons text-sm">edit</span>
                   </button>
@@ -187,6 +187,7 @@ export default function CertificationsSection() {
         <Modal
           title={editingCert ? "Edit Certification" : "Add Certification"}
           onClose={closeModal}
+          overflowVisible
         >
           <div className="space-y-4">
             <div>

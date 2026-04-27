@@ -25,6 +25,7 @@ export default function EmploymentSection() {
   const [addingEmp, setAddingEmp] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [noticePeriodOpen, setNoticePeriodOpen] = useState(false);
 
   useEffect(() => {
     if (apiProfile?.employment) {
@@ -191,7 +192,7 @@ export default function EmploymentSection() {
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
                     <button
                       onClick={() => openEdit(e)}
-                      className="p-1 text-gray-400 hover:text-blue-600 transition rounded"
+                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 transition rounded-full hover:bg-gray-50 dark:hover:bg-gray-800"
                     >
                       <span className="material-icons text-sm">edit</span>
                     </button>
@@ -214,6 +215,7 @@ export default function EmploymentSection() {
         <Modal
           title={editingEmp ? "Edit Employment" : "Add Employment"}
           onClose={closeModal}
+          overflowVisible
         >
           <div className="space-y-4">
             <div>
@@ -325,21 +327,92 @@ export default function EmploymentSection() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Notice Period
                 </label>
-                <select
-                  className={`${inputCls} appearance-none`}
-                  value={draft.noticePeriod}
-                  onChange={(e) =>
-                    setDraft((d) => ({ ...d, noticePeriod: e.target.value }))
-                  }
-                >
-                  <option value="">Select notice period</option>
-                  <option value="Immediate">Immediate</option>
-                  <option value="15 Days">15 Days</option>
-                  <option value="1 Month">1 Month</option>
-                  <option value="2 Months">2 Months</option>
-                  <option value="3 Months">3 Months</option>
-                  <option value="6 Months">6 Months</option>
-                </select>
+                <div className="relative">
+                  <div
+                    className={`${inputCls} flex items-center justify-between cursor-pointer`}
+                    onClick={() => setNoticePeriodOpen(!noticePeriodOpen)}
+                  >
+                    <span
+                      className={
+                        draft.noticePeriod
+                          ? "text-gray-900 dark:text-white"
+                          : "text-gray-500"
+                      }
+                    >
+                      {draft.noticePeriod || "Select notice period"}
+                    </span>
+                    <svg
+                      className={`w-5 h-5 text-gray-400 transition-transform ${noticePeriodOpen ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                  {noticePeriodOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setNoticePeriodOpen(false)}
+                      />
+                      <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden">
+                        <div
+                          className="px-4 py-2 text-sm text-gray-500 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                          onClick={() => {
+                            setDraft((d) => ({ ...d, noticePeriod: "" }));
+                            setNoticePeriodOpen(false);
+                          }}
+                        >
+                          Select notice period
+                        </div>
+                        {[
+                          "Immediate",
+                          "15 Days",
+                          "1 Month",
+                          "2 Months",
+                          "3 Months",
+                          "6 Months",
+                        ].map((option) => (
+                          <div
+                            key={option}
+                            className={`px-4 py-2 text-sm cursor-pointer flex items-center justify-between ${
+                              draft.noticePeriod === option
+                                ? "bg-blue-600 text-white font-medium"
+                                : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            }`}
+                            onClick={() => {
+                              setDraft((d) => ({ ...d, noticePeriod: option }));
+                              setNoticePeriodOpen(false);
+                            }}
+                          >
+                            {option}
+                            {draft.noticePeriod === option && (
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
             {saveError && (

@@ -51,6 +51,7 @@ export default function ProfileHeaderSection() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [noticePeriodOpen, setNoticePeriodOpen] = useState(false);
 
   // Seed local state whenever the API profile loads / refreshes
   useEffect(() => {
@@ -87,13 +88,14 @@ export default function ProfileHeaderSection() {
   const openEdit = () => {
     setDraft(profile);
     setSaveError(null);
+    setNoticePeriodOpen(false);
     setEditing(true);
   };
 
   const save = async () => {
     setSaving(true);
     setSaveError(null);
-    
+
     const salaryVal = draft.salary;
     const normalizedSalary =
       salaryVal && !salaryVal.trim().endsWith("LPA")
@@ -109,7 +111,11 @@ export default function ProfileHeaderSection() {
         salary: normalizedSalary,
         noticePeriod: draft.noticePeriod,
       });
-      setProfile({ ...draft, salary: normalizedSalary, avatarInitials: toInitials(draft.name) });
+      setProfile({
+        ...draft,
+        salary: normalizedSalary,
+        avatarInitials: toInitials(draft.name),
+      });
       setEditing(false);
     } catch (e: unknown) {
       const err = e as {
@@ -187,7 +193,7 @@ export default function ProfileHeaderSection() {
               onClick={() => fileInputRef.current?.click()}
               disabled={avatarUploading}
               title="Upload profile picture"
-              className="absolute bottom-1 right-0 z-20 p-1.5 bg-white dark:bg-gray-700 rounded-full shadow-sm border border-gray-100 dark:border-gray-600 text-gray-500 hover:text-blue-600 transition disabled:opacity-50"
+              className="absolute bottom-1 right-0 z-20 w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-700 rounded-full shadow-sm border border-gray-100 dark:border-gray-600 text-gray-500 hover:text-blue-600 transition disabled:opacity-50"
             >
               <span className="material-icons text-sm">
                 {avatarUploading ? "hourglass_empty" : "edit"}
@@ -240,7 +246,11 @@ export default function ProfileHeaderSection() {
                 {
                   icon: "attach_money",
                   label: "Current Salary",
-                  value: profile.salary ? (profile.salary.endsWith("LPA") ? profile.salary : `${profile.salary} LPA`) : "",
+                  value: profile.salary
+                    ? profile.salary.endsWith("LPA")
+                      ? profile.salary
+                      : `${profile.salary} LPA`
+                    : "",
                 },
                 {
                   icon: "calendar_month",
@@ -269,7 +279,11 @@ export default function ProfileHeaderSection() {
 
       {/* Edit Modal */}
       {editing && (
-        <Modal title="Edit Profile" onClose={() => setEditing(false)}>
+        <Modal
+          title="Edit Profile"
+          onClose={() => setEditing(false)}
+          overflowVisible
+        >
           <div className="space-y-4">
             {PROFILE_FIELDS.map(({ label, key }) => (
               <div key={key}>
@@ -292,20 +306,91 @@ export default function ProfileHeaderSection() {
                     </span>
                   </div>
                 ) : key === "noticePeriod" ? (
-                  <select
-                    className={`${inputCls} appearance-none`}
-                    value={draft[key] as string}
-                    onChange={(e) =>
-                      setDraft((d) => ({ ...d, [key]: e.target.value }))
-                    }
-                  >
-                    <option value="">Select notice period…</option>
-                    <option value="Available to join immediately">Available to join immediately</option>
-                    <option value="1 month">1 month</option>
-                    <option value="2 months">2 months</option>
-                    <option value="3 months">3 months</option>
-                    <option value=">3 months">&gt;3 months</option>
-                  </select>
+                  <div className="relative">
+                    <div
+                      className={`${inputCls} flex items-center justify-between cursor-pointer`}
+                      onClick={() => setNoticePeriodOpen(!noticePeriodOpen)}
+                    >
+                      <span
+                        className={
+                          draft[key]
+                            ? "text-gray-900 dark:text-white"
+                            : "text-gray-500"
+                        }
+                      >
+                        {draft[key] || "Select notice period..."}
+                      </span>
+                      <svg
+                        className={`w-5 h-5 text-gray-400 transition-transform ${noticePeriodOpen ? "rotate-180" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
+                    {noticePeriodOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setNoticePeriodOpen(false)}
+                        />
+                        <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden">
+                          <div
+                            className="px-4 py-2 text-sm text-gray-500 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                            onClick={() => {
+                              setDraft((d) => ({ ...d, [key]: "" }));
+                              setNoticePeriodOpen(false);
+                            }}
+                          >
+                            Select notice period...
+                          </div>
+                          {[
+                            "Available to join immediately",
+                            "1 month",
+                            "2 months",
+                            "3 months",
+                            ">3 months",
+                          ].map((option) => (
+                            <div
+                              key={option}
+                              className={`px-4 py-2 text-sm cursor-pointer flex items-center justify-between ${
+                                draft[key] === option
+                                  ? "bg-blue-600 text-white font-medium"
+                                  : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              }`}
+                              onClick={() => {
+                                setDraft((d) => ({ ...d, [key]: option }));
+                                setNoticePeriodOpen(false);
+                              }}
+                            >
+                              {option}
+                              {draft[key] === option && (
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 ) : key === "title" ? (
                   <div>
                     <input

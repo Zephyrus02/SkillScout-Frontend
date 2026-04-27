@@ -137,7 +137,7 @@ export default function ProjectsSection() {
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
                     <button
                       onClick={() => openEdit(p)}
-                      className="p-1 text-gray-400 hover:text-blue-600 transition rounded-full hover:bg-gray-50 dark:hover:bg-gray-800"
+                      className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 transition rounded-full hover:bg-gray-50 dark:hover:bg-gray-800"
                     >
                       <span className="material-icons text-base">edit</span>
                     </button>

@@ -137,7 +137,7 @@ export default function ResumeSection() {
                   href={resumeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-500 transition shadow-sm"
+                  className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-500 transition shadow-sm"
                   title="Download resume"
                 >
                   <span className="material-icons text-lg">download</span>
@@ -145,7 +145,7 @@ export default function ResumeSection() {
               )}
               <button
                 onClick={handleResumeDelete}
-                className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-500 hover:text-red-500 transition shadow-sm"
+                className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-500 hover:text-red-500 transition shadow-sm"
                 title="Delete resume"
               >
                 <span className="material-icons text-lg">delete</span>
@@ -179,7 +179,7 @@ export default function ResumeSection() {
               setHeadlineError(null);
               setEditingHeadline(true);
             }}
-            className="p-1.5 text-gray-400 hover:text-blue-600 transition rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
+            className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 transition rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             <span className="material-icons text-lg">edit</span>
           </button>

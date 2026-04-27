@@ -46,23 +46,21 @@ export default function SidebarAccountSettings() {
               Public Profile
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Make your profile visible to anyone with the link
+              Make your profile public
             </p>
           </div>
-          <button
-            onClick={handleTogglePublic}
-            disabled={publicToggling}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${
-              isPublic ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-700"
-            }`}
-            aria-label="Toggle public profile"
-          >
-            <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-                isPublic ? "translate-x-5" : "translate-x-0.5"
-              }`}
+          <label className="relative inline-flex cursor-pointer items-center gap-3 text-gray-900">
+            <input
+              type="checkbox"
+              className="peer sr-only"
+              checked={isPublic}
+              onChange={handleTogglePublic}
+              disabled={publicToggling}
+              aria-label="Toggle public profile"
             />
-          </button>
+            <div className="peer h-7 w-12 rounded-full bg-gray-200 dark:bg-gray-700 ring-offset-1 transition-colors duration-200 peer-checked:bg-blue-600 peer-focus:ring-2 peer-focus:ring-blue-500 peer-disabled:opacity-50"></div>
+            <span className="dot absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ease-in-out peer-checked:translate-x-5"></span>
+          </label>
         </div>
 
         <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
@@ -76,19 +74,17 @@ export default function SidebarAccountSettings() {
                 Receive daily job alerts
               </p>
             </div>
-            <button
-              onClick={() => setEmailAlerts(!emailAlerts)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                emailAlerts ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-700"
-              }`}
-              aria-label="Toggle email alerts"
-            >
-              <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-                  emailAlerts ? "translate-x-5" : "translate-x-0.5"
-                }`}
+            <label className="relative inline-flex cursor-pointer items-center gap-3 text-gray-900">
+              <input
+                type="checkbox"
+                className="peer sr-only"
+                checked={emailAlerts}
+                onChange={() => setEmailAlerts(!emailAlerts)}
+                aria-label="Toggle email alerts"
               />
-            </button>
+              <div className="peer h-7 w-12 rounded-full bg-gray-200 dark:bg-gray-700 ring-offset-1 transition-colors duration-200 peer-checked:bg-blue-600 peer-focus:ring-2 peer-focus:ring-blue-500"></div>
+              <span className="dot absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ease-in-out peer-checked:translate-x-5"></span>
+            </label>
           </div>
         </div>
 
