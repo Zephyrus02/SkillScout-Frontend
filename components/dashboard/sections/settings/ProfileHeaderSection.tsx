@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/router";
 import Modal from "@/components/ui/Modal";
 import { inputCls, cancelBtnCls, saveBtnCls } from "./constants";
 import type { ProfileHeader } from "./types";
@@ -38,8 +39,11 @@ function toInitials(name: string) {
 
 export default function ProfileHeaderSection() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
   const { profile: apiProfile, loading, refresh } = useProfile();
   const completionPct = apiProfile?.completionPercentage ?? 0;
+  const isPublic = apiProfile?.isPublicProfile ?? false;
+  const profileUserId = apiProfile?.userId;
 
   const [profile, setProfile] = useState<ProfileHeader>(EMPTY);
   const [editing, setEditing] = useState(false);
@@ -209,9 +213,14 @@ export default function ProfileHeaderSection() {
                 >
                   Edit Profile
                 </button>
-                <button className="px-4 py-2 border border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl text-sm font-medium transition whitespace-nowrap">
-                  View Public Profile
-                </button>
+                {isPublic && profileUserId && (
+                  <button
+                    onClick={() => router.push(`/profile/${profileUserId}`)}
+                    className="px-4 py-2 border border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl text-sm font-medium transition whitespace-nowrap"
+                  >
+                    View Public Profile
+                  </button>
+                )}
               </div>
             </div>
 

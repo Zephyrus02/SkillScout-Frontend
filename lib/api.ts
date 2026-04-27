@@ -343,6 +343,7 @@ export interface FullProfile {
   socialLinks: SocialLinks;
   resumeUrl?: string | null;
   resumeFileName?: string | null;
+  isPublicProfile: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -704,6 +705,14 @@ export const profileAPI = {
   deleteResume: async () => {
     const res = await apiClient.delete("/profile/resume");
     return res.data as { success: boolean; message: string };
+  },
+
+  /** PATCH /api/profile/visibility — toggle public profile on/off */
+  toggleVisibility: async (isPublicProfile: boolean) => {
+    const res = await apiClient.patch("/profile/visibility", {
+      isPublicProfile,
+    });
+    return res.data as { success: boolean; data: { isPublicProfile: boolean } };
   },
 
   // ── Career ──────────────────────────────────────────────────────────────
