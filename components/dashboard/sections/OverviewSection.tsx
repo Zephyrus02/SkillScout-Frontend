@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 import { DIFFICULTY_BADGE, DIFFICULTY_LABELS } from "./practice/data";
 
 /* ─────────────────────────────────────────────────────────────
@@ -31,6 +32,7 @@ const LOCKED_FEATURES = [
 ];
 
 export default function OverviewSection() {
+  const { user } = useAuth();
   const [interviewType, setInterviewType] = useState<
     "technical" | "behavioral"
   >("technical");
@@ -38,6 +40,7 @@ export default function OverviewSection() {
   const [difficulty, setDifficulty] = useState(3);
   const diffLabel = DIFFICULTY_LABELS[difficulty - 1];
   const diffBadge = DIFFICULTY_BADGE[difficulty - 1];
+  const displayName = user?.name?.trim() || "there";
 
   return (
     <div>
@@ -45,7 +48,7 @@ export default function OverviewSection() {
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-            Welcome, Alex! 👋
+            Welcome, {displayName}! 👋
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Let&rsquo;s get you ready for your dream job. Your journey starts
