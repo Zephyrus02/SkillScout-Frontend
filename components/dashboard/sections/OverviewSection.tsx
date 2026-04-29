@@ -75,7 +75,7 @@ export default function OverviewSection() {
         {/* ── Left col (8) ── */}
         <div className="col-span-12 lg:col-span-8 space-y-8">
           {/* Hero banner */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-blue-600 p-8 text-white shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)]">
+          <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary to-blue-600 p-8 text-white shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)]">
             {/* glow blobs */}
             <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-48 h-48 bg-purple-500 opacity-20 rounded-full blur-3xl pointer-events-none" />
@@ -302,7 +302,7 @@ export default function OverviewSection() {
           </div>
 
           {/* Did you know? */}
-          <div className="bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/10 dark:to-surface-dark rounded-2xl p-6 border border-purple-100 dark:border-purple-900/30">
+          <div className="bg-linear-to-br from-purple-50 to-white dark:from-purple-900/10 dark:to-surface-dark rounded-2xl p-6 border border-purple-100 dark:border-purple-900/30">
             <div className="flex gap-3">
               <span className="material-icons text-purple-500 shrink-0">
                 tips_and_updates
