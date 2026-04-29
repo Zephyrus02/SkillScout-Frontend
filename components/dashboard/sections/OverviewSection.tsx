@@ -40,8 +40,7 @@ export default function OverviewSection() {
   const [difficulty, setDifficulty] = useState(3);
   const diffLabel = DIFFICULTY_LABELS[difficulty - 1];
   const diffBadge = DIFFICULTY_BADGE[difficulty - 1];
-  const displayName =
-    user?.name?.trim() || "there";
+  const displayName = user?.name?.trim() || "there";
 
   return (
     <div>
