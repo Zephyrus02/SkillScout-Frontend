@@ -373,7 +373,7 @@ export default function StepRole({
             cloud_upload
           </span>
           {uploadingResume ? (
-            <p className="text-sm font-medium text-primary">Uploading…</p>
+            <p className="text-sm font-medium text-primary">Uploading &amp; parsing with AI…</p>
           ) : data.resumeFile || data.resumeUrl ? (
             <p className="text-sm font-medium text-green-700 dark:text-green-400">
               {data.resumeFile?.name ??

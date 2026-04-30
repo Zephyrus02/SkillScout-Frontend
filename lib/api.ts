@@ -707,6 +707,61 @@ export const profileAPI = {
     return res.data as { success: boolean; message: string };
   },
 
+  /** GET /api/profile/resume/download-url — returns a short-lived signed URL for private bucket */
+  getResumeDownloadUrl: async () => {
+    const res = await apiClient.get("/profile/resume/download-url");
+    return res.data as { success: boolean; data: { url: string } };
+  },
+
+  /** POST /api/profile/resume/parse — upload, parse with AI, return parsed data for autofill */
+  parseResume: async (file: File) => {
+    const fd = new FormData();
+    fd.append("resume", file);
+    const res = await apiClient.post("/profile/resume/parse", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data as {
+      success: boolean;
+      data: {
+        resumeUrl: string;
+        resumeFileName: string;
+        parsedData: {
+          name?: string;
+          email?: string;
+          phone?: string;
+          location?: string;
+          bio?: string;
+          profileHeadline?: string;
+          education: Array<{
+            institution: string;
+            degree: string;
+            field: string;
+            startDate?: string;
+            endDate?: string;
+          }>;
+          experience: Array<{
+            company: string;
+            title: string;
+            startDate?: string;
+            endDate?: string;
+            current?: boolean;
+            description?: string;
+          }>;
+          skills: string[];
+          certifications: Array<{
+            name: string;
+            issuer: string;
+            issueDate?: string;
+            expiryDate?: string;
+          }>;
+          languages: Array<{ name: string; proficiency?: string }>;
+          careerLevel?: string;
+          expectedSalary?: string;
+        };
+      };
+    };
+  },
+
   /** PATCH /api/profile/visibility — toggle public profile on/off */
   toggleVisibility: async (isPublicProfile: boolean) => {
     const res = await apiClient.patch("/profile/visibility", {

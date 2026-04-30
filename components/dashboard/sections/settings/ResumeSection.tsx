@@ -133,15 +133,20 @@ export default function ResumeSection() {
             </div>
             <div className="flex gap-2">
               {resumeUrl && (
-                <a
-                  href={resumeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await profileAPI.getResumeDownloadUrl();
+                      window.open(res.data.url, "_blank", "noopener,noreferrer");
+                    } catch {
+                      // ignore silently
+                    }
+                  }}
                   className="w-8 h-8 flex items-center justify-center hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-500 transition shadow-sm"
                   title="Download resume"
                 >
                   <span className="material-icons text-lg">download</span>
-                </a>
+                </button>
               )}
               <button
                 onClick={handleResumeDelete}
