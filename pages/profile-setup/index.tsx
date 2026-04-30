@@ -22,6 +22,7 @@ import Step5Review from "@/components/profile-setup/Step5Review";
 import { profileAPI, onboardingAPI } from "@/lib/api";
 import { getUserData } from "@/lib/user-storage";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const DRAFT_STORAGE_KEY = "skillscout_onboarding_draft";
 
@@ -373,18 +374,98 @@ export default function ProfileSetupPage() {
     return { url: res.data.profilePictureUrl };
   }, []);
 
-  const handleUploadResume = useCallback(async (file: File) => {
-    const fd = new FormData();
-    fd.append("resume", file);
-    const res = await onboardingAPI.uploadFile(fd);
-    if (!res.success || !res.data?.resumeUrl) {
-      throw new Error("Upload failed");
-    }
-    return {
-      url: res.data.resumeUrl,
-      fileName: res.data.resumeFileName ?? file.name,
-    };
-  }, []);
+  const handleUploadResume = useCallback(
+    async (file: File) => {
+      const res = await profileAPI.parseResume(file);
+      if (!res.success || !res.data?.resumeUrl) {
+        throw new Error("Upload failed");
+      }
+      const { resumeUrl, resumeFileName, parsedData } = res.data;
+
+      // Autofill experienceData — only overwrite fields that are currently empty
+      setExperienceData((prev) => ({
+        ...prev,
+        resumeUrl,
+        resumeFileName: resumeFileName ?? file.name,
+        resumeFile: file,
+        profileHeadline:
+          prev.profileHeadline || parsedData.profileHeadline || "",
+        currentLocation: prev.currentLocation || parsedData.location || "",
+        expectedSalary: prev.expectedSalary || parsedData.expectedSalary || "",
+        education:
+          prev.education.length === 0 && parsedData.education?.length
+            ? parsedData.education.map((edu, i) => ({
+                id: Date.now() + i,
+                degree: edu.degree ?? "",
+                institution: edu.institution ?? "",
+                startDate: edu.startDate ?? "",
+                endDate: edu.endDate ?? "",
+                current: false,
+              }))
+            : prev.education,
+        employment:
+          prev.employment.length === 0 && parsedData.experience?.length
+            ? parsedData.experience.map((exp, i) => ({
+                id: Date.now() + i + 1000,
+                role: exp.title ?? "",
+                company: exp.company ?? "",
+                startDate: exp.startDate ?? "",
+                endDate: exp.endDate ?? "",
+                current: exp.current ?? false,
+                desc: exp.description ?? "",
+                salary: "",
+                noticePeriod: "",
+              }))
+            : prev.employment,
+        certifications:
+          prev.certifications.length === 0 && parsedData.certifications?.length
+            ? parsedData.certifications.map((cert, i) => ({
+                id: Date.now() + i + 2000,
+                name: cert.name ?? "",
+                issuer: cert.issuer ?? "",
+                issueDate: cert.issueDate ?? "",
+                doesExpire: !!cert.expiryDate,
+                expiryDate: cert.expiryDate ?? "",
+              }))
+            : prev.certifications,
+      }));
+
+      // Autofill techSkills if empty
+      if (parsedData.skills?.length) {
+        setSkillsData((prev) => ({
+          ...prev,
+          techSkills:
+            prev.techSkills.length === 0
+              ? parsedData.skills.slice(0, 20)
+              : prev.techSkills,
+        }));
+      }
+
+      // Autofill careerLevel if empty
+      if (parsedData.careerLevel) {
+        setJobLevelData((prev) => ({
+          ...prev,
+          careerLevel: prev.careerLevel || parsedData.careerLevel || "",
+        }));
+      }
+
+      // Autofill fullName if empty
+      if (parsedData.name) {
+        setPersonalData((prev) => ({
+          ...prev,
+          fullName: prev.fullName || parsedData.name || "",
+        }));
+      }
+
+      toast.success(
+        "Resume parsed! Form fields have been pre-filled from your resume.",
+      );
+
+      return { url: resumeUrl, fileName: resumeFileName ?? file.name };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   const finish = async () => {
     setSubmitting(true);

@@ -42,6 +42,9 @@ async function fetchOnce(): Promise<FullProfile | null> {
 export function invalidateProfileCache() {
   _cache = null;
   _cacheAge = 0;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("profile-invalidated"));
+  }
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
@@ -83,6 +86,11 @@ export function useProfile(): UseProfileReturn {
 
   useEffect(() => {
     load();
+    const handleInvalidate = () => load();
+    window.addEventListener("profile-invalidated", handleInvalidate);
+    return () => {
+      window.removeEventListener("profile-invalidated", handleInvalidate);
+    };
   }, [load]);
 
   const refresh = useCallback(() => load(true), [load]);

@@ -3,7 +3,7 @@ import { useProfile, invalidateProfileCache } from "@/hooks/useProfile";
 import { profileAPI } from "@/lib/api";
 
 export default function SidebarAccountSettings() {
-  const { profile } = useProfile();
+  const { profile, refresh } = useProfile();
   const [emailAlerts, setEmailAlerts] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
   const [publicToggling, setPublicToggling] = useState(false);
@@ -21,6 +21,7 @@ export default function SidebarAccountSettings() {
     try {
       await profileAPI.toggleVisibility(newValue);
       invalidateProfileCache();
+      await refresh();
     } catch {
       setIsPublic(!newValue);
     } finally {
