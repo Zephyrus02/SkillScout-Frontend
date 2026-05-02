@@ -5,9 +5,11 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import AuthBranding from "@/components/auth/AuthBranding";
 import { authAPI } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
+  const { verifyEmailAndLogin } = useAuth();
   const { email, verified, token } = router.query;
 
   // `verified=true` is set by some legacy redirect; `verifiedByApi` is set by
@@ -28,11 +30,12 @@ export default function VerifyEmailPage() {
     const tokenParam = token as string | undefined;
     if (!tokenParam) return;
     setVerifying(true);
-    authAPI
-      .verifyEmail({ token: tokenParam })
+    verifyEmailAndLogin(tokenParam)
       .then(() => {
         setVerifiedByApi(true);
-        toast.success("Email verified successfully! You can now sign in.");
+        toast.success(
+          "Email verified successfully! Taking you to setup your profile...",
+        );
       })
       .catch((err: unknown) => {
         const msg =
