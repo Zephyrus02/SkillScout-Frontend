@@ -9,7 +9,9 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
-  const { verifyEmailAndLogin } = useAuth();
+  const auth = useAuth();
+  const { verifyEmailAndLogin } = auth;
+  console.log("auth keys:", Object.keys(auth));
   const { email, verified, token } = router.query;
 
   // `verified=true` is set by some legacy redirect; `verifiedByApi` is set by
@@ -39,8 +41,7 @@ export default function VerifyEmailPage() {
       })
       .catch((err: unknown) => {
         const msg =
-          (err as { response?: { data?: { message?: string } } })?.response
-            ?.data?.message ??
+          (err as { message?: string })?.message ??
           "Verification failed. The link may have expired.";
         setVerifyError(msg);
         toast.error(msg);
