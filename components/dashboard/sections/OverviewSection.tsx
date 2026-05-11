@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { DIFFICULTY_BADGE, DIFFICULTY_LABELS } from "./practice/data";
+import { DIFFICULTY_BADGE, DIFFICULTY_LABELS, INTERVIEW_TYPES, type InterviewTypeId } from "./practice/data";
 
 /* ─────────────────────────────────────────────────────────────
    Overview / Home  –  new-user empty state
@@ -33,10 +33,7 @@ const LOCKED_FEATURES = [
 
 export default function OverviewSection() {
   const { user } = useAuth();
-  const [interviewType, setInterviewType] = useState<
-    "technical" | "behavioral"
-  >("technical");
-  const [duration, setDuration] = useState<15 | 30 | 45>(15);
+  const [interviewType, setInterviewType] = useState<InterviewTypeId>("technical");
   const [difficulty, setDifficulty] = useState(3);
   const diffLabel = DIFFICULTY_LABELS[difficulty - 1];
   const diffBadge = DIFFICULTY_BADGE[difficulty - 1];
@@ -209,28 +206,20 @@ export default function OverviewSection() {
                   Interview Type
                 </label>
                 <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => setInterviewType("technical")}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
-                      interviewType === "technical"
-                        ? "border-primary bg-blue-50 dark:bg-blue-900/20 text-primary"
-                        : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
-                    }`}
-                  >
-                    <span className="material-icons mb-1">code</span>
-                    <span className="text-xs font-bold">Technical</span>
-                  </button>
-                  <button
-                    onClick={() => setInterviewType("behavioral")}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
-                      interviewType === "behavioral"
-                        ? "border-primary bg-blue-50 dark:bg-blue-900/20 text-primary"
-                        : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
-                    }`}
-                  >
-                    <span className="material-icons mb-1">person</span>
-                    <span className="text-xs font-medium">Behavioral</span>
-                  </button>
+                  {INTERVIEW_TYPES.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setInterviewType(t.id)}
+                      className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
+                        interviewType === t.id
+                          ? "border-primary bg-blue-50 dark:bg-blue-900/20 text-primary"
+                          : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                      }`}
+                    >
+                      <span className="material-icons mb-1">{t.icon}</span>
+                      <span className="text-xs font-bold">{t.label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -259,28 +248,6 @@ export default function OverviewSection() {
                   <span>Junior</span>
                   <span>Mid-Level</span>
                   <span>Senior/Staff</span>
-                </div>
-              </div>
-
-              {/* Duration */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-wide">
-                  Duration
-                </label>
-                <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
-                  {([15, 30, 45] as const).map((d) => (
-                    <button
-                      key={d}
-                      onClick={() => setDuration(d)}
-                      className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                        duration === d
-                          ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                          : "font-medium text-gray-500 dark:text-gray-400"
-                      }`}
-                    >
-                      {d} min
-                    </button>
-                  ))}
                 </div>
               </div>
 

@@ -1,16 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { InterviewTypeId } from "./data";
 import InterviewConfig from "./InterviewConfig";
 import SessionPreview from "./SessionPreview";
 import ProTip from "./ProTip";
+import { paymentsAPI } from "@/lib/api";
 
 export default function PracticeSectionContent() {
   const [interviewType, setInterviewType] =
     useState<InterviewTypeId>("technical");
   const [company, setCompany] = useState("google");
   const [difficulty, setDifficulty] = useState(3);
-  const [duration, setDuration] = useState(45);
   const [persona, setPersona] = useState("neutral");
+  const [planSlug, setPlanSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    paymentsAPI.getSubscription().then((result) => {
+      const slug = result?.data?.plan?.slug ?? null;
+      setPlanSlug(slug);
+    }).catch(() => {
+      // keep planSlug null → defaults to lite tier
+    });
+  }, []);
 
   return (
     <div>
@@ -39,14 +49,12 @@ export default function PracticeSectionContent() {
           setCompany={setCompany}
           difficulty={difficulty}
           setDifficulty={setDifficulty}
-          duration={duration}
-          setDuration={setDuration}
           persona={persona}
           setPersona={setPersona}
         />
 
         <div className="col-span-12 lg:col-span-4 flex flex-col space-y-6">
-          <SessionPreview duration={duration} />
+          <SessionPreview interviewType={interviewType} planSlug={planSlug} />
           <ProTip />
         </div>
       </div>
