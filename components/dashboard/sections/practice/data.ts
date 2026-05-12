@@ -59,39 +59,45 @@ export const PLAN_INTERVIEW_STRUCTURES: Record<
   { lite: SessionSection[]; pro: SessionSection[] }
 > = {
   technical: {
+    // Trial & Lite — ~45 minutes
     lite: [
       { name: "Warm-up", targetMinutes: 5 },
       { name: "Core Technical", targetMinutes: 25 },
-      { name: "Problem Solving", targetMinutes: 10 },
-      { name: "Wrap-up", targetMinutes: 5 },
+      { name: "Code Reasoning", targetMinutes: 12 },
+      { name: "Wrap-up", targetMinutes: 3 },
     ],
+    // Pro & Elite — ~60 minutes
     pro: [
       { name: "Warm-up", targetMinutes: 5 },
       { name: "Core Technical", targetMinutes: 25 },
-      { name: "System Design", targetMinutes: 20 },
-      { name: "Problem Solving", targetMinutes: 5 },
-      { name: "Wrap-up", targetMinutes: 5 },
+      { name: "System Design / DSA", targetMinutes: 20 },
+      { name: "Solution Reasoning", targetMinutes: 7 },
+      { name: "Wrap-up", targetMinutes: 3 },
     ],
   },
   behavioral: {
+    // Trial & Lite — ~30 minutes
     lite: [
       { name: "Introduction", targetMinutes: 3 },
       { name: "Behavioral Questions", targetMinutes: 22 },
       { name: "Wrap-up", targetMinutes: 5 },
     ],
+    // Pro & Elite — ~45 minutes
     pro: [
-      { name: "Introduction", targetMinutes: 3 },
+      { name: "Introduction", targetMinutes: 5 },
       { name: "Behavioral Questions", targetMinutes: 35 },
-      { name: "Wrap-up", targetMinutes: 7 },
+      { name: "Wrap-up", targetMinutes: 5 },
     ],
   },
   "hr-screening": {
+    // Trial & Lite — ~30 minutes
     lite: [
       { name: "Introduction", targetMinutes: 5 },
       { name: "Background", targetMinutes: 15 },
       { name: "Role Fit", targetMinutes: 7 },
       { name: "Wrap-up", targetMinutes: 3 },
     ],
+    // Pro & Elite — ~45 minutes
     pro: [
       { name: "Introduction", targetMinutes: 5 },
       { name: "Background", targetMinutes: 20 },
@@ -100,6 +106,7 @@ export const PLAN_INTERVIEW_STRUCTURES: Record<
     ],
   },
   "full-loop": {
+    // Trial & Lite — ~60 minutes
     lite: [
       { name: "Introduction", targetMinutes: 5 },
       { name: "Technical", targetMinutes: 25 },
@@ -107,10 +114,11 @@ export const PLAN_INTERVIEW_STRUCTURES: Record<
       { name: "Role Fit", targetMinutes: 7 },
       { name: "Wrap-up", targetMinutes: 3 },
     ],
+    // Pro & Elite — ~90 minutes
     pro: [
       { name: "Introduction", targetMinutes: 5 },
-      { name: "Technical", targetMinutes: 35 },
-      { name: "System Design", targetMinutes: 20 },
+      { name: "Technical", targetMinutes: 30 },
+      { name: "System Design / DSA", targetMinutes: 25 },
       { name: "Behavioral", targetMinutes: 20 },
       { name: "Role Fit", targetMinutes: 7 },
       { name: "Wrap-up", targetMinutes: 3 },
