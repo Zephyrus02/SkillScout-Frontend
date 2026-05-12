@@ -103,6 +103,24 @@ const nextConfig: NextConfig = {
           },
           // camera/microphone intentionally excluded — LiveKit & MediaPipe use them on /dashboard/*
           { key: "Permissions-Policy", value: "geolocation=()" },
+          {
+            key: "Content-Security-Policy",
+            // 'unsafe-eval' required by MediaPipe WASM and LiveKit internals.
+            // connect-src uses 'https: wss:' to cover dynamic LiveKit server URLs.
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-eval' https://checkout.razorpay.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "img-src 'self' data: https://lh3.googleusercontent.com https://images.unsplash.com",
+              "connect-src 'self' https: wss:",
+              "frame-src https://checkout.razorpay.com",
+              "media-src 'self' blob:",
+              "worker-src 'self' blob:",
+              "object-src 'none'",
+              "base-uri 'self'",
+            ].join("; "),
+          },
         ],
       },
     ];
