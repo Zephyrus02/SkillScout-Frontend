@@ -77,7 +77,7 @@ export default function SignUpForm() {
     }
   };
 
-  const { googleButtonRef } = useGoogleAuth({
+  const { triggerGoogleSignIn } = useGoogleAuth({
     onSuccess: async (idToken) => {
       setLoading(true);
       try {
@@ -129,7 +129,7 @@ export default function SignUpForm() {
 
       {/* Social auth */}
       <SocialAuthButtons
-        googleButtonRef={googleButtonRef}
+        onGoogleClick={triggerGoogleSignIn}
         onGitHubClick={handleGitHubClick}
         loading={loading}
       />

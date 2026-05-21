@@ -1,11 +1,9 @@
 /**
  * SocialAuthButtons — Google + GitHub sign-in buttons.
  *
- * Google strategy (same as the Vite frontend):
- *   - Renders a custom-styled pill button matching the site design.
- *   - Overlays the invisible official GIS button on top (opacity-0, absolute).
- *   - Clicks on the visual button fall through (pointer-events-none) and land
- *     on the GIS iframe, which fires the credential callback in useGoogleAuth.
+ * Google strategy:
+ *   - Renders a fully-clickable styled button.
+ *   - onClick calls `onGoogleClick` which triggers the GIS One Tap / popup flow.
  *
  * GitHub strategy:
  *   - Calls onGitHubClick if provided, otherwise shows a "coming soon" toast.
@@ -54,8 +52,8 @@ const GitHubIcon = () => (
 );
 
 interface SocialAuthButtonsProps {
-  /** Callback ref for the div into which the GIS SDK renders its invisible button */
-  googleButtonRef?: (el: HTMLDivElement | null) => void;
+  /** Called when the user clicks the Google button */
+  onGoogleClick?: () => void;
   /** Optional handler for GitHub. If omitted, a "coming soon" toast is shown. */
   onGitHubClick?: () => void;
   /** Show a spinner overlay while any auth operation is in progress */
@@ -63,7 +61,7 @@ interface SocialAuthButtonsProps {
 }
 
 export default function SocialAuthButtons({
-  googleButtonRef,
+  onGoogleClick,
   onGitHubClick,
   loading,
 }: SocialAuthButtonsProps) {
@@ -78,50 +76,25 @@ export default function SocialAuthButtons({
   return (
     <div className="flex flex-col gap-3">
       {/* ── Google button ──────────────────────────────────────────────── */}
-      {googleButtonRef ? (
-        <div className="relative w-full min-h-[48px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-          {/*
-            Visual layer — in NORMAL FLOW so the container gets height from it.
-            pointer-events-none so clicks fall through onto the GIS iframe below.
-          */}
-          <div
-            className="flex items-center justify-center gap-3 py-3 px-4 min-h-[48px] pointer-events-none select-none"
-            aria-hidden
-          >
+      <button
+        type="button"
+        onClick={onGoogleClick}
+        disabled={loading || !onGoogleClick}
+        className="relative flex items-center justify-center gap-3 h-12 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+      >
+        {loading ? (
+          <span className="material-icons animate-spin text-[20px] text-slate-500">
+            autorenew
+          </span>
+        ) : (
+          <>
             <GoogleIcon />
             <span className="text-slate-700 dark:text-slate-200 text-sm font-semibold">
               Continue with Google
             </span>
-          </div>
-
-          {/*
-            Invisible GIS iframe (absolutely covers the visual layer, z-10).
-            The GIS SDK renders its iframe here; clicks on the visual button
-            above fall through (pointer-events-none) and land on this iframe.
-          */}
-          <div
-            ref={googleButtonRef}
-            className="absolute inset-0 z-10 opacity-0 [&>div]:!w-full [&>div]:!h-full [&>div]:!min-h-[48px] [&>div]:!flex [&>div]:!items-center [&>div]:!justify-center [&_iframe]:!w-full [&_iframe]:!min-h-[48px]"
-          />
-
-          {/* Spinner while auth is in-flight */}
-          {loading && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center rounded-xl bg-white/70 dark:bg-slate-800/70">
-              <span className="material-icons animate-spin text-[20px] text-slate-500">
-                autorenew
-              </span>
-            </div>
-          )}
-        </div>
-      ) : (
-        /* GIS script not yet loaded — show a styled but non-interactive placeholder */
-        <div className="flex items-center justify-center gap-3 h-12 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 opacity-60 cursor-not-allowed select-none">
-          <GoogleIcon />
-          <span className="text-slate-700 dark:text-slate-200 text-sm font-semibold">
-            Continue with Google
-          </span>
-        </div>
-      )}
+          </>
+        )}
+      </button>
 
       {/* ── GitHub button ──────────────────────────────────────────────── */}
       <button
