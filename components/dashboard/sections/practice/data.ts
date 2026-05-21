@@ -24,8 +24,6 @@ export const DIFFICULTY_BADGE = [
   "bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400",
 ];
 
-export const DURATIONS = [15, 30, 45];
-
 export const PERSONAS = [
   {
     id: "strict",
@@ -47,13 +45,99 @@ export const PERSONAS = [
   },
 ];
 
-export const SESSION_STEPS = [
-  { title: "Introduction", meta: "2 mins • Elevator Pitch", note: null },
-  {
-    title: "Technical Deep Dive",
-    meta: "25 mins • System Design & Algo",
-    note: "Focus: Scalability & Database Choice",
+// Plan tier: trial/lite → "lite" (shorter); pro/elite → "pro" (longer)
+export type PlanTier = "lite" | "pro";
+
+export interface SessionSection {
+  name: string;
+  targetMinutes: number;
+}
+
+// Mirrors INTERVIEW_STRUCTURES from ai-agent/src/interview-types/schema.ts
+export const PLAN_INTERVIEW_STRUCTURES: Record<
+  InterviewTypeId,
+  { lite: SessionSection[]; pro: SessionSection[] }
+> = {
+  technical: {
+    // Trial & Lite — ~45 minutes
+    lite: [
+      { name: "Warm-up", targetMinutes: 5 },
+      { name: "Core Technical", targetMinutes: 25 },
+      { name: "Code Reasoning", targetMinutes: 12 },
+      { name: "Wrap-up", targetMinutes: 3 },
+    ],
+    // Pro & Elite — ~60 minutes
+    pro: [
+      { name: "Warm-up", targetMinutes: 5 },
+      { name: "Core Technical", targetMinutes: 25 },
+      { name: "System Design / DSA", targetMinutes: 20 },
+      { name: "Solution Reasoning", targetMinutes: 7 },
+      { name: "Wrap-up", targetMinutes: 3 },
+    ],
   },
-  { title: "Behavioral Questions", meta: "10 mins • STAR Method", note: null },
-  { title: "Q&A / Feedback", meta: "8 mins • Wrap up", note: null },
-];
+  behavioral: {
+    // Trial & Lite — ~30 minutes
+    lite: [
+      { name: "Introduction", targetMinutes: 3 },
+      { name: "Behavioral Questions", targetMinutes: 22 },
+      { name: "Wrap-up", targetMinutes: 5 },
+    ],
+    // Pro & Elite — ~45 minutes
+    pro: [
+      { name: "Introduction", targetMinutes: 5 },
+      { name: "Behavioral Questions", targetMinutes: 35 },
+      { name: "Wrap-up", targetMinutes: 5 },
+    ],
+  },
+  "hr-screening": {
+    // Trial & Lite — ~30 minutes
+    lite: [
+      { name: "Introduction", targetMinutes: 5 },
+      { name: "Background", targetMinutes: 15 },
+      { name: "Role Fit", targetMinutes: 7 },
+      { name: "Wrap-up", targetMinutes: 3 },
+    ],
+    // Pro & Elite — ~45 minutes
+    pro: [
+      { name: "Introduction", targetMinutes: 5 },
+      { name: "Background", targetMinutes: 20 },
+      { name: "Role Fit", targetMinutes: 15 },
+      { name: "Wrap-up", targetMinutes: 5 },
+    ],
+  },
+  "full-loop": {
+    // Trial & Lite — ~60 minutes
+    lite: [
+      { name: "Introduction", targetMinutes: 5 },
+      { name: "Technical", targetMinutes: 25 },
+      { name: "Behavioral", targetMinutes: 20 },
+      { name: "Role Fit", targetMinutes: 7 },
+      { name: "Wrap-up", targetMinutes: 3 },
+    ],
+    // Pro & Elite — ~90 minutes
+    pro: [
+      { name: "Introduction", targetMinutes: 5 },
+      { name: "Technical", targetMinutes: 30 },
+      { name: "System Design / DSA", targetMinutes: 25 },
+      { name: "Behavioral", targetMinutes: 20 },
+      { name: "Role Fit", targetMinutes: 7 },
+      { name: "Wrap-up", targetMinutes: 3 },
+    ],
+  },
+};
+
+export function getPlanTier(planSlug: string | null | undefined): PlanTier {
+  return planSlug === "pro" || planSlug === "elite" ? "pro" : "lite";
+}
+
+export function getSessionSections(
+  interviewType: InterviewTypeId,
+  planSlug: string | null | undefined,
+): SessionSection[] {
+  const tier = getPlanTier(planSlug);
+  return PLAN_INTERVIEW_STRUCTURES[interviewType][tier];
+}
+
+export function getTotalDuration(sections: SessionSection[]): number {
+  return sections.reduce((sum, s) => sum + s.targetMinutes, 0);
+}

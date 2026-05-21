@@ -1,5 +1,8 @@
 import Image from "next/image";
 
+const testimonialText =
+  "Every engineer knows the pain of grinding LeetCode alone. With Skillscout, I had a personalized coach that helped me crack the System Design round at Google. It's not just practice; it's proper preparation.";
+
 export default function Testimonial() {
   return (
     <section className="py-20 bg-background-light dark:bg-background-dark overflow-hidden">
@@ -19,10 +22,7 @@ export default function Testimonial() {
           </div>
           <div>
             <p className="text-lg md:text-xl font-medium text-text-light dark:text-text-dark mb-6 italic leading-relaxed">
-              &ldquo;Every engineer knows the pain of grinding LeetCode alone.
-              With Skillscout, I had a personalized coach that helped me crack
-              the System Design round at Google. It&apos;s not just practice;
-              it&apos;s proper preparation.&rdquo;
+              &ldquo;{testimonialText}&rdquo;
             </p>
             <div>
               <div className="font-bold text-text-light dark:text-text-dark">

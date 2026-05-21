@@ -3,7 +3,6 @@ import {
   INTERVIEW_TYPES,
   DIFFICULTY_LABELS,
   DIFFICULTY_BADGE,
-  DURATIONS,
   PERSONAS,
 } from "./data";
 import { AmazonLogo, MetaLogo, NetflixLogo } from "./CompanyLogos";
@@ -44,8 +43,6 @@ interface Props {
   setCompany: (c: string) => void;
   difficulty: number;
   setDifficulty: (d: number) => void;
-  duration: number;
-  setDuration: (d: number) => void;
   persona: string;
   setPersona: (p: string) => void;
 }
@@ -57,8 +54,6 @@ export default function InterviewConfig({
   setCompany,
   difficulty,
   setDifficulty,
-  duration,
-  setDuration,
   persona,
   setPersona,
 }: Props) {
@@ -214,26 +209,6 @@ export default function InterviewConfig({
                 <span>Junior</span>
                 <span>Mid-Level</span>
                 <span>Senior/Staff</span>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">
-                Duration
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {DURATIONS.map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => setDuration(d)}
-                    className={`py-2 px-3 text-sm rounded-lg border transition-colors ${
-                      duration === d
-                        ? "border-primary bg-primary text-white font-bold"
-                        : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 font-medium hover:bg-gray-50 dark:hover:bg-gray-800"
-                    }`}
-                  >
-                    {d} min
-                  </button>
-                ))}
               </div>
             </div>
           </div>

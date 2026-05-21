@@ -1,12 +1,16 @@
 import { useRouter } from "next/router";
-import { SESSION_STEPS } from "./data";
+import type { InterviewTypeId } from "./data";
+import { getSessionSections, getTotalDuration } from "./data";
 
 interface Props {
-  duration: number;
+  interviewType: InterviewTypeId;
+  planSlug: string | null;
 }
 
-export default function SessionPreview({ duration }: Props) {
+export default function SessionPreview({ interviewType, planSlug }: Props) {
   const router = useRouter();
+  const sections = getSessionSections(interviewType, planSlug);
+  const totalDuration = getTotalDuration(sections);
 
   return (
     <div className="bg-surface-light dark:bg-surface-dark rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex-1">
@@ -17,26 +21,23 @@ export default function SessionPreview({ duration }: Props) {
 
       {/* Timeline */}
       <div className="space-y-4 mb-6">
-        {SESSION_STEPS.map((step, i) => (
+        {sections.map((section, i) => (
           <div key={i} className="flex items-start gap-3">
             <div className="flex flex-col items-center">
               <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
                 {i + 1}
               </div>
-              {i < SESSION_STEPS.length - 1 && (
+              {i < sections.length - 1 && (
                 <div className="w-[2px] h-6 bg-gray-200 dark:bg-gray-700 mt-1" />
               )}
             </div>
             <div className="pb-2">
               <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                {step.title}
+                {section.name}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {step.meta}
+                {section.targetMinutes} mins
               </p>
-              {step.note && (
-                <p className="text-xs text-primary mt-0.5">{step.note}</p>
-              )}
             </div>
           </div>
         ))}
@@ -49,7 +50,7 @@ export default function SessionPreview({ duration }: Props) {
           Total Duration
         </span>
         <span className="font-bold text-gray-900 dark:text-white">
-          ~{duration} minutes
+          ~{totalDuration} minutes
         </span>
       </div>
 

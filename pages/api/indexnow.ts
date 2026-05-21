@@ -8,12 +8,10 @@ function isTruthy(value: unknown): value is string {
 }
 
 function getTriggerSecret(req: NextApiRequest): string | undefined {
+  // Accept secret only via header — never from query params, which appear in server access logs.
   const headerSecret = req.headers["x-indexnow-secret"];
   if (typeof headerSecret === "string" && headerSecret.length > 0)
     return headerSecret;
-  const querySecret = req.query.secret;
-  if (typeof querySecret === "string" && querySecret.length > 0)
-    return querySecret;
   return undefined;
 }
 

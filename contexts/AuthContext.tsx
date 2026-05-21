@@ -80,6 +80,7 @@ interface AuthContextType {
     avatarUrl?: string,
   ) => Promise<{ requiresEmailVerification: boolean; email?: string } | void>;
   googleAuth: (idToken: string, keepMeLoggedIn?: boolean) => Promise<void>;
+  verifyEmailAndLogin: (token: string) => Promise<void>;
   githubCallbackAuth: (
     accessToken: string,
     isNewUser?: boolean,
@@ -346,6 +347,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  const verifyEmailAndLogin = async (token: string) => {
+    const response = await authAPI.verifyEmail({ token });
+
+    if (response.success && response.data) {
+      const { user: rawUserData, accessToken } = response.data;
+      if (accessToken) {
+        setAccessToken(accessToken);
+      }
+
+      let userForNav = rawUserData ? normalizeUserRole(rawUserData) : null;
+      try {
+        const profileRes = await authAPI.getProfile();
+        if (profileRes.success && profileRes.data) {
+          userForNav = normalizeUserRole(profileRes.data);
+        }
+      } catch {
+        // use the response user data as fallback
+      }
+
+      if (userForNav) {
+        _authFlowNavigating = true;
+        setAuthFlowNavigating(true);
+        setUserState(userForNav);
+        setUserData(userForNav);
+        try {
+          await navigateAfterAuth(userForNav, router);
+        } finally {
+          _authFlowNavigating = false;
+          setAuthFlowNavigating(false);
+        }
+      }
+    }
+  };
+
   const googleAuth = async (idToken: string, keepMeLoggedIn = false) => {
     const response = await authAPI.googleLogin({
       idToken,
@@ -465,6 +500,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     login,
     signup,
     googleAuth,
+    verifyEmailAndLogin,
     githubCallbackAuth,
     logout,
   };
@@ -484,3 +520,5 @@ function clearSession() {
   clearUserData();
   clearAccessToken();
 }
+// trigger rebuild
+// trigger fast refresh Sat May  2 19:12:17 IST 2026
