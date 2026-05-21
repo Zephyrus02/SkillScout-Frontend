@@ -1,11 +1,24 @@
 import type { InterviewTypeId } from "./data";
-import {
-  INTERVIEW_TYPES,
-  DIFFICULTY_LABELS,
-  DIFFICULTY_BADGE,
-  PERSONAS,
-} from "./data";
+import { INTERVIEW_TYPES, PERSONAS } from "./data";
 import { AmazonLogo, MetaLogo, NetflixLogo } from "./CompanyLogos";
+
+const DIFFICULTY_OPTIONS = [
+  {
+    id: 1,
+    label: "Junior",
+    desc: "Foundational questions with clear guidance.",
+  },
+  {
+    id: 2,
+    label: "Mid-Level",
+    desc: "Balanced depth with some follow-up pressure.",
+  },
+  {
+    id: 3,
+    label: "Senior/Staff",
+    desc: "Advanced scenarios with stronger evaluation.",
+  },
+] as const;
 
 // Google logo SVG helper
 function GoogleLogo() {
@@ -57,9 +70,6 @@ export default function InterviewConfig({
   persona,
   setPersona,
 }: Props) {
-  const diffLabel = DIFFICULTY_LABELS[difficulty - 1];
-  const diffBadge = DIFFICULTY_BADGE[difficulty - 1];
-
   return (
     <div className="col-span-12 lg:col-span-8 space-y-6">
       {/* Interview Type */}
@@ -178,48 +188,52 @@ export default function InterviewConfig({
       </section>
 
       {/* Parameters + Persona side-by-side */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <section className="bg-surface-light dark:bg-surface-dark rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+        <section className="h-full bg-surface-light dark:bg-surface-dark rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="material-icons text-primary">tune</span>
             Parameters
           </h2>
-          <div className="space-y-5">
-            <div>
-              <div className="flex justify-between mb-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Difficulty Level
-                </label>
-                <span
-                  className={`text-xs font-bold px-2 py-0.5 rounded ${diffBadge}`}
+          <div className="space-y-3 flex-1 flex flex-col justify-center">
+            {DIFFICULTY_OPTIONS.map((option) => {
+              const active = difficulty === option.id;
+              return (
+                <button
+                  key={option.id}
+                  onClick={() => setDifficulty(option.id)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
+                    active
+                      ? "border-2 border-primary bg-blue-50/50 dark:bg-blue-900/10"
+                      : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  }`}
                 >
-                  {diffLabel}
-                </span>
-              </div>
-              <input
-                type="range"
-                min={1}
-                max={3}
-                step={1}
-                value={difficulty}
-                onChange={(e) => setDifficulty(Number(e.target.value))}
-                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"
-              />
-              <div className="flex justify-between mt-1 text-xs text-gray-400">
-                <span>Junior</span>
-                <span>Mid-Level</span>
-                <span>Senior/Staff</span>
-              </div>
-            </div>
+                  <input
+                    type="radio"
+                    name="difficulty"
+                    checked={active}
+                    onChange={() => setDifficulty(option.id)}
+                    className="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-sm text-gray-900 dark:text-white mb-1">
+                      {option.label}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                      {option.desc}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </section>
 
-        <section className="bg-surface-light dark:bg-surface-dark rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
+        <section className="h-full bg-surface-light dark:bg-surface-dark rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="material-icons text-primary">face</span>
             Interviewer Persona
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1 flex flex-col justify-center">
             {PERSONAS.map((p) => {
               const active = persona === p.id;
               return (
@@ -246,7 +260,6 @@ export default function InterviewConfig({
                       {p.desc}
                     </div>
                   </div>
-                  <span className="text-xl">{p.emoji}</span>
                 </label>
               );
             })}
