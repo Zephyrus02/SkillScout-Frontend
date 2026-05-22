@@ -26,13 +26,21 @@ export default function MonthYearPicker({
   onChange,
   placeholder = "Select month & year",
 }: MonthYearPickerProps) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonthIdx = now.getMonth();
+
   const parts = value ? value.split(" ") : [];
   const selMonth = parts[0] || "";
-  const selYear = parts[1] ? parseInt(parts[1]) : new Date().getFullYear();
+  const selYear = parts[1] ? parseInt(parts[1]) : currentYear;
 
-  const [year, setYear] = useState(selYear);
+  // Never let the displayed year exceed the current year.
+  const initialYear = Math.min(selYear, currentYear);
+  const [year, setYear] = useState(initialYear);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  const canGoNextYear = year < currentYear;
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -46,7 +54,10 @@ export default function MonthYearPicker({
 
   // Sync year when value changes externally
   useEffect(() => {
-    if (parts[1]) setYear(parseInt(parts[1]));
+    if (parts[1]) {
+      const parsed = parseInt(parts[1]);
+      setYear(Math.min(parsed, currentYear));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
@@ -85,28 +96,42 @@ export default function MonthYearPicker({
             </span>
             <button
               type="button"
-              onClick={() => setYear((y) => y + 1)}
-              className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+              onClick={() => canGoNextYear && setYear((y) => y + 1)}
+              disabled={!canGoNextYear}
+              aria-disabled={!canGoNextYear}
+              className={`p-1 rounded-lg ${
+                canGoNextYear
+                  ? "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+                  : "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+              }`}
             >
               <span className="material-icons text-base">chevron_right</span>
             </button>
           </div>
 
           <div className="grid grid-cols-3 gap-1">
-            {MONTHS.map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => select(m)}
-                className={`text-xs py-1.5 rounded-lg transition font-medium ${
-                  selMonth === m && selYear === year
-                    ? "bg-blue-600 text-white"
-                    : "hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 hover:text-blue-600"
-                }`}
-              >
-                {m}
-              </button>
-            ))}
+            {MONTHS.map((m, idx) => {
+              const isFuture = year > currentYear || (year === currentYear && idx > currentMonthIdx);
+              const isSelected = selMonth === m && selYear === year;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => select(m)}
+                  disabled={isFuture}
+                  aria-disabled={isFuture}
+                  className={`text-xs py-1.5 rounded-lg transition font-medium ${
+                    isFuture
+                      ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                      : isSelected
+                      ? "bg-blue-600 text-white"
+                      : "hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 hover:text-blue-600"
+                  }`}
+                >
+                  {m}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
