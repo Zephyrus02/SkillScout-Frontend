@@ -34,7 +34,7 @@ const FOCUS_AREAS = [
 
 export default function FocusAreas() {
   return (
-    <div className="bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-6 col-span-1 md:col-span-2 lg:col-span-4 h-[380px] overflow-hidden flex flex-col">
+    <div className="bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-6 col-span-1 md:col-span-2 lg:col-span-4 h-auto lg:h-[380px] overflow-visible lg:overflow-hidden flex flex-col">
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -48,28 +48,27 @@ export default function FocusAreas() {
           View All
         </button>
       </div>
-
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-1 flex-col gap-3 overflow-visible lg:overflow-y-auto lg:pr-1">
         {FOCUS_AREAS.map((area) => (
           <div
             key={area.title}
-            className={`flex items-start gap-3 p-3 rounded-xl border ${area.bg} ${area.border}`}
+            className={`flex items-start gap-3 p-3 rounded-xl border min-w-0 ${area.bg} ${area.border}`}
           >
             <span
               className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${area.dot}`}
             />
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+              <div className="flex items-start justify-between gap-2 mb-0.5">
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 flex-1 min-w-0 break-words">
                   {area.title}
                 </p>
                 <span
-                  className={`text-xs font-medium px-1.5 py-0.5 rounded ${area.badge}`}
+                  className={`text-xs font-medium px-1.5 py-0.5 rounded shrink-0 ${area.badge}`}
                 >
                   {area.priority}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-gray-500 dark:text-gray-400 break-words">
                 {area.desc}
               </p>
             </div>

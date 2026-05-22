@@ -11,7 +11,7 @@ import {
 
 export default function SkillRadarChart() {
   return (
-    <div className="bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-6 col-span-1 md:col-span-2 lg:col-span-4 h-[380px] flex flex-col">
+    <div className="bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-6 col-span-1 md:col-span-2 lg:col-span-4 h-auto lg:h-[380px] flex flex-col">
       <div className="flex justify-between items-start mb-2">
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -26,8 +26,11 @@ export default function SkillRadarChart() {
         </button>
       </div>
 
-      <div className="flex-1 w-full flex items-center justify-center">
-        <svg viewBox="0 0 220 220" className="w-full h-full max-w-[200px]">
+      <div className="flex-1 w-full flex items-center justify-center py-1">
+        <svg
+          viewBox="-14 -14 248 248"
+          className="w-full h-auto aspect-square max-w-[220px] xl:max-w-[240px] overflow-visible"
+        >
           {/* Grid hexagons */}
           {[20, 40, 60, 80, 100].map((pct) => (
             <polygon
