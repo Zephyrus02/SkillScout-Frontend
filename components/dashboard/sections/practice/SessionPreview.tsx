@@ -13,7 +13,7 @@ export default function SessionPreview({ interviewType, planSlug }: Props) {
   const totalDuration = getTotalDuration(sections);
 
   return (
-    <div className="bg-surface-light dark:bg-surface-dark rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm h-140 max-h-140 flex flex-col">
+    <div className="bg-surface-light dark:bg-surface-dark rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm h-148 max-h-148 flex flex-col">
       <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
         <span className="material-icons text-primary">preview</span>
         Session Preview
