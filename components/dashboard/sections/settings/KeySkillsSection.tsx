@@ -79,7 +79,7 @@ export default function KeySkillsSection() {
       </div>
 
       {/* Input + autocomplete */}
-      <div className="relative mb-5" ref={dropdownRef}>
+      <div className="mb-5" ref={dropdownRef}>
         <div className="flex gap-2">
           <div className="relative flex-1">
             <input
@@ -111,6 +111,39 @@ export default function KeySkillsSection() {
                 <span className="material-icons text-sm">close</span>
               </button>
             )}
+
+              {/* Autocomplete dropdown */}
+              {showDropdown && filteredSuggestions.length > 0 && (
+                <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden">
+                  {filteredSuggestions.map((s) => {
+                    const alreadyAdded = skills.includes(s);
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        disabled={alreadyAdded}
+                        className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between transition ${
+                          alreadyAdded
+                            ? "text-gray-400 dark:text-gray-600 cursor-default bg-gray-50 dark:bg-gray-800/50"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
+                        }`}
+                        onMouseDown={(e) => {
+                          if (alreadyAdded) return;
+                          e.preventDefault();
+                          addSkill(s);
+                        }}
+                      >
+                        <span>{s}</span>
+                        {alreadyAdded && (
+                          <span className="material-icons text-sm text-green-500">
+                            check
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
           </div>
           <button
             type="button"
@@ -120,39 +153,6 @@ export default function KeySkillsSection() {
             Add
           </button>
         </div>
-
-        {/* Autocomplete dropdown */}
-        {showDropdown && filteredSuggestions.length > 0 && (
-          <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden">
-            {filteredSuggestions.map((s) => {
-              const alreadyAdded = skills.includes(s);
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  disabled={alreadyAdded}
-                  className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between transition ${
-                    alreadyAdded
-                      ? "text-gray-400 dark:text-gray-600 cursor-default bg-gray-50 dark:bg-gray-800/50"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600"
-                  }`}
-                  onMouseDown={(e) => {
-                    if (alreadyAdded) return;
-                    e.preventDefault();
-                    addSkill(s);
-                  }}
-                >
-                  <span>{s}</span>
-                  {alreadyAdded && (
-                    <span className="material-icons text-sm text-green-500">
-                      check
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* Skills chips */}
