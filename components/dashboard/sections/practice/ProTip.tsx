@@ -1,7 +1,7 @@
 export default function ProTip() {
   return (
-    <div className="rounded-2xl p-5 bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-lg">
-      <div className="flex items-center gap-2 font-bold text-base mb-2">
+    <div className="rounded-2xl px-5 py-4 bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-lg">
+      <div className="flex items-center gap-2 font-bold text-base mb-1.5">
         <span className="material-icons text-yellow-300">lightbulb</span>
         Pro Tip
       </div>

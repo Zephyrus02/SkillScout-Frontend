@@ -383,7 +383,7 @@ export default function StepSkills({
         </p>
 
         {/* Input + autocomplete */}
-        <div className="relative mb-4">
+        <div className="mb-4">
           <div className="flex gap-2">
             <div className="relative flex-1">
               <input
@@ -417,6 +417,39 @@ export default function StepSkills({
                   <span className="material-icons text-sm">close</span>
                 </button>
               )}
+
+              {/* Autocomplete dropdown */}
+              {showRoleDropdown && filteredRoles.length > 0 && (
+                <div className="absolute z-50 top-full mt-1 left-0 right-0 w-full min-w-full max-w-full box-border bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden">
+                  {filteredRoles.map((r) => {
+                    const alreadyAdded = roles.includes(r);
+                    return (
+                      <button
+                        key={r}
+                        type="button"
+                        disabled={alreadyAdded}
+                        className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between transition ${
+                          alreadyAdded
+                            ? "text-subtext-light dark:text-subtext-dark cursor-default bg-gray-50 dark:bg-gray-800/50"
+                            : "text-text-light dark:text-text-dark hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-primary"
+                        }`}
+                        onMouseDown={(e) => {
+                          if (alreadyAdded) return;
+                          e.preventDefault();
+                          addRole(r);
+                        }}
+                      >
+                        <span>{r}</span>
+                        {alreadyAdded && (
+                          <span className="material-icons text-sm text-green-500">
+                            check
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             <button
               type="button"
@@ -428,39 +461,6 @@ export default function StepSkills({
               Add
             </button>
           </div>
-
-          {/* Autocomplete dropdown */}
-          {showRoleDropdown && filteredRoles.length > 0 && (
-            <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden">
-              {filteredRoles.map((r) => {
-                const alreadyAdded = roles.includes(r);
-                return (
-                  <button
-                    key={r}
-                    type="button"
-                    disabled={alreadyAdded}
-                    className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between transition ${
-                      alreadyAdded
-                        ? "text-subtext-light dark:text-subtext-dark cursor-default bg-gray-50 dark:bg-gray-800/50"
-                        : "text-text-light dark:text-text-dark hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-primary"
-                    }`}
-                    onMouseDown={(e) => {
-                      if (alreadyAdded) return;
-                      e.preventDefault();
-                      addRole(r);
-                    }}
-                  >
-                    <span>{r}</span>
-                    {alreadyAdded && (
-                      <span className="material-icons text-sm text-green-500">
-                        check
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
 
         {/* Role chips */}
