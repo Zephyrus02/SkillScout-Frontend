@@ -1,4 +1,3 @@
-import { motion, useScroll, useSpring } from "framer-motion";
 import { useRef } from "react";
 
 const roadmapData = [
@@ -54,14 +53,6 @@ const roadmapData = [
 
 export default function RoadmapPanel() {
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  const { scrollYProgress } = useScroll({ container: containerRef });
-  
-  const scaleY = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001
-  });
 
   return (
     <div className="col-span-1 md:col-span-2 bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-gray-800 p-6 shadow-sm flex flex-col relative overflow-hidden group h-[340px]">
@@ -96,9 +87,8 @@ export default function RoadmapPanel() {
         <div className="absolute right-3 top-4 bottom-12 w-0.5 bg-gray-100 dark:bg-gray-800 rounded-full z-0" />
         
         {/* Animated fill line */}
-        <motion.div 
+        <div 
           className="absolute right-3 top-4 bottom-12 w-0.5 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full z-10 origin-top"
-          style={{ scaleY }}
         />
 
         {/* Steps */}
@@ -107,12 +97,8 @@ export default function RoadmapPanel() {
           const isInProgress = step.status === "in-progress";
 
           return (
-            <motion.div 
+            <div 
               key={step.id}
-              initial={{ opacity: 0, x: -10 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ root: containerRef, margin: "-10% 0px -10% 0px", once: false }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
               className={`flex items-start justify-between gap-4 p-4 pr-10 relative z-20 transition-all duration-300 rounded-2xl border-l-[3px] shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] dark:shadow-none ${
                 isInProgress 
                   ? "bg-gradient-to-r from-blue-50/50 to-white dark:from-blue-900/10 dark:to-surface-dark border-blue-500 pb-5"
@@ -156,25 +142,18 @@ export default function RoadmapPanel() {
                 : "right-1 border-white dark:border-surface-dark w-[18px] h-[18px]"
               }`}>
                  {isCompleted ? (
-                   <motion.div 
-                     initial={{ scale: 0 }}
-                     whileInView={{ scale: 1 }}
+                   <div 
                      className="w-2.5 h-2.5 bg-gradient-to-tr from-green-500 to-emerald-400 rounded-full" 
                    />
                  ) : isInProgress ? (
                    <div className="relative flex items-center justify-center">
-                     <motion.div 
-                       animate={{ scale: [1, 1.5, 1], opacity: [1, 0.4, 1] }}
-                       transition={{ repeat: Infinity, duration: 2 }}
-                       className="absolute w-2.5 h-2.5 bg-blue-500 rounded-full" 
-                     />
                      <div className="w-2.5 h-2.5 bg-blue-600 rounded-full z-10" />
                    </div>
                  ) : (
                    <div className="w-1.5 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full" />
                  )}
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>

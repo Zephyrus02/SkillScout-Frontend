@@ -103,15 +103,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
             {/* User profile */}
             <div className="flex items-center gap-3 mb-8">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-sm font-bold shrink-0 ring-2 ring-white dark:ring-gray-700">
-                {initials || "U"}
-              </div>
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={displayName}
+                  className="h-10 w-10 rounded-full object-cover shrink-0 ring-2 ring-white dark:ring-gray-700"
+                />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-sm font-bold shrink-0 ring-2 ring-white dark:ring-gray-700">
+                  {initials || "U"}
+                </div>
+              )}
               <div className="min-w-0">
                 <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
                   {displayName}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  {user?.email ?? ""}
                 </p>
               </div>
             </div>
