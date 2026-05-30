@@ -71,7 +71,7 @@ export default function InterviewConfig({
   setPersona,
 }: Props) {
   return (
-    <div className="col-span-12 lg:col-span-8 space-y-6">
+    <div className="col-span-12 md:col-span-8 space-y-6">
       {/* Interview Type */}
       <section className="bg-surface-light dark:bg-surface-dark rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
