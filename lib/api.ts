@@ -243,6 +243,40 @@ export const authAPI = {
     const res = await apiClient.post("/auth/resend-verification", { email });
     return res.data;
   },
+
+  /**
+   * POST /api/auth/request-password-reset  [authenticated]
+   * Generates a 1-hour magic link and emails it to the logged-in user.
+   */
+  requestPasswordReset: async () => {
+    const res = await apiClient.post("/auth/request-password-reset");
+    return res.data as { success: boolean; message: string };
+  },
+
+  /**
+   * POST /api/auth/reset-password  [public — token from magic link]
+   * Verifies current password, then sets the new password.
+   */
+  resetPassword: async (data: {
+    token: string;
+    currentPassword: string;
+    newPassword: string;
+  }) => {
+    const res = await apiClient.post("/auth/reset-password", data);
+    return res.data as { success: boolean; message: string };
+  },
+
+  /**
+   * POST /api/auth/suspend-account  [authenticated]
+   * Suspends the account (sets deletedAt) and renames the email so the
+   * original address is free for a fresh signup.
+   */
+  suspendAccount: async () => {
+    const res = await apiClient.post("/auth/suspend-account", {
+      confirm: true,
+    });
+    return res.data as { success: boolean; message: string };
+  },
 };
 
 // ── Profile API types ────────────────────────────────────────────────────────
