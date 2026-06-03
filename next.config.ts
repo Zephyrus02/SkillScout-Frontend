@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+      },
     ],
   },
   async headers() {
@@ -112,8 +116,8 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-eval' https://checkout.razorpay.com https://cdn.razorpay.com https://accounts.google.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: https://lh3.googleusercontent.com https://images.unsplash.com https://accounts.google.com",
-              "connect-src 'self' https: wss: http://localhost:5001 ws://localhost:5001 https://api.razorpay.com",
+              "img-src 'self' data: https://lh3.googleusercontent.com https://images.unsplash.com https://accounts.google.com https://*.supabase.co",
+              "connect-src 'self' https: wss: http://localhost:5001 ws://localhost:5001 http://localhost:4747 https://api.razorpay.com",
               "frame-src https://checkout.razorpay.com https://api.razorpay.com https://accounts.google.com",
               "media-src 'self' blob:",
               "worker-src 'self' blob:",
