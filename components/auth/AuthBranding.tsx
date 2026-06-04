@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { AvatarCircles } from "@/components/ui/avatar-circles";
 
 const avatarUrls = [
   "https://avatars.githubusercontent.com/u/16860528",
@@ -62,11 +61,6 @@ export default function AuthBranding() {
             Practice with AI, get instant feedback, and land your dream job
             faster. Join thousands of candidates improving their skills today.
           </p>
-
-          {/* Social proof */}
-          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/10">
-            <AvatarCircles avatarUrls={avatarUrls} numPeople={99} />
-          </div>
         </div>
 
         {/* Footer links */}
