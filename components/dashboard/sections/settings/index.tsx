@@ -24,6 +24,7 @@
  *   └── SidebarAccountSettings.tsx – Email alerts, change password, delete
  */
 
+import { useEffect } from "react";
 import ProfileHeaderSection from "./ProfileHeaderSection";
 import CareerProfileSection from "./CareerProfileSection";
 import ResumeSection from "./ResumeSection";
@@ -39,6 +40,27 @@ import SidebarBillingUsage from "./SidebarBillingUsage";
 import SidebarAccountSettings from "./SidebarAccountSettings";
 
 export default function SettingsSection() {
+  useEffect(() => {
+    const runHighlight = (hash: string) => {
+      const targetId = hash.replace("#", "");
+      if (!targetId) return;
+      const target = document.getElementById(targetId);
+      if (!target) return;
+
+      target.classList.remove("section-glow");
+      void target.offsetWidth;
+      target.classList.add("section-glow");
+      window.setTimeout(() => {
+        target.classList.remove("section-glow");
+      }, 1200);
+    };
+
+    const handleHashChange = () => runHighlight(window.location.hash);
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* ── Profile Hero ──────────────────────────────────────────────── */}

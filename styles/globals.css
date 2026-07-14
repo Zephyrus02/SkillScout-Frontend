@@ -57,6 +57,20 @@
   }
 }
 
+@keyframes section-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.0);
+  }
+  30% {
+    box-shadow:
+      0 0 0 4px rgba(59, 130, 246, 0.35),
+      0 12px 30px -12px rgba(59, 130, 246, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -99,6 +113,10 @@ body {
   transition:
     background-color 0.3s,
     color 0.3s;
+}
+
+.section-glow {
+  animation: section-glow 1.2s ease-out;
 }
 
 /* ─── shadcn/ui CSS variables ─────────────────────────────────────────────── */

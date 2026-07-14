@@ -195,6 +195,7 @@ export default function SidebarBillingUsage() {
   const [upgradeSuccess, setUpgradeSuccess] = useState<string | null>(null);
   const [cancelPending, setCancelPending] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [credits, setCredits] = useState<CreditsBalance | null>(null);
 
   const loadData = async () => {
@@ -345,19 +346,28 @@ export default function SidebarBillingUsage() {
     }
   };
 
-  const handleCancelSubscription = async (atCycleEnd: boolean) => {
+  const handleCancelSubscription = async (
+    atCycleEnd: boolean,
+  ): Promise<boolean> => {
     setCancelPending(true);
     setCancelError(null);
     try {
       await paymentsAPI.cancelSubscription(atCycleEnd);
       await loadData();
+      return true;
     } catch (e) {
       setCancelError(
         e instanceof Error ? e.message : "Failed to cancel. Please try again.",
       );
+      return false;
     } finally {
       setCancelPending(false);
     }
+  };
+
+  const handleConfirmCancel = async () => {
+    const succeeded = await handleCancelSubscription(true);
+    if (succeeded) setCancelModalOpen(false);
   };
 
   const handleViewInvoice = async (id: string) => {
@@ -569,7 +579,7 @@ export default function SidebarBillingUsage() {
           {isPaid && subscription && !subscription.cancelAtPeriodEnd && (
             <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
               <button
-                onClick={() => handleCancelSubscription(true)}
+                onClick={() => setCancelModalOpen(true)}
                 disabled={cancelPending}
                 className="w-full text-left text-sm font-medium text-red-500 hover:text-red-600 transition flex justify-between items-center py-2 disabled:opacity-50"
               >
@@ -632,6 +642,45 @@ export default function SidebarBillingUsage() {
                   />
                 );
               })}
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {cancelModalOpen && (
+        <Modal
+          title="Cancel subscription"
+          onClose={() => {
+            if (!cancelPending) setCancelModalOpen(false);
+          }}
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              You will keep access until the end of your current billing period.
+              Are you sure you want to cancel?
+            </p>
+            {cancelError && (
+              <p className="text-xs text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">
+                {cancelError}
+              </p>
+            )}
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setCancelModalOpen(false)}
+                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition"
+                disabled={cancelPending}
+              >
+                Keep subscription
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmCancel}
+                disabled={cancelPending}
+                className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {cancelPending ? "Cancelling…" : "Confirm cancel"}
+              </button>
             </div>
           </div>
         </Modal>
