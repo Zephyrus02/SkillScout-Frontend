@@ -33,7 +33,7 @@ export default function Button({
   size = "md",
   loading = false,
   icon,
-  iconPosition = "left",
+  iconPosition = "right",
   fullWidth = false,
   children,
   className = "",
